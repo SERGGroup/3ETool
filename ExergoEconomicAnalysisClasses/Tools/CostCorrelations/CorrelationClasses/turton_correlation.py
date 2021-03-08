@@ -135,7 +135,7 @@ class TurtonCorrelation(AbstractCostCorrelation):
     def parameter_settings_widget(self):
         return None
 
-    def import_xml_tree(self, data:ETree.Element):
+    def import_xml_tree(self, data: ETree.Element):
 
         header = data.find("header")
 
@@ -342,7 +342,7 @@ class TurtonEditCorrelationWidget(BaseEditCorrelationWidget):
 
         for key in parameter_dict.keys():
 
-            widget = ParameterWidget(parameter_dict[key], self)
+            widget = ParametersWidget(parameter_dict[key], self)
             widget.set_edit_layout = True
             widget.init_layout()
 

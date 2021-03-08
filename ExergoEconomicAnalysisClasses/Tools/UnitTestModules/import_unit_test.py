@@ -13,7 +13,6 @@ def import_matlab_result(excel_path):
 class ImportTestCase(unittest.TestCase):
 
     def test_excel_import(self):
-
         array_handler_list = list()
         resource_excel_path = os.path.join(costants.ROOT_DIR, "ExergoEconomicAnalysisClasses", "Tools",
                                            "UnitTestModules", "testResources", "ExcelTestFiles")
@@ -22,7 +21,6 @@ class ImportTestCase(unittest.TestCase):
         excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
         while os.path.isfile(excel_path):
-
             array_handler = import_excel_input(excel_path)
             result = import_matlab_result(excel_path)
             array_handler.calculate()
@@ -38,13 +36,13 @@ class ImportTestCase(unittest.TestCase):
             excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
     def test_excel_direct_calculation(self):
-
         root = tk.Tk()
         root.withdraw()
         excel_path = filedialog.askopenfilename()
         calculate_excel(excel_path)
 
         self.assertTrue(True)
+
 
 if __name__ == '__main__':
     unittest.main()

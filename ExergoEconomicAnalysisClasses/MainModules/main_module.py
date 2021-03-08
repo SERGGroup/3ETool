@@ -16,6 +16,7 @@ class Block:
         self.name = " "
         self.type = "generic"
 
+        self.comp_cost_corr = None
         self.comp_cost = 0.
         self.output_cost = 0.
 
@@ -275,7 +276,6 @@ class Block:
         for conn in self.output_connections:
 
             if not conn.has_to_be_skipped:
-
                 sub_martix[row, conn.ID] = conn.exergy_value
 
         # This part of the code scrolls the input connections, for each of them it checks if che connection
@@ -307,7 +307,6 @@ class Block:
 
                 non_loss_output = self.non_loss_output
                 for i in range(1, self.n_non_loss_output):
-
                     sub_martix[row, non_loss_output[0].ID] = 1
                     sub_martix[row, non_loss_output[i].ID] = -1
                     row += 1
@@ -316,7 +315,6 @@ class Block:
             for conn in self.output_connections:
 
                 if conn.is_loss and (not conn.has_to_be_skipped):
-
                     sub_martix[row, conn.ID] = 1
                     row += 1
 
@@ -394,7 +392,6 @@ class Block:
         for outConn in self.output_connections:
 
             if (not outConn.is_loss) and (not outConn.exergy_value == 0):
-
                 counter += 1
 
         return counter
@@ -647,7 +644,8 @@ class Block:
 class Connection:
 
     # Construction Methods
-    def __init__(self, inputID, from_block_input=None, to_block_input=None, exergy_value=0, is_fluid_stream=True):
+    def __init__(self, inputID, from_block_input: Block = None, to_block_input: Block = None, exergy_value: float = 0,
+                 is_fluid_stream=True):
 
         self.__ID = inputID
 
@@ -1017,21 +1015,19 @@ class ArrayHandler:
                 n_elements = self.n_conn_matrix
 
                 if n_elements == 0:
-
                     n_elements = self.n_connection
 
                 self.matrix = np.zeros((n_elements, n_elements))
                 self.vector = np.zeros(n_elements)
 
                 for block in self.block_list:
-
                     block.calculate_by_streams = self.calculate_by_streams
 
                     sub_matrix = block.get_matrix_row(n_elements)
                     sub_matrix_len = sub_matrix.shape[0]
 
-                    self.vector[i:(i+sub_matrix_len)] = sub_matrix[:, -1]
-                    self.matrix[i:(i+sub_matrix_len),:] = sub_matrix[:, 0:-1]
+                    self.vector[i:(i + sub_matrix_len)] = sub_matrix[:, -1]
+                    self.matrix[i:(i + sub_matrix_len), :] = sub_matrix[:, 0:-1]
                     i += sub_matrix_len
 
 
@@ -1048,7 +1044,6 @@ class ArrayHandler:
                 for block in self.block_list:
 
                     if not block.has_to_be_skipped:
-
                         block.calculate_by_streams = self.calculate_by_streams
 
                         row = block.get_matrix_row(n_elements)
@@ -1178,7 +1173,6 @@ class ArrayHandler:
             block.prepare_for_calculation()
 
         if self.there_are_block_to_be_skipped:
-
             self.calculate_by_streams = True
             self.__move_skipped_element_at_the_end()
 
@@ -1233,7 +1227,7 @@ class ArrayHandler:
     def __move_skipped_element_at_the_end(self):
 
         self.n_block_matrix = 0
-        self.n_conn_matrix  = 0
+        self.n_conn_matrix = 0
 
         for block in self.block_list:
 

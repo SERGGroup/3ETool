@@ -233,8 +233,7 @@ class Code:
         if ".xml" not in file_path:
 
             fernet = FernetHandler()
-            data = fernet.read_file(file_path)
-            root = ETree.fromstring(data)
+            root = fernet.read_file(file_path)
 
         else:
 

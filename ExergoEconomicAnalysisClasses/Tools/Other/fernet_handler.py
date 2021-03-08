@@ -47,7 +47,7 @@ class FernetHandler:
         fernet = Fernet(self.key)
         data = fernet.decrypt(data)
 
-        return data
+        return ETree.fromstring(data)
 
     def save_file(self, file_path, root: ETree.Element):
 

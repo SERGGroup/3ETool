@@ -1,8 +1,12 @@
-from ExergoEconomicAnalysisClasses.Tools.Other.matrix_analyzer import MatrixAnalyzer
 from datetime import date, datetime
-import pandas, math
+
+import math
+import pandas
+import xml.etree.ElementTree as ETree
 
 from ExergoEconomicAnalysisClasses.MainModules.main_module import ArrayHandler
+from ExergoEconomicAnalysisClasses.Tools.Other.matrix_analyzer import MatrixAnalyzer
+from ExergoEconomicAnalysisClasses.Tools.Other.fernet_handler import FernetHandler
 
 
 def import_excel_input(excel_path) -> ArrayHandler:
@@ -59,25 +63,23 @@ def import_excel_input(excel_path) -> ArrayHandler:
 
 
 def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
-
-    #Stream Solution Data frame generation
-    stream_data = { "Stream"                    : list(),
-                    "Name"                      : list(),
-                    "Exergy Value [kW]"         : list(),
-                    "Specific Cost [Euro/kJ]"   : list(),
-                    "Total Cost [Euro/s]"       : list()}
+    # Stream Solution Data frame generation
+    stream_data = {"Stream": list(),
+                   "Name": list(),
+                   "Exergy Value [kW]": list(),
+                   "Specific Cost [Euro/kJ]": list(),
+                   "Total Cost [Euro/s]": list()}
 
     for conn in array_handler.connection_list:
 
         if not conn.is_internal_stream:
-
             stream_data["Stream"].append(conn.index)
             stream_data["Name"].append(conn.name)
             stream_data["Exergy Value [kW]"].append(conn.exergy_value)
             stream_data["Specific Cost [Euro/kJ]"].append(conn.relCost)
-            stream_data["Total Cost [Euro/s]"].append(conn.relCost*conn.exergy_value)
+            stream_data["Total Cost [Euro/s]"].append(conn.relCost * conn.exergy_value)
 
-    stream_df = pandas.DataFrame(data = stream_data)
+    stream_df = pandas.DataFrame(data=stream_data)
 
     # Output Stream Data frame generation
     usefull_data = {"Stream": list(),
@@ -87,14 +89,13 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
                     "Total Cost [Euro/s]": list()}
 
     for conn in array_handler.useful_effect_connections:
-
         usefull_data["Stream"].append(conn.index)
         usefull_data["Name"].append(conn.name)
         usefull_data["Exergy Value [kW]"].append(conn.exergy_value)
         usefull_data["Specific Cost [Euro/kJ]"].append(conn.relCost)
         usefull_data["Total Cost [Euro/s]"].append(conn.relCost * conn.exergy_value)
 
-    usefull_df = pandas.DataFrame(data = usefull_data)
+    usefull_df = pandas.DataFrame(data=usefull_data)
 
     # generation of time stamps for excel sheet name
     today = date.today()
@@ -109,7 +110,6 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
 
 
 def calculate_excel(excel_path):
-
     array_handler = import_excel_input(excel_path)
     array_handler.calculate()
 
@@ -117,3 +117,55 @@ def calculate_excel(excel_path):
     analyzer.solve(array_handler.vector)
 
     export_solution_to_excel(excel_path, array_handler)
+
+
+def export_dat(dat_path, array_handler: ArrayHandler):
+
+    data = ETree.Element("data")
+    fernet = FernetHandler()
+
+    # <--------- CONNECTIONS DEFINITION --------->
+    connections = ETree.SubElement(data, "connections")
+
+    for connection in array_handler.connection_list:
+
+        if not connection.is_internal_stream:
+
+            connection_element = ETree.SubElement(connections, "connection")
+
+            connection_element.set("index", str(connection.index))
+            connection_element.set("name", str(connection.name))
+            connection_element.set("exergy_value", str(connection.exergy_value))
+
+            connection_element.set("from_block", str(connection.from_block.get_main_ID()))
+            connection_element.set("to_block", str(connection.to_block.get_main_ID()))
+
+    # <--------- BLOCKS DEFINITION --------->
+    blocks = ETree.SubElement(data, "blocks")
+    for block in array_handler.block_list:
+
+        if not block.is_support_block:
+
+            block_element = ETree.SubElement(blocks, "block")
+
+            block_element.set("ID", str(block.ID))
+            block_element.set("index", str(block.index))
+
+            block_element.set("name", str(block.name))
+            block_element.set("type", str(block.type))
+            block_element.set("comp_cost", str(block.comp_cost))
+            block_element.set("comp_cost_corr", str(block.comp_cost_corr))
+
+    fernet.save_file(dat_path, data)
+
+
+def import_dat(dat_path) -> ArrayHandler:
+
+    array_handler = ArrayHandler()
+    fernet = FernetHandler()
+
+    root = fernet.read_file(dat_path)
+    block_list = root.findall("block")
+    conn_list = root.findall("block")
+
+    # TODO import dat!!!
