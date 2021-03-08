@@ -1,0 +1,10 @@
+
+P[$0] = $input[0]
+W_out = $input[2] "[kW]"
+&repeat{P[$0] = P_in}
+enthalpy($fluid, P = P_in, T = T[$0])
+P_in = P[$1]
+h[$2] + h[$1]
+(h[$4] - h[$3])*m_dot[$3] = W_out
+"prova questo è un commento[]"
+Call Prova($fluid, P = p_in, T = T_2)

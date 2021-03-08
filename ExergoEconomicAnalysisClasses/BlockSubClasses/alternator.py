@@ -1,0 +1,91 @@
+from ExergoEconomicAnalysisClasses.MainModules import Block
+from ExergoEconomicAnalysisClasses.MainModules.support_blocks import Drawer
+
+
+class Alternator(Block):
+
+    def __init__(self, inputID, main_class):
+
+        super().__init__(inputID, main_class)
+
+        self.type = "alternator"
+        self.has_support_block = True
+        self.support_block.append(Drawer(main_class, self))
+
+        self.efficiency = 1.
+
+    def add_connection_to_support_block(self, new_connection, is_input):
+        self.support_block[0].add_connection(new_connection, is_input, )
+
+    def is_ready_for_calculation(self):
+        return len(self.support_block[0].input_connections) >= 1
+
+    def prepare_for_calculation(self):
+
+        self.support_block[0].prepare_for_calculation()
+
+        exergy_balance = 0
+
+        for conn in self.input_connections:
+
+            if conn == self.support_block[0].connection_with_main:
+                exergy_balance += conn.exergy_value * self.efficiency
+
+            else:
+                exergy_balance += conn.exergy_value
+
+        for conn in self.output_connections:
+            exergy_balance -= conn.exergy_value
+
+        new_conn = self.main_class.append_connection(from_block=self)
+        new_conn.name = "electrical power output"
+        new_conn.is_useful_effect = True
+        new_conn.exergy_value = exergy_balance
+
+    def append_excel_connection_list(self, input_list):
+
+        self.efficiency = float(input_list[0])
+
+        for elem in input_list[1:]:
+
+            new_conn = self.main_class.find_connection_by_index(abs(elem))
+
+            if not new_conn is None:
+
+                is_input = (elem > 0)
+                new_conn.is_fluid_stream = False
+
+                if is_input:
+
+                    self.add_connection(new_conn, is_input, append_to_support_block=0)
+
+                else:
+
+                    self.add_connection(new_conn, is_input)
+
+    @classmethod
+    def return_EES_needed_index(cls):
+
+        # Alternator has multiple input and outputs for exergy flux:
+
+        return_dict = {"global output": [0, False],
+                       "mechanical input": [1, True],
+                       "mechanical output": [2, True],
+                       "electrical input": [3, True],
+                       "electrical output": [4, True]}
+
+        return return_dict
+
+    @classmethod
+    def return_EES_base_equations(cls):
+
+        # WARNING: This methods must be overloaded in subclasses!!
+        # This methods returns a dictionary that contain a list of streams that have to be present in the EES text
+        # definition.
+
+        return dict()
+
+    def return_other_zone_connections(self, zone_type, input_connection):
+
+        # Alternator is connected only to energy streams, hence it is not interested in the zones generation process
+        return list()

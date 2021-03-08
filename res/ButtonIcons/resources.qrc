@@ -1,0 +1,12 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
+
+        <file alias="icon-add">file-add.svg</file>
+        <file alias="icon-delete">file-delete.svg</file>
+        <file alias="icon-duplicate">file-duplicate.svg</file>
+        <file alias="icon-modify">file-modify.svg</file>
+        <file alias="icon-open">file-open.svg</file>
+        <file alias="icon-view">file-view.svg</file>
+
+    </qresource>
+</RCC>

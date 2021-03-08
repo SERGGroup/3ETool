@@ -1,0 +1,21 @@
+&optional(set_delta_P){
+
+    Delta_P[$block_index] = $input[0]
+    P[$2] = P[$1] - Delta_P[$block_index]
+
+}
+
+Efficiency[$block_index] = $input[1]"[ - ] "
+h_iso[$2]=enthalpy($fluid, P=P[$1], s=s[$1])
+
+h[$2]=h[$1]+(h_iso[$2]-h[$1])*Efficiency[$block_index]
+s[$2]=entropy($fluid, P=P[$2], h=h[$2])
+T[$2]=temperature($fluid, P=P[$2], h=h[$2])
+&repeat{p[2]}
+
+&optional(calculate_m_dot){
+
+    m_dot[$2]=m_dot[$1]
+    W[$0] =(h[$1]-h[$2])*m_dot[$1]
+
+}
