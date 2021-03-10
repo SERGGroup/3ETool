@@ -1,4 +1,5 @@
 from ExergoEconomicAnalysisClasses.MainModules import Block
+import xml.etree.ElementTree as ETree
 from res import costants
 
 
@@ -20,6 +21,56 @@ class Generic(Block):
 
                 is_input = (elem > 0)
                 self.add_connection(new_conn, is_input)
+
+    def export_xml_other_parameters(self) -> ETree.Element:
+
+        other_tree = ETree.Element("Other")
+        return other_tree
+
+    def append_xml_other_parameters(self, input_list: ETree.Element):
+
+        pass
+
+    def export_xml_connection_list(self) -> ETree.Element:
+
+        xml_connection_list = ETree.Element("Connections")
+        fluid_connections = ETree.SubElement(xml_connection_list, "FluidConnections")
+
+        for input_connection in self.external_input_connections:
+
+            input_xml = ETree.SubElement(fluid_connections, "input")
+            input_xml.set("index", str(input_connection.index))
+
+        for output_connection in self.external_output_connections:
+
+            output_xml = ETree.SubElement(fluid_connections, "output")
+            output_xml.set("index", str(output_connection.index))
+
+        return xml_connection_list
+
+    def append_xml_connection_list(self, input_list: ETree.Element):
+
+        fluid_connections = input_list.find("FluidConnections")
+
+        self.__add_connection_by_index(fluid_connections, "input")
+        self.__add_connection_by_index(fluid_connections, "output")
+
+    def __add_connection_by_index(self, input_list: ETree.Element, connection_name, append_to_support_block=None):
+
+        if connection_name == "input":
+
+            is_input = True
+
+        else:
+
+            is_input = False
+
+        for connection in input_list.findall(connection_name):
+
+            new_conn = self.main_class.find_connection_by_index(float(connection.get("index")))
+
+            if new_conn is not None:
+                self.add_connection(new_conn, is_input, append_to_support_block=append_to_support_block)
 
     @classmethod
     def return_EES_needed_index(cls):

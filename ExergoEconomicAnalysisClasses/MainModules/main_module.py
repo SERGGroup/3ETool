@@ -1,8 +1,9 @@
 from ExergoEconomicAnalysisClasses.Tools.modules_handler import ModulesHandler
-import warnings
-import numpy as np
-import copy
+import xml.etree.ElementTree as ETree
 from res import costants
+import numpy as np
+import warnings
+import copy
 
 
 class Block:
@@ -181,6 +182,52 @@ class Block:
     def append_excel_connection_list(self, input_list):
 
         raise (NotImplementedError, "block.append_excel_connection_list() must be overloaded in subclasses")
+
+    @property
+    def xml(self) -> ETree.Element:
+
+        block_child = ETree.Element("block")
+
+        block_child.set("index", str(self.index))
+        block_child.set("name", str(self.name))
+        block_child.set("type", str(self.type))
+        block_child.set("comp_cost", str(self.comp_cost))
+        block_child.set("comp_cost_corr", str(self.comp_cost_corr))
+
+        block_child.append(self.export_xml_other_parameters())
+        block_child.append(self.export_xml_connection_list())
+
+        return block_child
+
+    @xml.setter
+    def xml(self, xml_input: ETree.Element):
+
+        self.index = float(xml_input.get("index"))
+        self.name = xml_input.get("name")
+        self.type = xml_input.get("type")
+
+        self.comp_cost = float(xml_input.get("comp_cost"))
+        self.comp_cost_corr = xml_input.get("comp_cost_corr")
+
+        self.append_xml_other_parameters(xml_input.find("Other"))
+        self.append_xml_connection_list(xml_input.find("Connections"))
+
+    def export_xml_other_parameters(self) -> ETree.Element:
+
+        other_tree = ETree.Element("Other")
+        return other_tree
+
+    def append_xml_other_parameters(self, input_list: ETree.Element):
+
+        pass
+
+    def export_xml_connection_list(self) -> ETree.Element:
+
+        raise (NotImplementedError, "block.__export_xml_connection_list() must be overloaded in subclasses")
+
+    def append_xml_connection_list(self, input_list: ETree.Element):
+
+        raise (NotImplementedError, "block.__append_xml_connection_list() must be overloaded in subclasses")
 
     # Calculation Methods
     def get_matrix_row(self, n_elements):
@@ -491,6 +538,35 @@ class Block:
         else:
             raise (NotImplementedError, "block.is_ready_for_calculation() must be overloaded in subclasses")
 
+    @property
+    def external_input_connections(self):
+
+        input_connections = list()
+        for connection in self.input_connections:
+            if not connection.is_internal_stream:
+                input_connections.append(connection)
+
+        if self.is_support_block and self.has_support_block:
+            for block in self.support_block:
+                input_connections.extend(block.external_input_connections)
+
+        return input_connections
+
+    @property
+    def external_output_connections(self):
+
+        output_connections = list()
+        for connection in self.output_connections:
+            if not connection.is_internal_stream:
+                output_connections.append(connection)
+
+        if self.has_support_block:
+            for block in self.support_block:
+                if "Drawer" not in str(type(block)):
+                    output_connections.extend(block.external_output_connections)
+
+        return output_connections
+
     def return_other_zone_connections(self, zone_type, input_connection):
 
         # WARNING: This methods must be overloaded in subclasses!!
@@ -760,6 +836,34 @@ class Connection:
 
         return (self.exergy_value == 0) or self.is_system_input or self.is_loss
 
+    @property
+    def xml(self) -> ETree:
+
+        connection_child = ETree.Element("connection")
+
+        connection_child.set("index", str(self.index))
+        connection_child.set("name", str(self.name))
+
+        connection_child.set("relCost", str(self.relCost))
+        connection_child.set("exergy_value", str(self.exergy_value))
+
+        connection_child.set("is_fluid_stream", str(self.is_fluid_stream))
+        connection_child.set("is_useful_effect", str(self.is_useful_effect))
+
+        return connection_child
+
+    @xml.setter
+    def xml(self, input_xml: ETree):
+
+        self.index = float(input_xml.get("index"))
+        self.name = input_xml.get("name")
+
+        self.relCost = float(input_xml.get("relCost"))
+        self.exergy_value = float(input_xml.get("exergy_value"))
+
+        self.is_fluid_stream = input_xml.get("is_fluid_stream") == "True"
+        self.is_useful_effect = input_xml.get("is_useful_effect") == "True"
+
     # Overloaded Methods
 
     def __this_has_higher_skipping_order(self, other):
@@ -937,7 +1041,7 @@ class ArrayHandler:
 
             return new_block
 
-    def append_connection(self, new_conn=None, from_block=None, to_block=None):
+    def append_connection(self, new_conn=None, from_block=None, to_block=None) -> Connection:
 
         if new_conn is None:
             new_conn = Connection(self.n_connection)

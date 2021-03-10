@@ -1,4 +1,4 @@
-from ExergoEconomicAnalysisClasses.Tools.modules_importer import import_excel_input, calculate_excel
+from ExergoEconomicAnalysisClasses.Tools.modules_importer import *
 from tkinter import filedialog
 import unittest, pandas, os
 from res import costants
@@ -13,9 +13,9 @@ def import_matlab_result(excel_path):
 class ImportTestCase(unittest.TestCase):
 
     def test_excel_import(self):
+
         array_handler_list = list()
-        resource_excel_path = os.path.join(costants.ROOT_DIR, "ExergoEconomicAnalysisClasses", "Tools",
-                                           "UnitTestModules", "testResources", "ExcelTestFiles")
+        resource_excel_path = os.path.join(costants.TEST_RES_DIR, "ImportTestResources", "ExcelTestFiles")
 
         i = 1
         excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
@@ -36,6 +36,7 @@ class ImportTestCase(unittest.TestCase):
             excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
     def test_excel_direct_calculation(self):
+
         root = tk.Tk()
         root.withdraw()
         excel_path = filedialog.askopenfilename()
@@ -43,6 +44,33 @@ class ImportTestCase(unittest.TestCase):
 
         self.assertTrue(True)
 
+    def test_dat_import_export(self):
+
+        array_handler_list = list()
+        resource_excel_path = os.path.join(costants.TEST_RES_DIR, "ImportTestResources", "ExcelTestFiles")
+        resource_dat_path = os.path.join(costants.TEST_RES_DIR, "ImportTestResources", "DatTestFiles")
+
+        i = 1
+        excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
+
+        while os.path.isfile(excel_path):
+
+            array_handler = import_excel_input(excel_path)
+            array_handler.calculate()
+            result_excel = array_handler.useful_effect_connections[0]
+
+            dat_path = os.path.join(resource_dat_path, "Sample Dat " + str(i) + ".dat")
+            export_dat(dat_path, array_handler)
+            array_handler_dat = import_dat(dat_path)
+            array_handler_list.append(array_handler_dat)
+
+            array_handler_dat.calculate()
+            result_dat = array_handler_dat.useful_effect_connections[0]
+
+            self.assertEqual(round(result_excel.relCost, 6), round(result_dat.relCost, 6))
+
+            i += 1
+            excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
 if __name__ == '__main__':
     unittest.main()

@@ -7,6 +7,7 @@ RUN_MODE = "administrator"
 # ROOT DIRECTORIES
 ROOT_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
 RES_DIR = os.path.join(ROOT_DIR, "res")
+TEST_RES_DIR = os.path.join(ROOT_DIR, "ExergoEconomicAnalysisClasses", "Tools", "UnitTestModules", "testResources")
 
 
 # EES FORMAT STYLES

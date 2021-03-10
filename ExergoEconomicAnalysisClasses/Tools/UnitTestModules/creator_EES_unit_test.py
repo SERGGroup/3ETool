@@ -30,8 +30,7 @@ class InputEESTestCase(unittest.TestCase):
 
         zones_list = list()
         error_found = False
-        resource_excel_path = os.path.join(costants.ROOT_DIR, "ExergoEconomicAnalysisClasses", "Tools",
-                                           "UnitTestModules", "testResources", "ExcelTestFiles")
+        resource_excel_path = os.path.join(costants.TEST_RES_DIR, "ImportTestResources", "ExcelTestFiles")
 
         i = 1
         excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")

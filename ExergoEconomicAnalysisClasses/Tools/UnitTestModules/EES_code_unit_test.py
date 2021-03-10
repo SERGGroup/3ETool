@@ -11,8 +11,7 @@ class EESCodeTestCase(unittest.TestCase):
         self.code_analyzer = EESCodeAnalyzer()
         self.error_found = False
 
-        resource_file_path = os.path.join(costants.ROOT_DIR, "ExergoEconomicAnalysisClasses", "Tools",
-                                          "UnitTestModules", "testResources", "TXTFiles", "EESTestScripts")
+        resource_file_path = os.path.join(costants.TEST_RES_DIR, "TXTFiles", "EESTestScripts")
 
         self.__test_file(resource_file_path)
 
@@ -32,8 +31,7 @@ class EESCodeTestCase(unittest.TestCase):
         self.results = list()
         self.error_found = False
 
-        resource_file_path = os.path.join(costants.ROOT_DIR, "ExergoEconomicAnalysisClasses", "Tools",
-                                          "UnitTestModules", "testResources", "TXTFiles", "EESSplitterTestScript")
+        resource_file_path = os.path.join(costants.TEST_RES_DIR, "TXTFiles", "EESSplitterTestScript")
 
         self.__test_file(resource_file_path, test_split=True)
         self.assertFalse(self.error_found)

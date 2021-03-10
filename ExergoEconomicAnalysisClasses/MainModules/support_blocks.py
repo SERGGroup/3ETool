@@ -275,6 +275,7 @@ class Drawer(Block):
 
 
 def get_support_block_class(block_subclass_name, modules_handler):
+
     block_subclass = modules_handler.import_correct_sub_class(block_subclass_name)
 
     class SupportSeparator(block_subclass):

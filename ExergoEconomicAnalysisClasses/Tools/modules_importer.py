@@ -10,7 +10,6 @@ from ExergoEconomicAnalysisClasses.Tools.Other.fernet_handler import FernetHandl
 
 
 def import_excel_input(excel_path) -> ArrayHandler:
-
     array_handler = ArrayHandler()
 
     # import connections
@@ -120,41 +119,20 @@ def calculate_excel(excel_path):
 
 
 def export_dat(dat_path, array_handler: ArrayHandler):
-
     data = ETree.Element("data")
     fernet = FernetHandler()
 
     # <--------- CONNECTIONS DEFINITION --------->
     connections = ETree.SubElement(data, "connections")
-
     for connection in array_handler.connection_list:
-
         if not connection.is_internal_stream:
-
-            connection_element = ETree.SubElement(connections, "connection")
-
-            connection_element.set("index", str(connection.index))
-            connection_element.set("name", str(connection.name))
-            connection_element.set("exergy_value", str(connection.exergy_value))
-
-            connection_element.set("from_block", str(connection.from_block.get_main_ID()))
-            connection_element.set("to_block", str(connection.to_block.get_main_ID()))
+            connections.append(connection.xml)
 
     # <--------- BLOCKS DEFINITION --------->
     blocks = ETree.SubElement(data, "blocks")
     for block in array_handler.block_list:
-
         if not block.is_support_block:
-
-            block_element = ETree.SubElement(blocks, "block")
-
-            block_element.set("ID", str(block.ID))
-            block_element.set("index", str(block.index))
-
-            block_element.set("name", str(block.name))
-            block_element.set("type", str(block.type))
-            block_element.set("comp_cost", str(block.comp_cost))
-            block_element.set("comp_cost_corr", str(block.comp_cost_corr))
+            blocks.append(block.xml)
 
     fernet.save_file(dat_path, data)
 
@@ -165,7 +143,18 @@ def import_dat(dat_path) -> ArrayHandler:
     fernet = FernetHandler()
 
     root = fernet.read_file(dat_path)
-    block_list = root.findall("block")
-    conn_list = root.findall("block")
 
-    # TODO import dat!!!
+    a = ETree.tostring(root)
+
+    conn_list = root.find("connections")
+    block_list = root.find("blocks")
+
+    for conn in conn_list.findall("connection"):
+        new_conn = array_handler.append_connection()
+        new_conn.xml = conn
+
+    for block in block_list.findall("block"):
+        new_block = array_handler.append_block(block.get("type"))
+        new_block.xml = block
+
+    return array_handler

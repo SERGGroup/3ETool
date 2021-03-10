@@ -1,5 +1,6 @@
 from ExergoEconomicAnalysisClasses.MainModules import Block
 from ExergoEconomicAnalysisClasses.MainModules.support_blocks import Drawer
+import xml.etree.ElementTree as ETree
 from res import costants
 
 
@@ -44,6 +45,114 @@ class Evaporator(Block):
             if new_conn is not None:
                 is_input = (elem > 0)
                 self.add_connection(new_conn, is_input=is_input, append_to_support_block=0)
+
+    def export_xml_other_parameters(self) -> ETree.Element:
+
+        other_tree = ETree.Element("Other")
+        return other_tree
+
+    def append_xml_other_parameters(self, input_list: ETree.Element):
+
+        pass
+
+    def export_xml_connection_list(self) -> ETree.Element:
+
+        xml_connection_list = ETree.Element("Connections")
+
+        fuels_connections = ETree.SubElement(xml_connection_list, "FuelsConnections")
+        product_connections = ETree.SubElement(xml_connection_list, "ProductConnections")
+
+        for support_block in self.support_block:
+
+            if support_block.is_input:
+
+                main_tree = ETree.SubElement(fuels_connections, "Block")
+
+            else:
+
+                main_tree = ETree.SubElement(product_connections, "Block")
+
+            for input_connection in support_block.external_input_connections:
+
+                input_xml = ETree.SubElement(main_tree, "input")
+                input_xml.set("index", str(input_connection.index))
+
+            for output_connection in support_block.external_output_connections:
+
+                output_xml = ETree.SubElement(main_tree, "output")
+                output_xml.set("index", str(output_connection.index))
+
+        return xml_connection_list
+
+    def append_xml_connection_list(self, input_list: ETree.Element):
+
+        fuels_connections = input_list.find("FuelsConnections")
+        product_connections = input_list.find("ProductConnections")
+
+        self.__add_support_blocks(len(fuels_connections.findall("Block")), True)
+        self.__add_support_blocks(len(product_connections.findall("Block")), False)
+
+        i = 0
+        support_block_array = self.input_support_block
+        for connection in fuels_connections.findall("Block"):
+            self.__add_connection_by_index(connection, "input", append_to_support_block=support_block_array[i])
+            self.__add_connection_by_index(connection, "output", append_to_support_block=support_block_array[i])
+            i = i + 1
+
+        i = 0
+        support_block_array = self.output_support_block
+        for connection in product_connections.findall("Block"):
+            self.__add_connection_by_index(connection, "input", append_to_support_block=support_block_array[i])
+            self.__add_connection_by_index(connection, "output", append_to_support_block=support_block_array[i])
+            i = i + 1
+
+    def __add_connection_by_index(self, input_list: ETree.Element, connection_name, append_to_support_block=None):
+
+        if connection_name == "input":
+
+            is_input = True
+
+        else:
+
+            is_input = False
+
+        for connection in input_list.findall(connection_name):
+
+            new_conn = self.main_class.find_connection_by_index(float(connection.get("index")))
+
+            if new_conn is not None:
+                self.add_connection(new_conn, is_input, append_to_support_block = append_to_support_block)
+
+    def __add_support_blocks(self, n_support_blocks, is_input):
+
+        for i in range(1, n_support_blocks):
+
+            self.add_new_drawer(is_input)
+
+    @property
+    def input_support_block(self) -> list:
+
+        return_list = list()
+
+        for support_block in self.support_block:
+
+            if support_block.is_input:
+
+                return_list.append(support_block)
+
+        return return_list
+
+    @property
+    def output_support_block(self) -> list:
+
+        return_list = list()
+
+        for support_block in self.support_block:
+
+            if not support_block.is_input:
+                return_list.append(support_block)
+
+        return return_list
 
     @classmethod
     def return_EES_needed_index(cls):
