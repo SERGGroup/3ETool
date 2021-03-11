@@ -30,11 +30,13 @@ class Condenser(Block):
 
             self.support_block[0].prepare_for_calculation()
 
-        new_conn = self.main_class.append_connection(from_block=self)
-        new_conn.name = "condenser exergy loss"
-        new_conn.automatically_generated_connection = True
-        new_conn.exergy_value = self.exergy_balance
-        new_conn.is_fluid_stream = False
+        if self.main_class.options.loss_cost_is_zero:
+
+            new_conn = self.main_class.append_connection(from_block=self)
+            new_conn.name = "condenser exergy loss"
+            new_conn.automatically_generated_connection = True
+            new_conn.exergy_value = self.exergy_balance
+            new_conn.is_fluid_stream = False
 
     def append_excel_connection_list(self, input_list):
 

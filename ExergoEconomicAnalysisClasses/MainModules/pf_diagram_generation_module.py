@@ -95,10 +95,21 @@ class ProductConnection(Connection):
         self.base_connection = base_connection
 
         self.exergy_value = base_connection.exergy_value
-        self.relCost = base_connection.relCost
+        self.rel_cost = base_connection.rel_cost
 
         self.is_useful_effect = base_connection.is_useful_effect
         self.is_fluid_stream = base_connection.is_fluid_stream
+
+    @property
+    def rel_cost(self) -> float:
+
+        return self.__rel_cost
+
+    @rel_cost.setter
+    def rel_cost(self, rel_cost_input):
+
+        self.__rel_cost = rel_cost_input
+        self.base_connection.rel_cost = rel_cost_input
 
 
 class PFArrayHandler(ArrayHandler):

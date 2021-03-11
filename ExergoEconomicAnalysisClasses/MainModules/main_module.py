@@ -163,7 +163,7 @@ class Block:
 
         for outConn in self.output_connections:
 
-            if outConn.is_loss:
+            if outConn.is_loss and self.main_class.options.loss_cost_is_zero:
                 outConn.set_cost(0.)
 
             else:
@@ -273,7 +273,7 @@ class Block:
 
             else:
 
-                element_cost += conn.exergy_value * conn.relCost
+                element_cost += conn.exergy_value * conn.rel_cost
 
         row[-1] = element_cost
 
@@ -282,7 +282,7 @@ class Block:
 
         for conn in self.output_connections:
 
-            if not conn.is_loss:
+            if not conn.is_loss or (not self.main_class.options.loss_cost_is_zero):
                 exergy_sum += conn.exergy_value
 
         row[self.ID] = exergy_sum
@@ -322,7 +322,7 @@ class Block:
 
             else:
 
-                element_cost += conn.exergy_value * conn.relCost
+                element_cost += conn.exergy_value * conn.rel_cost
 
         row[-1] = element_cost
 
@@ -594,7 +594,7 @@ class Block:
     @property
     def can_be_removed_in_pf_definition(self):
 
-        if self.exergy_balance == 0 and self.n_input == 1:
+        if self.exergy_balance == 0 and self.n_input == 1 and self.comp_cost == 0.:
             return True
 
         return False
@@ -787,7 +787,7 @@ class Connection:
         self.from_block = from_block_input
         self.to_block = to_block_input
 
-        self.relCost = 0.
+        self.__rel_cost = 0.
         self.exergy_value = exergy_value
 
         self.is_useful_effect = False
@@ -855,7 +855,7 @@ class Connection:
 
     def set_cost(self, cost):
 
-        self.relCost = cost
+        self.rel_cost = cost
 
     # Boolean Methods
     @property
@@ -907,7 +907,7 @@ class Connection:
         connection_child.set("index", str(self.index))
         connection_child.set("name", str(self.name))
 
-        connection_child.set("relCost", str(self.relCost))
+        connection_child.set("rel_cost", str(self.rel_cost))
         connection_child.set("exergy_value", str(self.exergy_value))
 
         connection_child.set("is_fluid_stream", str(self.is_fluid_stream))
@@ -921,11 +921,21 @@ class Connection:
         self.index = float(input_xml.get("index"))
         self.name = input_xml.get("name")
 
-        self.relCost = float(input_xml.get("relCost"))
+        self.rel_cost = float(input_xml.get("rel_cost"))
         self.exergy_value = float(input_xml.get("exergy_value"))
 
         self.is_fluid_stream = input_xml.get("is_fluid_stream") == "True"
         self.is_useful_effect = input_xml.get("is_useful_effect") == "True"
+
+    @property
+    def rel_cost(self) -> float:
+
+        return self.__rel_cost
+
+    @rel_cost.setter
+    def rel_cost(self, rel_cost_input):
+
+        self.__rel_cost = rel_cost_input
 
     # Overloaded Methods
 
@@ -1216,7 +1226,7 @@ class ArrayHandler:
 
                         for non_diss_blocks in block.redistribution_block_list:
 
-                            self.matrix[i, non_diss_blocks.ID] = non_diss_blocks.redistribution_index(redistribution_sum)
+                            self.matrix[non_diss_blocks.ID, i] = non_diss_blocks.redistribution_index(redistribution_sum)
 
                     i += 1
 
@@ -1256,7 +1266,7 @@ class ArrayHandler:
                     new_conn.is_useful_effect = True
 
                 else:
-                    new_conn.relCost = input_cost
+                    new_conn.rel_cost = input_cost
 
             # Overloaded Methods
 
@@ -1544,16 +1554,17 @@ class ArrayHandler:
         return str(self)
 
 
-class CalculationOptions():
+class CalculationOptions:
 
     def __init__(self):
+
         self.calculate_on_pf_diagram = True
         self.loss_cost_is_zero = True
 
         self.valve_is_dissipative = False
         self.condenser_is_dissipative = True
 
-        self.redistribution_method = costants.EXERGY_DESTRUCTION
+        self.redistribution_method = costants.EXERGY_PRODUCT
 
     @property
     def xml(self) -> ETree.Element:

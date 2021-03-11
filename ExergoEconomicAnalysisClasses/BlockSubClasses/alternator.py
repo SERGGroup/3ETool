@@ -172,6 +172,10 @@ class Alternator(Block):
 
         return exergy_balance
 
+    @property
+    def can_be_removed_in_pf_definition(self):
+        return False
+
     def return_other_zone_connections(self, zone_type, input_connection):
 
         # Alternator is connected only to energy streams, hence it is not interested in the zones generation process

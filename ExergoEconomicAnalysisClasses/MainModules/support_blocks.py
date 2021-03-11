@@ -260,6 +260,11 @@ class Drawer(Block):
     @property
     def is_connected(self):
         return not self.connection_with_main is None
+    
+    def __str__(self):
+
+        self.name = "Support block of: " + str(self.main_block.name)
+        return super(Drawer, self).__str__()
 
 
 def get_support_block_class(block_subclass_name, modules_handler):

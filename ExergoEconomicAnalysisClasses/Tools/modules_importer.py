@@ -8,6 +8,7 @@ from ExergoEconomicAnalysisClasses.Tools.Other.fernet_handler import FernetHandl
 
 
 def import_excel_input(excel_path) -> ArrayHandler:
+
     array_handler = ArrayHandler()
 
     # import connections
@@ -73,8 +74,8 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
             stream_data["Stream"].append(conn.index)
             stream_data["Name"].append(conn.name)
             stream_data["Exergy Value [kW]"].append(conn.exergy_value)
-            stream_data["Specific Cost [Euro/kJ]"].append(conn.relCost)
-            stream_data["Total Cost [Euro/s]"].append(conn.relCost * conn.exergy_value)
+            stream_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
+            stream_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
 
     stream_df = pandas.DataFrame(data=stream_data)
 
@@ -89,8 +90,8 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
         usefull_data["Stream"].append(conn.index)
         usefull_data["Name"].append(conn.name)
         usefull_data["Exergy Value [kW]"].append(conn.exergy_value)
-        usefull_data["Specific Cost [Euro/kJ]"].append(conn.relCost)
-        usefull_data["Total Cost [Euro/s]"].append(conn.relCost * conn.exergy_value)
+        usefull_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
+        usefull_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
 
     usefull_df = pandas.DataFrame(data=usefull_data)
 

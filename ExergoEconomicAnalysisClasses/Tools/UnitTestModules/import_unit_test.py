@@ -6,8 +6,12 @@ import tkinter as tk
 
 
 def import_matlab_result(excel_path):
-    result_data = pandas.read_excel(excel_path, sheet_name="Eff Out").values
-    return result_data[1, 6]
+
+    try:
+        result_data = pandas.read_excel(excel_path, sheet_name="Eff Out").values
+        return result_data[1, 6]
+    except:
+        return -100
 
 
 class ImportTestCase(unittest.TestCase):
@@ -24,15 +28,18 @@ class ImportTestCase(unittest.TestCase):
 
             array_handler = import_excel_input(excel_path)
             result = import_matlab_result(excel_path)
-            array_handler.options.calculate_on_pf_diagram = False
-            array_handler.calculate()
 
-            print(array_handler)
+            if result != -100:
 
-            array_handler_list.append(array_handler)
-            useful_effect = array_handler.useful_effect_connections[0]
+                array_handler.options.calculate_on_pf_diagram = False
+                array_handler.calculate()
 
-            self.assertEqual(round(result, 6), round(useful_effect.relCost, 6))
+                print(array_handler)
+
+                array_handler_list.append(array_handler)
+                useful_effect = array_handler.useful_effect_connections[0]
+
+                self.assertEqual(round(result, 6), round(useful_effect.rel_cost, 6))
 
             i += 1
             excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
@@ -56,7 +63,6 @@ class ImportTestCase(unittest.TestCase):
         excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
         while os.path.isfile(excel_path):
-
             array_handler = import_excel_input(excel_path)
             array_handler.calculate()
             result_excel = array_handler.useful_effect_connections[0]
@@ -69,7 +75,7 @@ class ImportTestCase(unittest.TestCase):
             array_handler_dat.calculate()
             result_dat = array_handler_dat.useful_effect_connections[0]
 
-            self.assertEqual(round(result_excel.relCost, 6), round(result_dat.relCost, 6))
+            self.assertEqual(round(result_excel.rel_cost, 6), round(result_dat.rel_cost, 6))
 
             i += 1
             excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")

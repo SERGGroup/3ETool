@@ -57,7 +57,7 @@ class MyTestCase(unittest.TestCase):
         print(array_handler)
         array_handler.calculate()
 
-        self.assertAlmostEqual(61.667, array_handler.block_list[-1].output_connections[0].relCost, delta=2)
+        self.assertAlmostEqual(61.667, array_handler.block_list[-1].output_connections[0].rel_cost, delta=2)
 
 if __name__ == '__main__':
     unittest.main()
