@@ -570,11 +570,24 @@ class Block:
     @property
     def can_be_removed_in_pf_definition(self):
 
-        if self.is_support_block and self.n_input == 1:
+        if self.exergy_balance == 0 and self.n_input == 1:
 
             return True
 
         return False
+
+    @property
+    def exergy_balance(self):
+
+        exergy_balance = 0
+
+        for conn in self.input_connections:
+            exergy_balance += conn.exergy_value
+
+        for conn in self.output_connections:
+            exergy_balance -= conn.exergy_value
+
+        return exergy_balance
 
     def return_other_zone_connections(self, zone_type, input_connection):
 

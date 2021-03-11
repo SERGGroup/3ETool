@@ -156,10 +156,10 @@ class Drawer(Block):
             self.connection_with_main.is_fluid_stream = False
 
         if self.is_input:
-            self.connection_with_main.exergy_value += self.__return_exergy_balance()
+            self.connection_with_main.exergy_value += self.exergy_balance
 
         else:
-            self.connection_with_main.exergy_value -= self.__return_exergy_balance()
+            self.connection_with_main.exergy_value -= self.exergy_balance
 
     def __add_connection_manually(self, from_block, to_block, is_connection_with_main=False):
 
@@ -174,18 +174,6 @@ class Drawer(Block):
 
         if is_connection_with_main:
             self.connection_with_main = new_connection
-
-    def __return_exergy_balance(self):
-
-        exergy_balance = 0
-
-        for conn in self.input_connections:
-            exergy_balance += conn.exergy_value
-
-        for conn in self.output_connections:
-            exergy_balance -= conn.exergy_value
-
-        return exergy_balance
 
     def __append_support_block(self, is_input=True):
 
