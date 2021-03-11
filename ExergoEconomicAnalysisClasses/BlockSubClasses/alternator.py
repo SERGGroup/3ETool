@@ -25,24 +25,11 @@ class Alternator(Block):
 
         self.support_block[0].prepare_for_calculation()
 
-        exergy_balance = 0
-
-        for conn in self.input_connections:
-
-            if conn == self.support_block[0].connection_with_main:
-                exergy_balance += conn.exergy_value * self.efficiency
-
-            else:
-                exergy_balance += conn.exergy_value
-
-        for conn in self.output_connections:
-            exergy_balance -= conn.exergy_value
-
         new_conn = self.main_class.append_connection(from_block=self)
         new_conn.name = "electrical power output"
         new_conn.is_useful_effect = True
         new_conn.automatically_generated_connection = True
-        new_conn.exergy_value = exergy_balance
+        new_conn.exergy_value = self.exergy_balance
 
     def append_excel_connection_list(self, input_list):
 
@@ -166,6 +153,24 @@ class Alternator(Block):
         # definition.
 
         return dict()
+
+    @property
+    def exergy_balance(self):
+
+        exergy_balance = 0
+
+        for conn in self.input_connections:
+
+            if conn == self.support_block[0].connection_with_main:
+                exergy_balance += conn.exergy_value * self.efficiency
+
+            else:
+                exergy_balance += conn.exergy_value
+
+        for conn in self.output_connections:
+            exergy_balance -= conn.exergy_value
+
+        return exergy_balance
 
     def return_other_zone_connections(self, zone_type, input_connection):
 

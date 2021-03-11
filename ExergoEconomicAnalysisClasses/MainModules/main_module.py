@@ -19,6 +19,7 @@ class Block:
 
         self.comp_cost_corr = None
         self.comp_cost = 0.
+        self.difference_cost = 0.
         self.output_cost = 0.
 
         self.input_connections = list()
@@ -32,7 +33,6 @@ class Block:
         self.has_support_block = False
 
         self.move_skipped_block_at_the_end = False
-        self.calculate_by_streams = False
 
         self.error_value = 0
 
@@ -232,15 +232,15 @@ class Block:
     # Calculation Methods
     def get_matrix_row(self, n_elements):
 
-        if self.calculate_by_streams:
+        if self.is_dissipative:
 
-            return self.__get_matrix_row_by_stream(n_elements)
+            return self.__get_dissipative_matrix_row(n_elements)
 
         else:
 
-            return self.__get_matrix_row_by_block(n_elements)
+            return self.__get_standard_matrix_row(n_elements)
 
-    def __get_matrix_row_by_block(self, n_blocks):
+    def __get_standard_matrix_row(self, n_blocks):
 
         # This Methods returns the row of the Cost Matrix corresponding to the current block in a block-oriented
         # computation scheme
@@ -289,83 +289,107 @@ class Block:
 
         return row
 
-    def __get_matrix_row_by_stream(self, n_blocks):
+    def __get_dissipative_matrix_row(self, n_blocks):
 
-        # This Methods returns the rows of the Cost Matrix corresponding to the current block in a stream-oriented
-        # computation scheme
+        # This Methods returns the rows of the Cost Matrix corresponding to the a dissipative block
 
-        # The Cost Matrix is a squared matrix of size NXN where N is the number of streams. Another column,
+        # The Cost Matrix is a squared matrix of size NXN where N is the number of blocks. Another column,
         # representing the known variables vector has been added at the end of the matrix, hence its actual
         # dimensions are NX(N+1).
         #
-        # The Cost Matrix is composed by the balance equation for each component equations and by some support
-        # equation needed for the system to be solvable. In our case the only support equation allowed (due to the
-        # presence of support blocks) are:
-        #
-        #       - cost of each non-loss output streams has to be equal
-        #       - cost of each loss output streams has to be 0
-        #
-        # The cost balance equation is composed as follows:
-        #
-        #       - for input streams with undefined exergy cost must be inserted in the matrix with negative sign
-        #       - for output streams exergy value must be inserted in the matrix with positive sign
-        #       - The last column represent known variable and should be filled with the known costs
-        #
+        # In the Cost Matrix the elements on the diagonal for dissipative blocks is equal to 1 as the i-th column in
+        # the matrix represent the cost difference variable. While the off-diagonal elements match with the input
+        # flows into the blocks. Off-diagonal terms must be negative. For example at column "m" you will find the
+        # exergy flux coming into the component from block with ID "m".
+
+        # The last column represent known variable and should be filled with the known costs
         # For further details please refers to the paper (to be quoted)
 
-        # initialization with an matrix of zeroes (dimension [n_output, N+1])
-        sub_martix = np.zeros((self.n_non_empty_output, n_blocks + 1))
-        row = 0
-
-        # COMPONENT COST BALANCE EQUATION
-
-        # Output connections are scrolled and added to the matrix with positive sign
-        for conn in self.output_connections:
-
-            if not conn.has_to_be_skipped:
-                sub_martix[row, conn.ID] = conn.exergy_value
+        # line initialization with an array of zeroes (dimension N+1)
+        row = np.zeros(n_blocks + 1)
+        element_cost = self.comp_cost
 
         # This part of the code scrolls the input connections, for each of them it checks if che connection
         # came form another block (it's an internal connection) or if it's a system input.
         # In the latter case its absolute cost must be known so it will be considered as a known variable
         # result is written in the last column
 
-        element_cost = self.comp_cost
-
         for conn in self.input_connections:
 
-            if not conn.has_to_be_skipped:
+            if not (conn.is_system_input or conn.exergy_value == 0):
 
-                sub_martix[row, conn.ID] = -conn.exergy_value
+                row[conn.fromID] = -conn.exergy_value
 
             else:
 
                 element_cost += conn.exergy_value * conn.relCost
 
-        sub_martix[row, -1] = element_cost
+        row[-1] = element_cost
 
-        # COMPONENT SUPPORT EQUATIONS
-        if self.n_non_empty_output > 1:
+        # diagonal element is set to 1
 
-            row += 1
+        row[self.ID] = 1
 
-            # Each output cost is equal
-            if self.n_non_loss_output > 1:
+        return row
 
-                non_loss_output = self.non_loss_output
-                for i in range(1, self.n_non_loss_output):
-                    sub_martix[row, non_loss_output[0].ID] = 1
-                    sub_martix[row, non_loss_output[i].ID] = -1
-                    row += 1
+    @property
+    def redistribution_block_list(self):
 
-            # Loss cost 0
-            for conn in self.output_connections:
+        # TODO it can be overloaded in sub classes
 
-                if conn.is_loss and (not conn.has_to_be_skipped):
-                    sub_martix[row, conn.ID] = 1
-                    row += 1
+        if self.is_dissipative:
 
-        return sub_martix
+            return self.main_class.non_dissipative_blocks
+
+        else:
+
+            return list()
+
+    @property
+    def redistribution_sum(self):
+
+        redistribution_sum = 0
+        redistribution_method = self.main_class.options.redistribution_method
+
+        for block in self.redistribution_block_list:
+
+            if redistribution_method == costants.EXERGY_DESTRUCTION:
+
+                redistribution_sum += abs(block.exergy_balance)
+
+            elif redistribution_method == costants.EXERGY_PRODUCT:
+
+                redistribution_sum += abs(block.productive_exergy_output)
+
+            else:
+
+                redistribution_sum += abs(block.comp_cost)
+
+        return redistribution_sum
+
+    def redistribution_index(self, redistribution_sum):
+
+        if self.is_dissipative:
+
+            redistribution_index = 0
+
+        else:
+
+            redistribution_method = self.main_class.options.redistribution_method
+
+            if redistribution_method == costants.EXERGY_DESTRUCTION:
+
+                redistribution_index = abs(self.exergy_balance)/redistribution_sum
+
+            elif redistribution_method == costants.EXERGY_PRODUCT:
+
+                redistribution_index = abs(self.productive_exergy_output)/redistribution_sum
+
+            else:
+
+                redistribution_index = abs(self.comp_cost)/redistribution_sum
+
+        return redistribution_index
 
     def prepare_for_calculation(self):
 
@@ -399,7 +423,7 @@ class Block:
             return self.ID
 
     @property
-    def has_to_be_skipped(self):
+    def is_dissipative(self):
 
         # this method returns true if all the outputs are exergy losses or have an exergy value equal to 0
         # hence the corresponding column in the solution matrix will be and empty vector resulting in a singular matrix
@@ -571,7 +595,6 @@ class Block:
     def can_be_removed_in_pf_definition(self):
 
         if self.exergy_balance == 0 and self.n_input == 1:
-
             return True
 
         return False
@@ -588,6 +611,17 @@ class Block:
             exergy_balance -= conn.exergy_value
 
         return exergy_balance
+
+    @property
+    def productive_exergy_output(self):
+
+        productive_exergy_output = 0
+
+        for conn in self.non_loss_output:
+
+            productive_exergy_output += abs(conn.exergy_value)
+
+        return productive_exergy_output
 
     def return_other_zone_connections(self, zone_type, input_connection):
 
@@ -633,13 +667,13 @@ class Block:
 
     def __this_has_higher_skipping_order(self, other):
 
-        if self.has_to_be_skipped == other.has_to_be_skipped:
+        if self.is_dissipative == other.is_dissipative:
 
             return None
 
         else:
 
-            return self.has_to_be_skipped
+            return self.is_dissipative
 
     def __this_has_higher_support_block_order(self, this, other):
 
@@ -897,7 +931,7 @@ class Connection:
 
     def __this_has_higher_skipping_order(self, other):
 
-        if self.has_to_be_skipped == other.has_to_be_skipped:
+        if self.has_to_be_skipped == other.is_dissipative:
 
             return None
 
@@ -1017,7 +1051,6 @@ class ArrayHandler:
 
         self.block_list = list()
         self.n_block = 0
-        self.n_block_matrix = 0
 
         self.connection_list = list()
         self.n_connection = 0
@@ -1027,7 +1060,6 @@ class ArrayHandler:
         self.vector = np.zeros(0)
 
         self.modules_handler = ModulesHandler()
-        self.calculate_by_streams = False
 
         self.pf_diagram = None
         self.options = CalculationOptions()
@@ -1167,24 +1199,26 @@ class ArrayHandler:
             else:
 
                 i = 0
-                n_elements = self.n_block_matrix
-
-                if n_elements == 0:
-                    n_elements = self.n_block
+                n_elements = self.n_block
 
                 self.matrix = np.zeros((n_elements, n_elements))
                 self.vector = np.zeros(n_elements)
 
                 for block in self.block_list:
 
-                    if not block.has_to_be_skipped:
-                        block.calculate_by_streams = self.calculate_by_streams
+                    row = block.get_matrix_row(n_elements)
+                    self.vector[i] = row[-1]
+                    self.matrix[i, :] = row[0:-1]
 
-                        row = block.get_matrix_row(n_elements)
+                    if block.is_dissipative:
 
-                        self.vector[i] = row[-1]
-                        self.matrix[i, :] = row[0:-1]
-                        i += 1
+                        redistribution_sum = block.redistribution_sum
+
+                        for non_diss_blocks in block.redistribution_block_list:
+
+                            self.matrix[i, non_diss_blocks.ID] = non_diss_blocks.redistribution_index(redistribution_sum)
+
+                    i += 1
 
                 try:
 
@@ -1232,7 +1266,7 @@ class ArrayHandler:
 
         for block in self.block_list:
 
-            if not block.has_to_be_skipped:
+            if not block.is_dissipative:
 
                 block.append_output_cost(sol[i])
                 i += 1
@@ -1280,6 +1314,18 @@ class ArrayHandler:
 
         return return_list
 
+    @property
+    def non_dissipative_blocks(self):
+
+        return_list = list()
+
+        for block in self.block_list:
+
+            if not block.is_dissipative:
+                return_list.append(block)
+
+        return return_list
+
     # support methods
     def import_correct_sub_class(self, subclass_name):
 
@@ -1296,11 +1342,11 @@ class ArrayHandler:
         return True
 
     @property
-    def there_are_block_to_be_skipped(self):
+    def there_are_dissipative_blocks(self):
 
         for block in self.block_list:
 
-            if block.has_to_be_skipped:
+            if block.is_dissipative:
                 return True
 
         return False
@@ -1385,7 +1431,7 @@ class ArrayHandler:
         for block in self.block_list:
             block.prepare_for_calculation()
 
-        if self.there_are_block_to_be_skipped:
+        if self.there_are_dissipative_blocks:
             self.__move_skipped_element_at_the_end()
 
     def __try_append_connection(self, new_conn, block_input, is_input):
@@ -1410,28 +1456,10 @@ class ArrayHandler:
 
     def __move_skipped_element_at_the_end(self):
 
-        self.n_block_matrix = 0
-        self.n_conn_matrix = 0
-
         for block in self.block_list:
-
             block.move_skipped_block_at_the_end = True
 
-            if not block.has_to_be_skipped:
-                self.n_block_matrix += 1
-
-        for conn in self.connection_list:
-
-            conn.sort_by_index = False
-
-            if not conn.has_to_be_skipped:
-                self.n_conn_matrix += 1
-
         self.__reset_IDs(reset_block=True)
-        self.__reset_IDs(reset_block=False)
-
-        for conn in self.connection_list:
-            conn.sort_by_index = True
 
         for block in self.block_list:
             block.move_skipped_block_at_the_end = False
@@ -1519,29 +1547,32 @@ class ArrayHandler:
 class CalculationOptions():
 
     def __init__(self):
-
         self.calculate_on_pf_diagram = True
         self.loss_cost_is_zero = True
 
-        self.valve_is_dissipative = True
+        self.valve_is_dissipative = False
         self.condenser_is_dissipative = True
+
+        self.redistribution_method = costants.EXERGY_DESTRUCTION
 
     @property
     def xml(self) -> ETree.Element:
-
         option_child = ETree.Element("options")
 
         option_child.set("calculate_on_pf_diagram", str(self.calculate_on_pf_diagram))
         option_child.set("loss_cost_is_zero", str(self.loss_cost_is_zero))
+
         option_child.set("valve_is_dissipative", str(self.valve_is_dissipative))
         option_child.set("condenser_is_dissipative", str(self.condenser_is_dissipative))
+        option_child.set("redistribution_method", str(self.redistribution_method))
 
         return option_child
 
     @xml.setter
     def xml(self, xml_input: ETree.Element):
-
         self.calculate_on_pf_diagram = xml_input.get("calculate_on_pf_diagram") == "True"
         self.loss_cost_is_zero = xml_input.get("loss_cost_is_zero") == "True"
+
         self.valve_is_dissipative = xml_input.get("valve_is_dissipative") == "True"
         self.condenser_is_dissipative = xml_input.get("condenser_is_dissipative") == "True"
+        self.redistribution_method = int(xml_input.get("redistribution_method"))
