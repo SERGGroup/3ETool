@@ -21,8 +21,10 @@ class ImportTestCase(unittest.TestCase):
         excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
         while os.path.isfile(excel_path):
+
             array_handler = import_excel_input(excel_path)
             result = import_matlab_result(excel_path)
+            array_handler.options.calculate_on_pf_diagram = False
             array_handler.calculate()
 
             print(array_handler)
@@ -71,6 +73,7 @@ class ImportTestCase(unittest.TestCase):
 
             i += 1
             excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -164,7 +164,7 @@ class Block:
         for outConn in self.output_connections:
 
             if outConn.is_loss:
-                outConn.set_cost(0)
+                outConn.set_cost(0.)
 
             else:
                 outConn.set_cost(defined_steam_cost)
@@ -567,6 +567,15 @@ class Block:
 
         return output_connections
 
+    @property
+    def can_be_removed_in_pf_definition(self):
+
+        if self.is_support_block and self.n_input == 1:
+
+            return True
+
+        return False
+
     def return_other_zone_connections(self, zone_type, input_connection):
 
         # WARNING: This methods must be overloaded in subclasses!!
@@ -735,6 +744,7 @@ class Connection:
         self.exergy_value = exergy_value
 
         self.is_useful_effect = False
+        self.automatically_generated_connection = False
         self.is_fluid_stream = is_fluid_stream
 
         self.zones = {costants.ZONE_TYPE_FLUID: None,
@@ -743,6 +753,7 @@ class Connection:
                       costants.ZONE_TYPE_ENERGY: None}
 
         self.sort_by_index = True
+        self.base_connection = None
 
     def set_block(self, block, is_from_block):
 
@@ -804,6 +815,11 @@ class Connection:
     def is_system_input(self):
 
         return self.fromID == -1
+
+    @property
+    def is_system_output(self):
+
+        return self.toID == -1
 
     @property
     def is_block_input(self):
@@ -933,8 +949,18 @@ class Connection:
 
         # enables comparison
         # Connection1 == Connection2 -> True if ID1 = ID2
+        # If type(self) == type(other) = ProductConnection the program compare the base_connections IDs
+        # It types are different (one is Connection and the other one in ProductConnection) the comparison will fail
 
-        return self.ID == other.ID
+        if type(self) == type(other):
+
+            if type(self) is Connection:
+                return self.ID == other.ID
+
+            else:
+                return self.base_connection == other.base_connection
+
+        return False
 
     def __str__(self):
 
@@ -989,6 +1015,9 @@ class ArrayHandler:
 
         self.modules_handler = ModulesHandler()
         self.calculate_by_streams = False
+
+        self.pf_diagram = None
+        self.options = CalculationOptions()
 
     def append_block(self, input_element="Generic"):
 
@@ -1104,6 +1133,9 @@ class ArrayHandler:
         # doing so, it invokes the method "__prepare_system" that prepares the system to be solved asking the
         # blocks to generate their own support blocks (if needed) and appending them to the block list.
 
+        # If the user requires to perform the calculation on the product-fuels diagram rather than on the physical
+        # system the program generates and solve it automatically
+
         if not self.is_ready_for_calculation:
 
             warning_string = "The system is not ready - calculation not started"
@@ -1113,30 +1145,15 @@ class ArrayHandler:
 
             self.__prepare_system()
 
-            i = 0
-            if self.calculate_by_streams:
+            if self.options.calculate_on_pf_diagram and "PFArrayHandler" not in str(type(self)):
 
-                n_elements = self.n_conn_matrix
-
-                if n_elements == 0:
-                    n_elements = self.n_connection
-
-                self.matrix = np.zeros((n_elements, n_elements))
-                self.vector = np.zeros(n_elements)
-
-                for block in self.block_list:
-                    block.calculate_by_streams = self.calculate_by_streams
-
-                    sub_matrix = block.get_matrix_row(n_elements)
-                    sub_matrix_len = sub_matrix.shape[0]
-
-                    self.vector[i:(i + sub_matrix_len)] = sub_matrix[:, -1]
-                    self.matrix[i:(i + sub_matrix_len), :] = sub_matrix[:, 0:-1]
-                    i += sub_matrix_len
-
+                from ExergoEconomicAnalysisClasses.MainModules.pf_diagram_generation_module import PFArrayHandler
+                self.pf_diagram = PFArrayHandler(self)
+                self.pf_diagram.calculate()
 
             else:
 
+                i = 0
                 n_elements = self.n_block_matrix
 
                 if n_elements == 0:
@@ -1156,15 +1173,15 @@ class ArrayHandler:
                         self.matrix[i, :] = row[0:-1]
                         i += 1
 
-            try:
+                try:
 
-                sol = np.linalg.solve(self.matrix, self.vector)
-                self.__append_solution(sol)
+                    sol = np.linalg.solve(self.matrix, self.vector)
+                    self.append_solution(sol)
 
-            except:
+                except:
 
-                sol = np.linalg.lstsq(self.matrix, self.vector)
-                self.__append_solution(sol[0])
+                    sol = np.linalg.lstsq(self.matrix, self.vector)
+                    self.append_solution(sol[0])
 
     def find_connection_by_index(self, index):
 
@@ -1196,6 +1213,24 @@ class ArrayHandler:
 
             # Overloaded Methods
 
+    def append_solution(self, sol):
+
+        i = 0
+
+        for block in self.block_list:
+
+            if not block.has_to_be_skipped:
+
+                block.append_output_cost(sol[i])
+                i += 1
+
+            else:
+
+                block.append_output_cost(0.)
+
+        self.__reset_IDs(reset_block=True)
+        self.__reset_IDs(reset_block=False)
+
     @property
     def useful_effect_connections(self):
 
@@ -1204,6 +1239,30 @@ class ArrayHandler:
         for conn in self.connection_list:
 
             if conn.is_useful_effect:
+                return_list.append(conn)
+
+        return return_list
+
+    @property
+    def system_inputs(self):
+
+        return_list = list()
+
+        for conn in self.connection_list:
+
+            if conn.is_system_input:
+                return_list.append(conn)
+
+        return return_list
+
+    @property
+    def system_outputs(self):
+
+        return_list = list()
+
+        for conn in self.connection_list:
+
+            if conn.is_useful_effect or conn.is_loss:
                 return_list.append(conn)
 
         return return_list
@@ -1232,6 +1291,43 @@ class ArrayHandler:
                 return True
 
         return False
+
+    @property
+    def xml(self) -> ETree.Element:
+
+        data = ETree.Element("data")
+
+        data.append(self.options.xml)
+
+        # <--------- CONNECTIONS DEFINITION --------->
+        connections = ETree.SubElement(data, "connections")
+        for connection in self.connection_list:
+            if not (connection.is_internal_stream or connection.automatically_generated_connection):
+                connections.append(connection.xml)
+
+        # <--------- BLOCKS DEFINITION --------->
+        blocks = ETree.SubElement(data, "blocks")
+        for block in self.block_list:
+            if not block.is_support_block:
+                blocks.append(block.xml)
+
+        return data
+
+    @xml.setter
+    def xml(self, xml_input: ETree.Element):
+
+        self.options.xml = xml_input.find("options")
+
+        conn_list = xml_input.find("connections")
+        block_list = xml_input.find("blocks")
+
+        for conn in conn_list.findall("connection"):
+            new_conn = self.append_connection()
+            new_conn.xml = conn
+
+        for block in block_list.findall("block"):
+            new_block = self.append_block(block.get("type"))
+            new_block.xml = block
 
     def __reset_IDs(self, reset_block=True):
 
@@ -1277,36 +1373,7 @@ class ArrayHandler:
             block.prepare_for_calculation()
 
         if self.there_are_block_to_be_skipped:
-            self.calculate_by_streams = True
             self.__move_skipped_element_at_the_end()
-
-    def __append_solution(self, sol):
-
-        i = 0
-
-        if self.calculate_by_streams:
-
-            for conn in self.connection_list:
-
-                if not conn.has_to_be_skipped:
-                    conn.set_cost(sol[i])
-                    i += 1
-
-        else:
-
-            for block in self.block_list:
-
-                if not block.has_to_be_skipped:
-
-                    block.append_output_cost(sol[i])
-                    i += 1
-
-                else:
-
-                    block.append_output_cost(0.)
-
-        self.__reset_IDs(reset_block=True)
-        self.__reset_IDs(reset_block=False)
 
     def __try_append_connection(self, new_conn, block_input, is_input):
 
@@ -1434,3 +1501,34 @@ class ArrayHandler:
         #       Connection (ID: 4, name: e, from: 0, to: -1)"
 
         return str(self)
+
+
+class CalculationOptions():
+
+    def __init__(self):
+
+        self.calculate_on_pf_diagram = True
+        self.loss_cost_is_zero = True
+
+        self.valve_is_dissipative = True
+        self.condenser_is_dissipative = True
+
+    @property
+    def xml(self) -> ETree.Element:
+
+        option_child = ETree.Element("options")
+
+        option_child.set("calculate_on_pf_diagram", str(self.calculate_on_pf_diagram))
+        option_child.set("loss_cost_is_zero", str(self.loss_cost_is_zero))
+        option_child.set("valve_is_dissipative", str(self.valve_is_dissipative))
+        option_child.set("condenser_is_dissipative", str(self.condenser_is_dissipative))
+
+        return option_child
+
+    @xml.setter
+    def xml(self, xml_input: ETree.Element):
+
+        self.calculate_on_pf_diagram = xml_input.get("calculate_on_pf_diagram") == "True"
+        self.loss_cost_is_zero = xml_input.get("loss_cost_is_zero") == "True"
+        self.valve_is_dissipative = xml_input.get("valve_is_dissipative") == "True"
+        self.condenser_is_dissipative = xml_input.get("condenser_is_dissipative") == "True"

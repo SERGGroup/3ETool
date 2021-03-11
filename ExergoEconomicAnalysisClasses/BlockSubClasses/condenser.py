@@ -27,6 +27,7 @@ class Condenser(Block):
 
         new_conn = self.main_class.append_connection(from_block=self)
         new_conn.name = "condenser exergy loss"
+        new_conn.automatically_generated_connection = True
         new_conn.exergy_value = exergy_balance
         new_conn.is_fluid_stream = False
 
@@ -55,12 +56,15 @@ class Condenser(Block):
 
         for input_connection in self.external_input_connections:
 
-            input_xml = ETree.SubElement(fluid_connections, "input")
-            input_xml.set("index", str(input_connection.index))
+            if not input_connection.automatically_generated_connection:
+
+                input_xml = ETree.SubElement(fluid_connections, "input")
+                input_xml.set("index", str(input_connection.index))
 
         for output_connection in self.external_output_connections:
 
-            if not output_connection.name == "condenser exergy loss":
+            if not output_connection.automatically_generated_connection:
+
                 output_xml = ETree.SubElement(fluid_connections, "output")
                 output_xml.set("index", str(output_connection.index))
 

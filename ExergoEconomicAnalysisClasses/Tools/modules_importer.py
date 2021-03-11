@@ -1,8 +1,6 @@
 from datetime import date, datetime
-
 import math
 import pandas
-import xml.etree.ElementTree as ETree
 
 from ExergoEconomicAnalysisClasses.MainModules.main_module import ArrayHandler
 from ExergoEconomicAnalysisClasses.Tools.Other.matrix_analyzer import MatrixAnalyzer
@@ -119,42 +117,16 @@ def calculate_excel(excel_path):
 
 
 def export_dat(dat_path, array_handler: ArrayHandler):
-    data = ETree.Element("data")
+
     fernet = FernetHandler()
-
-    # <--------- CONNECTIONS DEFINITION --------->
-    connections = ETree.SubElement(data, "connections")
-    for connection in array_handler.connection_list:
-        if not connection.is_internal_stream:
-            connections.append(connection.xml)
-
-    # <--------- BLOCKS DEFINITION --------->
-    blocks = ETree.SubElement(data, "blocks")
-    for block in array_handler.block_list:
-        if not block.is_support_block:
-            blocks.append(block.xml)
-
-    fernet.save_file(dat_path, data)
+    fernet.save_file(dat_path, array_handler.xml)
 
 
 def import_dat(dat_path) -> ArrayHandler:
 
     array_handler = ArrayHandler()
     fernet = FernetHandler()
-
     root = fernet.read_file(dat_path)
-
-    a = ETree.tostring(root)
-
-    conn_list = root.find("connections")
-    block_list = root.find("blocks")
-
-    for conn in conn_list.findall("connection"):
-        new_conn = array_handler.append_connection()
-        new_conn.xml = conn
-
-    for block in block_list.findall("block"):
-        new_block = array_handler.append_block(block.get("type"))
-        new_block.xml = block
+    array_handler.xml = root
 
     return array_handler

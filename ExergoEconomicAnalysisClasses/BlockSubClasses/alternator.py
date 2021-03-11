@@ -41,6 +41,7 @@ class Alternator(Block):
         new_conn = self.main_class.append_connection(from_block=self)
         new_conn.name = "electrical power output"
         new_conn.is_useful_effect = True
+        new_conn.automatically_generated_connection = True
         new_conn.exergy_value = exergy_balance
 
     def append_excel_connection_list(self, input_list):
@@ -82,36 +83,45 @@ class Alternator(Block):
 
         for input_connection in self.support_block[0].external_input_connections:
 
-            input_xml = ETree.SubElement(mechanical_connections, "input")
-            input_xml.set("index", str(input_connection.index))
+            if not input_connection.automatically_generated_connection:
+
+                input_xml = ETree.SubElement(mechanical_connections, "input")
+                input_xml.set("index", str(input_connection.index))
 
         for output_connection in self.support_block[0].external_output_connections:
 
-            output_xml = ETree.SubElement(mechanical_connections, "output")
-            output_xml.set("index", str(output_connection.index))
+            if not output_connection.automatically_generated_connection:
+
+                output_xml = ETree.SubElement(mechanical_connections, "output")
+                output_xml.set("index", str(output_connection.index))
 
         electrical_connections = ETree.SubElement(xml_connection_list, "ElectricalConnections")
 
         for input_connection in self.external_input_connections:
 
-            input_xml = ETree.SubElement(electrical_connections, "input")
-            input_xml.set("index", str(input_connection.index))
+            if not input_connection.automatically_generated_connection:
+
+                input_xml = ETree.SubElement(electrical_connections, "input")
+                input_xml.set("index", str(input_connection.index))
 
         for output_connection in self.external_output_connections:
 
-            if not output_connection.name == "electrical power output":
+            if not output_connection.automatically_generated_connection:
 
                 output_xml = ETree.SubElement(electrical_connections, "output")
                 output_xml.set("index", str(output_connection.index))
 
+        a = ETree.tostring(xml_connection_list)
         return xml_connection_list
 
     def append_xml_connection_list(self, input_list: ETree.Element):
 
+        a = ETree.tostring(input_list)
+
         mechanical_connections = input_list.find("MechanicalConnections")
         electrical_connections = input_list.find("ElectricalConnections")
 
-        self.__add_connection_by_index(mechanical_connections, "input", append_to_support_block = 0)
+        self.__add_connection_by_index(mechanical_connections, "input", append_to_support_block=0)
         self.__add_connection_by_index(mechanical_connections, "output", append_to_support_block=0)
 
         self.__add_connection_by_index(electrical_connections, "input")
