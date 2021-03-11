@@ -159,15 +159,21 @@ class Block:
 
         # Cost of the exergy losses will be considered as 0
 
-        self.output_cost = defined_steam_cost
+        if self.is_dissipative:
 
-        for outConn in self.output_connections:
+            self.difference_cost = defined_steam_cost
 
-            if outConn.is_loss and self.main_class.options.loss_cost_is_zero:
-                outConn.set_cost(0.)
+        else:
 
-            else:
-                outConn.set_cost(defined_steam_cost)
+            self.output_cost = defined_steam_cost
+
+            for outConn in self.output_connections:
+
+                if outConn.is_loss and self.main_class.options.loss_cost_is_zero:
+                    outConn.set_cost(0.)
+
+                else:
+                    outConn.set_cost(defined_steam_cost)
 
     def disconnect_block(self):
 
@@ -594,7 +600,7 @@ class Block:
     @property
     def can_be_removed_in_pf_definition(self):
 
-        if self.exergy_balance == 0 and self.n_input == 1 and self.comp_cost == 0.:
+        if self.exergy_balance == 0 and self.n_input == 1 and self.comp_cost == 0. and not self.is_dissipative:
             return True
 
         return False
@@ -622,6 +628,27 @@ class Block:
             productive_exergy_output += abs(conn.exergy_value)
 
         return productive_exergy_output
+
+    @property
+    def cost_balance(self):
+
+        cost_balance = self.comp_cost
+
+        for conn in self.input_connections:
+
+            cost_balance += conn.exergy_value*conn.rel_cost
+
+        if self.is_dissipative:
+
+            cost_balance -= self.difference_cost
+
+        else:
+
+            for conn in self.output_connections:
+
+                cost_balance -= conn.exergy_value*conn.rel_cost
+
+        return cost_balance
 
     def return_other_zone_connections(self, zone_type, input_connection):
 
@@ -1226,7 +1253,7 @@ class ArrayHandler:
 
                         for non_diss_blocks in block.redistribution_block_list:
 
-                            self.matrix[non_diss_blocks.ID, i] = non_diss_blocks.redistribution_index(redistribution_sum)
+                            self.matrix[non_diss_blocks.ID, i] = -non_diss_blocks.redistribution_index(redistribution_sum)
 
                     i += 1
 
@@ -1340,6 +1367,30 @@ class ArrayHandler:
     def import_correct_sub_class(self, subclass_name):
 
         return self.modules_handler.import_correct_sub_class(subclass_name)
+
+    @property
+    def overall_investment_cost(self):
+
+        overall_investment_cost = 0
+
+        for block in self.block_list:
+
+            overall_investment_cost += block.comp_cost
+
+        return overall_investment_cost
+
+    @property
+    def overall_external_balance(self):
+
+        balance = self.overall_investment_cost
+
+        for conn in self.system_inputs:
+            balance += conn.exergy_value*conn.rel_cost
+
+        for conn in self.system_outputs:
+            balance -= conn.exergy_value * conn.rel_cost
+
+        return balance
 
     @property
     def is_ready_for_calculation(self):

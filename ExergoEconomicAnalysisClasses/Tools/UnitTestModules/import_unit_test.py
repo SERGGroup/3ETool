@@ -63,23 +63,41 @@ class ImportTestCase(unittest.TestCase):
         excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
         while os.path.isfile(excel_path):
+
             array_handler = import_excel_input(excel_path)
             array_handler.calculate()
-            result_excel = array_handler.useful_effect_connections[0]
+            result_excel = array_handler.useful_effect_connections
 
             dat_path = os.path.join(resource_dat_path, "Sample Dat " + str(i) + ".dat")
             export_dat(dat_path, array_handler)
             array_handler_dat = import_dat(dat_path)
+            array_handler_dat.options.calculate_on_pf_diagram = False
             array_handler_list.append(array_handler_dat)
 
             array_handler_dat.calculate()
-            result_dat = array_handler_dat.useful_effect_connections[0]
+            result_dat = array_handler_dat.useful_effect_connections
 
-            self.assertEqual(round(result_excel.rel_cost, 6), round(result_dat.rel_cost, 6))
+            difference = 0
+            sum = 0
+
+            for result in result_dat:
+
+                difference += result.rel_cost*result.exergy_value
+                sum += result.rel_cost*result.exergy_value
+
+            for result in result_excel:
+
+                difference -= result.rel_cost * result.exergy_value
+                sum += result.rel_cost * result.exergy_value
+
+            err = 2*difference/sum
+
+            self.assertEqual(round(err, 7), 0)
 
             i += 1
             excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
+        a = 1
 
 if __name__ == '__main__':
     unittest.main()
