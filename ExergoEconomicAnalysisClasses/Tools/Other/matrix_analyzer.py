@@ -1,149 +1,276 @@
 import numpy
 from copy import deepcopy
-from scipy.sparse import csc_matrix, linalg
 
 
-class MatrixAnalyzer():
+class MatrixAnalyzer:
 
-    def __init__(self, matrix: numpy.ndarray):
+    def __init__(self, matrix: numpy.ndarray, vector: numpy.ndarray, main_matrix=None):
 
         self.matrix = deepcopy(matrix)
-        self.residual_matrix = deepcopy(matrix)
-        self.ordered_matrix = numpy.zeros(self.matrix.shape)
-        self.r_cond = numpy.linalg.cond(self.matrix)
+        self.vector = vector
 
-        self.variable_set_equations = list()
-        self.matrix_blocks = list()
+        self.main_matrix = main_matrix
+        self.sub_matrix = None
+
+        self.has_assignment = False
 
         self.n_row = self.matrix.shape[0]
         self.n_col = self.matrix.shape[1]
 
-        self.columns = MatrixElementList()
-        self.rows = MatrixElementList()
+        self.elements = list()
 
-        self.empty_columns = list()
-        self.dependent_columns = list()
+        self.vector_list = None
+        self.columns = MatrixLineList(contains_rows=False)
+        self.rows = MatrixLineList(contains_rows=True)
 
-        self.empty_rows = list()
-        self.dependent_rows = list()
+        self.__initialize_matrix()
 
-        self.__check(check_col=True)
-        self.__check(check_col=False)
+        self.rows.check()
+        self.columns.check()
+        self.__check_assignments()
 
-        self.__identify_variable_set_equation()
-        self.__reorder_matrix()
+    def __initialize_matrix(self):
 
-    def solve(self, vector: numpy.ndarray):
+        for i in range(self.n_row):
 
-        A = linalg.lsmr(self.matrix, vector, btol=1E-10)
-        B = numpy.linalg.lstsq(self.matrix, vector, rcond=self.r_cond)
-        C = numpy.linalg.solve(self.matrix, vector)
+            row_list = list()
+            for j in range(self.n_col):
+                new_element = MatrixElement(self.matrix[i, j], [i, j])
+                row_list.append(new_element)
+
+            self.elements.append(row_list)
+            self.rows.add_to_list(row_list, i)
+
+        for j in range(self.n_col):
+
+            col_list = list()
+            for i in range(self.n_row):
+                element = self.elements[i][j]
+                col_list.append(element)
+
+            self.columns.add_to_list(col_list, j)
+
+        __tmp_vector_list = list()
+
+        for i in range(self.n_row):
+            __tmp_vector_list.append(MatrixElement(self.vector[i], [i, -1]))
+
+        self.vector_list = MatrixColumn(__tmp_vector_list, -1)
+
+    def __check_assignments(self):
+
+        for row in self.rows:
+
+            if row.is_assignment:
+                self.has_assignment = True
+
+    def solve(self):
+
+        if self.has_assignment:
+
+            non_assignment_rows_indices = self.__calculate_assignment()
+
+            if len(non_assignment_rows_indices) > 0:
+
+                __return = self.__identify_new_matrix_and_vector(non_assignment_rows_indices)
+                non_solved_columns = self.columns.non_solved
+
+                self.sub_matrix = MatrixAnalyzer(__return["new_matrix"], __return["new_vector"], self)
+                sub_solution = self.sub_matrix.solve()
+
+                for i in range(len(non_solved_columns)):
+                    non_solved_columns[i].set_solution(sub_solution[i])
+
+        else:
+
+            try:
+
+                sol = numpy.linalg.solve(self.matrix, self.vector)
+
+            except:
+
+                sol = numpy.linalg.lstsq(self.matrix, self.vector)
+                sol = sol[0]
+
+            for i in range(len(self.columns)):
+                self.columns[i].set_solution(sol[i])
+
+        return self.solution
+
+    def __calculate_assignment(self) -> list:
+
+        non_assignment_rows_indices = list()
+
+        for row in self.rows:
+
+            if row.is_assignment:
+
+                assignment_elem = row.non_zero_element[0]
+                assignment_vector = self.vector_list.get_from_list(assignment_elem.initial_position[0])
+                solution = assignment_vector.value / assignment_elem.value
+
+                assignment_column = self.columns.get_from_list(assignment_elem.initial_position[1])
+                assignment_column.set_solution(solution)
+
+            else:
+
+                non_assignment_rows_indices.append(row.initial_position)
+
+        return non_assignment_rows_indices
+
+    def __identify_new_matrix_and_vector(self, non_assignment_rows_indices):
+
+        # prepare new sub_matrix
+        n_elements = len(non_assignment_rows_indices)
+        new_matrix = numpy.zeros((n_elements, n_elements))
+        new_vector = self.vector_list.return_numpy_array(indices=non_assignment_rows_indices)
+
+        i = 0
+        for column in self.columns:
+
+            row_element = column.return_numpy_array(indices=non_assignment_rows_indices)
+
+            if column.is_solved:
+
+                new_vector -= row_element * column.solution
+
+            else:
+
+                new_matrix[:, i] = row_element
+                i += 1
+
+        return {"new_matrix": new_matrix,
+                "new_vector": new_vector}
 
     @property
     def is_solvable(self):
 
-        for element in [self.empty_columns, self.dependent_columns, self.empty_rows, self.dependent_rows]:
+        for element in [self.columns.empty_lines, self.columns.dependent_lines,
+                        self.rows.empty_lines, self.rows.dependent_lines]:
 
             if not len(element) == 0:
-
                 return False
 
-        return (self.n_row == self.n_col)
+        return self.n_row == self.n_col
 
-    def __check(self, check_col):
+    @property
+    def solution(self):
 
-        if check_col:
+        sol_vector = numpy.zeros(len(self.vector))
 
-            n_elements = self.n_col
-            matrix = self.matrix
+        for i in range(len(self.columns)):
 
-            list = self.columns
-            empty_list = self.empty_columns
-            dependence_list = self.dependent_columns
+            solution = self.columns[i].solution
 
-        else:
+            if solution is not None:
+                sol_vector[i] = solution
 
-            n_elements = self.n_row
-            matrix = numpy.transpose(self.matrix)
-
-            list = self.rows
-            empty_list = self.empty_rows
-            dependence_list = self.dependent_rows
-
-        for i in range(n_elements):
-
-            __vector = matrix[:, i]
-            __element = list.add_to_list(__vector, i)
-
-            if list[-1].module == 0:
-
-                empty_list.append({i: __element})
-
-            else:
-
-                for j in range(i + 1, n_elements):
-
-                    __new_vector = matrix[:, j]
-                    __new_element = list.add_to_list(__new_vector, j)
-
-                    if __element == __new_element:
-                        dependence_list.append({str(i) + "; " + str(j): [__element, __new_element]})
-
-    def __reorder_matrix(self):
-
-        self.ordered_matrix = numpy.zeros(self.matrix.shape)
-
-        self.rows.sort()
-        self.columns.sort()
-
-        __tmp_matrix = numpy.zeros(self.matrix.shape)
-
-        for i in range(len(self.rows)):
-
-            __tmp_matrix[i, :] = self.rows[i].vector
-            i += 1
-
-        for j in range(len(self.columns)):
-
-            self.ordered_matrix[:, j] = __tmp_matrix[:, self.columns[j].initial_position]
-
-    def __identify_variable_set_equation(self):
-
-        for i in range(self.residual_matrix.shape[0]):
-
-            non_zero_elements = 0
-
-            for j in range(self.residual_matrix.shape[1]):
-
-                if self.residual_matrix[i, j] != 0:
-                    non_zero_elements += 1
-
-            if non_zero_elements < 2:
-
-                # append equation
-                # TODO!!!
-                self.variable_set_equations.append(i)
+        return sol_vector
 
 
 class MatrixElement:
 
-    def __init__(self, vector: numpy.ndarray, initial_position):
-
-        self.vector = deepcopy(vector)
-        self.module = self.__vector_module()
-        self.norm_vector = vector/self.module
+    def __init__(self, value: float, initial_position: list):
+        self.value = value
+        self.solution = None
         self.initial_position = initial_position
 
-    def __vector_module(self):
+        self.row = None
+        self.col = None
+
+    @property
+    def is_empty(self) -> bool:
+        return self.value == 0
+
+
+class MatrixLine:
+
+    def __init__(self, vector: list[MatrixElement], initial_position):
+
+        self.vector = vector
+        self.module = self.__vector_module()
+        self.initial_position = initial_position
+
+        self.is_row = None
+        self.solution = None
+
+        self.non_zero = self.__count_non_zero_elements()
+
+    def __vector_module(self) -> float:
 
         module = 0
-        vector = self.vector
-        shape = vector.shape[0]
 
-        for j in range(shape):
-            module += pow(vector[j], 2)
+        for element in self.vector:
+            module += pow(element.value, 2)
 
         return pow(module, 0.5)
+
+    def __count_non_zero_elements(self) -> int:
+
+        counter = 0
+
+        for element in self.vector:
+
+            if not element.is_empty:
+                counter += 1
+
+        return counter
+
+    def return_numpy_array(self, indices=None) -> numpy.ndarray:
+
+        if indices is None:
+
+            return_vector = numpy.zeros(len(self.vector))
+
+            for i in range(len(self.vector)):
+                return_vector[i] = self.vector[i].value
+
+        else:
+
+            i = 0
+            return_vector = numpy.zeros(len(indices))
+
+            for index in indices:
+                return_vector[i] = self.vector[index].value
+                i += 1
+
+        return return_vector
+
+    def get_from_list(self, initial_position):
+
+        if self.is_row:
+            i = 1
+        else:
+            i = 0
+
+        for element in self.vector:
+
+            if element.initial_position[i] == initial_position:
+                return element
+
+        return None
+
+    @property
+    def non_zero_element(self):
+
+        return_list = list()
+
+        for element in self.vector:
+
+            if not element.is_empty:
+                return_list.append(element)
+
+        return return_list
+
+    @property
+    def is_empty(self):
+
+        return self.module == 0
+
+    @property
+    def dim(self):
+
+        return len(self.vector)
 
     def __gt__(self, other):
 
@@ -169,42 +296,130 @@ class MatrixElement:
 
     def __eq__(self, other):
 
-        shape = self.norm_vector.shape[0]
+        if self.dim == other.dim and self.is_row == other.is_row:
 
-        for j in range(shape):
+            if self.non_zero == other.non_zero:
 
-            try:
-                if not self.norm_vector[j] == other.norm_vector[j]:
-                    return False
+                for i in range(self.dim):
 
-            except:
-                return False
+                    if self.vector[i].value / self.module != other.vector[i].value / other.module:
+                        return False
 
-        return True
+                return True
+
+        return False
 
 
-class MatrixElementList(list):
+class MatrixColumn(MatrixLine):
 
-    def __init__(self):
+    def __init__(self, vector: list[MatrixElement], initial_position):
+
+        super().__init__(vector, initial_position)
+
+        self.is_row = False
+
+        for elem in vector:
+            elem.col = self
+
+    def set_solution(self, solution):
+
+        self.solution = solution
+        for elem in self.vector:
+            elem.solution = solution
+
+    @property
+    def is_solved(self):
+
+        return self.solution is not None
+
+
+class MatrixRow(MatrixLine):
+
+    def __init__(self, vector: list[MatrixElement], initial_position):
+        super().__init__(vector, initial_position)
+        self.is_row = True
+
+        for elem in vector:
+            elem.row = self
+
+    @property
+    def is_assignment(self):
+        return self.non_zero == 1
+
+
+class MatrixLineList(list):
+
+    def __init__(self, contains_rows):
+
         super().__init__()
+        self.contains_rows = contains_rows
 
-    def __get_from_list(self, initial_position):
+        self.empty_lines = list()
+        self.dependent_lines = list()
+
+    def get_from_list(self, initial_position):
 
         for element in self:
 
             if element.initial_position == initial_position:
-
                 return element
 
         return None
 
-    def add_to_list(self, vector: numpy.ndarray, initial_position):
+    def add_to_list(self, vector: list[MatrixElement], initial_position: int):
 
-        new_element = self.__get_from_list(initial_position)
+        new_element = self.get_from_list(initial_position)
 
         if new_element is None:
 
-            new_element = MatrixElement(vector, initial_position)
+            if self.contains_rows:
+                new_element = MatrixRow(vector, initial_position)
+
+            else:
+                new_element = MatrixColumn(vector, initial_position)
+
             self.append(new_element)
 
         return new_element
+
+    def check(self):
+
+        self.empty_lines = list()
+        self.dependent_lines = list()
+
+        for i in range(len(self)):
+
+            if self[i].is_empty:
+
+                self.empty_lines.append({i: self[i]})
+
+            else:
+
+                for j in range(i + 1, len(self)):
+
+                    if self[i] == self[j]:
+                        self.dependent_lines.append({str(i) + "; " + str(j): [self[i], self[j]]})
+
+    @property
+    def non_solved(self):
+
+        return_list = list()
+
+        for element in self:
+
+            if not element.is_solved:
+                return_list.append(element)
+
+        return return_list
+
+    @property
+    def sorted_indices(self) -> list:
+
+        sorted_indices = list()
+        self.sort()
+
+        for element in self:
+
+            sorted_indices.append(element.initial_position)
+
+        return sorted_indices

@@ -1,10 +1,43 @@
 from datetime import date, datetime
 import math
 import pandas
+import os
 
 from ExergoEconomicAnalysisClasses.MainModules.main_module import ArrayHandler
-from ExergoEconomicAnalysisClasses.Tools.Other.matrix_analyzer import MatrixAnalyzer
 from ExergoEconomicAnalysisClasses.Tools.Other.fernet_handler import FernetHandler
+
+
+def calculate_excel(excel_path):
+
+    array_handler = import_excel_input(excel_path)
+    array_handler.calculate()
+    export_solution_to_excel(excel_path, array_handler)
+
+
+def calculate_dat(dat_path):
+
+    array_handler = import_dat(dat_path)
+    array_handler.calculate()
+    write_csv_solution(dat_path, array_handler)
+
+
+def convert_excel_to_dat(excel_path: str):
+
+    array_handler = import_excel_input(excel_path)
+
+    if ".xlsm" in excel_path:
+
+        dat_path = excel_path.replace(".xlsm", ".dat")
+
+    elif ".xlsx" in excel_path:
+
+        dat_path = excel_path.replace(".xlsx", ".dat")
+
+    else:
+
+        dat_path = excel_path.replace(".xls", ".dat")
+
+    export_dat(dat_path, array_handler)
 
 
 def import_excel_input(excel_path) -> ArrayHandler:
@@ -61,39 +94,8 @@ def import_excel_input(excel_path) -> ArrayHandler:
 
 
 def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
-    # Stream Solution Data frame generation
-    stream_data = {"Stream": list(),
-                   "Name": list(),
-                   "Exergy Value [kW]": list(),
-                   "Specific Cost [Euro/kJ]": list(),
-                   "Total Cost [Euro/s]": list()}
 
-    for conn in array_handler.connection_list:
-
-        if not conn.is_internal_stream:
-            stream_data["Stream"].append(conn.index)
-            stream_data["Name"].append(conn.name)
-            stream_data["Exergy Value [kW]"].append(conn.exergy_value)
-            stream_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
-            stream_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
-
-    stream_df = pandas.DataFrame(data=stream_data)
-
-    # Output Stream Data frame generation
-    usefull_data = {"Stream": list(),
-                    "Name": list(),
-                    "Exergy Value [kW]": list(),
-                    "Specific Cost [Euro/kJ]": list(),
-                    "Total Cost [Euro/s]": list()}
-
-    for conn in array_handler.useful_effect_connections:
-        usefull_data["Stream"].append(conn.index)
-        usefull_data["Name"].append(conn.name)
-        usefull_data["Exergy Value [kW]"].append(conn.exergy_value)
-        usefull_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
-        usefull_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
-
-    usefull_df = pandas.DataFrame(data=usefull_data)
+    result_df = get_result_data_frames(array_handler)
 
     # generation of time stamps for excel sheet name
     today = date.today()
@@ -103,18 +105,10 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
 
     with pandas.ExcelWriter(excel_path, mode="a") as writer:
 
-        stream_df.to_excel(writer, sheet_name=("Stream Out" + " - " + today_str + " - " + now_str))
-        usefull_df.to_excel(writer, sheet_name=("Eff Out" + " - " + today_str + " - " + now_str))
+        for key in result_df.keys():
 
-
-def calculate_excel(excel_path):
-    array_handler = import_excel_input(excel_path)
-    array_handler.calculate()
-
-    analyzer = MatrixAnalyzer(array_handler.matrix)
-    analyzer.solve(array_handler.vector)
-
-    export_solution_to_excel(excel_path, array_handler)
+            pandas_df = pandas.DataFrame(data=result_df[key])
+            pandas_df.to_excel(writer, sheet_name=(key + " - " + today_str + " - " + now_str))
 
 
 def export_dat(dat_path, array_handler: ArrayHandler):
@@ -131,3 +125,61 @@ def import_dat(dat_path) -> ArrayHandler:
     array_handler.xml = root
 
     return array_handler
+
+
+def write_csv_solution(dat_path, array_handler):
+
+    result_df = get_result_data_frames(array_handler)
+
+    # generation of time stamps for excel sheet name
+    today = date.today()
+    now = datetime.now()
+    today_str = today.strftime("%d %b")
+    now_str = now.strftime("%H.%M")
+
+    dir_path = os.path.dirname(dat_path)
+
+    for key in result_df.keys():
+
+        csv_path = key + " - " + today_str + " - " + now_str + ".csv"
+        csv_path = os.path.join(dir_path, csv_path)
+
+        pandas_df = pandas.DataFrame(data=result_df[key])
+        pandas_df.to_csv(path_or_buf= csv_path, sep="\t")
+
+
+def get_result_data_frames(array_handler: ArrayHandler):
+
+    # Stream Solution Data frame generation
+    stream_data = {"Stream": list(),
+                   "Name": list(),
+                   "Exergy Value [kW]": list(),
+                   "Specific Cost [Euro/kJ]": list(),
+                   "Total Cost [Euro/s]": list()}
+
+    for conn in array_handler.connection_list:
+
+        if not conn.is_internal_stream:
+            stream_data["Stream"].append(conn.index)
+            stream_data["Name"].append(conn.name)
+            stream_data["Exergy Value [kW]"].append(conn.exergy_value)
+            stream_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
+            stream_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
+
+    # Output Stream Data frame generation
+    useful_data = {"Stream": list(),
+                   "Name": list(),
+                   "Exergy Value [kW]": list(),
+                   "Specific Cost [Euro/kJ]": list(),
+                   "Total Cost [Euro/s]": list()}
+
+    for conn in array_handler.useful_effect_connections:
+
+        useful_data["Stream"].append(conn.index)
+        useful_data["Name"].append(conn.name)
+        useful_data["Exergy Value [kW]"].append(conn.exergy_value)
+        useful_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
+        useful_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
+
+    return {"Stream Out": stream_data,
+            "Eff Out": useful_data}

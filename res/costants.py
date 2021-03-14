@@ -9,11 +9,6 @@ ROOT_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
 RES_DIR = os.path.join(ROOT_DIR, "res")
 TEST_RES_DIR = os.path.join(ROOT_DIR, "ExergoEconomicAnalysisClasses", "Tools", "UnitTestModules", "testResources")
 
-# DISSIPATIVE COMPONENTS REDISTRIBUTION METHODS
-EXERGY_DESTRUCTION = 0
-EXERGY_PRODUCT = 1
-RELATIVE_COST = 2
-
 # EES FORMAT STYLES
 STYLES = {"error": {"color": "#ff4d00",
                     "font-weight": "bold",
@@ -56,10 +51,11 @@ STYLES = {"error": {"color": "#ff4d00",
                       "text-decoration": "none"}
 
           }
+
 EES_CODE_FONT_FAMILY = "Courier New"
 
-
 def get_html_string(key, text):
+
     if not key in STYLES.keys():
         key = "default"
 

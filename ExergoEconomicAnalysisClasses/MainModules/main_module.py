@@ -1,3 +1,4 @@
+from ExergoEconomicAnalysisClasses.Tools.Other.matrix_analyzer import MatrixAnalyzer
 from ExergoEconomicAnalysisClasses.Tools.modules_handler import ModulesHandler
 import xml.etree.ElementTree as ETree
 from res import costants
@@ -359,11 +360,11 @@ class Block:
 
         for block in self.redistribution_block_list:
 
-            if redistribution_method == costants.EXERGY_DESTRUCTION:
+            if redistribution_method == CalculationOptions.EXERGY_DESTRUCTION:
 
                 redistribution_sum += abs(block.exergy_balance)
 
-            elif redistribution_method == costants.EXERGY_PRODUCT:
+            elif redistribution_method == CalculationOptions.EXERGY_PRODUCT:
 
                 redistribution_sum += abs(block.productive_exergy_output)
 
@@ -383,11 +384,11 @@ class Block:
 
             redistribution_method = self.main_class.options.redistribution_method
 
-            if redistribution_method == costants.EXERGY_DESTRUCTION:
+            if redistribution_method == CalculationOptions.EXERGY_DESTRUCTION:
 
                 redistribution_index = abs(self.exergy_balance)/redistribution_sum
 
-            elif redistribution_method == costants.EXERGY_PRODUCT:
+            elif redistribution_method == CalculationOptions.EXERGY_PRODUCT:
 
                 redistribution_index = abs(self.productive_exergy_output)/redistribution_sum
 
@@ -1257,15 +1258,10 @@ class ArrayHandler:
 
                     i += 1
 
-                try:
-
-                    sol = np.linalg.solve(self.matrix, self.vector)
-                    self.append_solution(sol)
-
-                except:
-
-                    sol = np.linalg.lstsq(self.matrix, self.vector)
-                    self.append_solution(sol[0])
+                matrix_analyzer = MatrixAnalyzer(self.matrix, self.vector)
+                matrix_analyzer.solve()
+                sol = matrix_analyzer.solution
+                self.append_solution(sol)
 
     def find_connection_by_index(self, index):
 
@@ -1607,18 +1603,24 @@ class ArrayHandler:
 
 class CalculationOptions:
 
+    # DISSIPATIVE COMPONENTS REDISTRIBUTION METHODS
+    EXERGY_DESTRUCTION = 0
+    EXERGY_PRODUCT = 1
+    RELATIVE_COST = 2
+
     def __init__(self):
 
-        self.calculate_on_pf_diagram = True
+        self.calculate_on_pf_diagram = False
         self.loss_cost_is_zero = True
 
         self.valve_is_dissipative = False
         self.condenser_is_dissipative = True
 
-        self.redistribution_method = costants.EXERGY_PRODUCT
+        self.redistribution_method = CalculationOptions.EXERGY_PRODUCT
 
     @property
     def xml(self) -> ETree.Element:
+
         option_child = ETree.Element("options")
 
         option_child.set("calculate_on_pf_diagram", str(self.calculate_on_pf_diagram))
@@ -1632,6 +1634,7 @@ class CalculationOptions:
 
     @xml.setter
     def xml(self, xml_input: ETree.Element):
+
         self.calculate_on_pf_diagram = xml_input.get("calculate_on_pf_diagram") == "True"
         self.loss_cost_is_zero = xml_input.get("loss_cost_is_zero") == "True"
 
