@@ -1610,7 +1610,7 @@ class CalculationOptions:
 
     def __init__(self):
 
-        self.calculate_on_pf_diagram = False
+        self.calculate_on_pf_diagram = True
         self.loss_cost_is_zero = True
 
         self.valve_is_dissipative = False

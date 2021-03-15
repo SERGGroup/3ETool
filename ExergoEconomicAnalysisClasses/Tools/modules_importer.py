@@ -155,15 +155,18 @@ def get_result_data_frames(array_handler: ArrayHandler):
                    "Name": list(),
                    "Exergy Value [kW]": list(),
                    "Specific Cost [Euro/kJ]": list(),
+                   "Specific Cost [Euro/kWh]": list(),
                    "Total Cost [Euro/s]": list()}
 
     for conn in array_handler.connection_list:
 
         if not conn.is_internal_stream:
+
             stream_data["Stream"].append(conn.index)
             stream_data["Name"].append(conn.name)
             stream_data["Exergy Value [kW]"].append(conn.exergy_value)
             stream_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
+            stream_data["Specific Cost [Euro/kWh]"].append(conn.rel_cost*3600)
             stream_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
 
     # Output Stream Data frame generation
@@ -171,6 +174,7 @@ def get_result_data_frames(array_handler: ArrayHandler):
                    "Name": list(),
                    "Exergy Value [kW]": list(),
                    "Specific Cost [Euro/kJ]": list(),
+                   "Specific Cost [Euro/kWh]": list(),
                    "Total Cost [Euro/s]": list()}
 
     for conn in array_handler.useful_effect_connections:
@@ -179,6 +183,7 @@ def get_result_data_frames(array_handler: ArrayHandler):
         useful_data["Name"].append(conn.name)
         useful_data["Exergy Value [kW]"].append(conn.exergy_value)
         useful_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
+        useful_data["Specific Cost [Euro/kWh]"].append(conn.rel_cost * 3600)
         useful_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
 
     return {"Stream Out": stream_data,
