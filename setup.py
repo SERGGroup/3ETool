@@ -7,7 +7,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
 
-    name='3ETool',
+    name='EEETool',
     version='0.0.2',
     license='GNU GPLv3',
 
