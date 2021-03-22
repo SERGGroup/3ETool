@@ -1,5 +1,5 @@
 import unittest, traceback, os
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 from ExergoEconomicAnalysisClasses.Tools.EESCodeGenerator.EES_parser import EESCodeAnalyzer
 
 

@@ -1,5 +1,5 @@
 import importlib, inspect
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 
 
 class Handler:

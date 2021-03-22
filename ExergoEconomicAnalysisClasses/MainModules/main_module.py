@@ -1,7 +1,7 @@
 from ExergoEconomicAnalysisClasses.Tools.Other.matrix_analyzer import MatrixAnalyzer
 from ExergoEconomicAnalysisClasses.Tools.modules_handler import ModulesHandler
 import xml.etree.ElementTree as ETree
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 import numpy as np
 import warnings
 import copy

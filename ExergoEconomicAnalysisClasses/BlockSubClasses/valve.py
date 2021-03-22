@@ -1,7 +1,7 @@
 from ExergoEconomicAnalysisClasses.MainModules.support_blocks import Drawer
 from ExergoEconomicAnalysisClasses.MainModules import Block
 import xml.etree.ElementTree as ETree
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 
 
 class Valve(Block):

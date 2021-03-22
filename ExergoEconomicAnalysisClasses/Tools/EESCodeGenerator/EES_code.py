@@ -1,7 +1,7 @@
 from ExergoEconomicAnalysisClasses.Tools.EESCodeGenerator.EES_parser import EESCodeAnalyzer
 from ExergoEconomicAnalysisClasses.Tools.Other.fernet_handler import FernetHandler
 from ExergoEconomicAnalysisClasses.Tools.modules_handler import ModulesHandler
-from res.costants import get_html_string
+from ExergoEconomicAnalysisClasses.costants import get_html_string
 import xml.etree.ElementTree as ETree
 import os
 

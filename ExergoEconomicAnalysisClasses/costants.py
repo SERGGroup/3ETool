@@ -7,7 +7,21 @@ RUN_MODE = "administrator"
 # ROOT DIRECTORIES
 ROOT_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
 RES_DIR = os.path.join(ROOT_DIR, "res")
-TEST_RES_DIR = os.path.join(ROOT_DIR, "ExergoEconomicAnalysisClasses", "Tools", "UnitTestModules", "testResources")
+TEST_RES_DIR = os.path.join(RES_DIR, "testResources")
+
+# FIREBASE CONFIGURATION DICT
+FIREBASE_CONFIG = {
+
+            "apiKey": "AIzaSyBQ4ZKw45o3U06gz9u1pmLd53cImzYGHj8",
+            "databaseURL":"https://etapp-serggroup-default-rtdb.europe-west1.firebasedatabase.app",
+            "authDomain": "etapp-serggroup.firebaseapp.com",
+            "projectId": "etapp-serggroup",
+            "storageBucket": "etapp-serggroup.appspot.com",
+            "messagingSenderId": "12706429785",
+            "appId": "1:12706429785:web:66cd6f6b1c1ed13b9e2a48",
+            "measurementId": "G-T2SHVKSR9H"
+
+        }
 
 # EES FORMAT STYLES
 STYLES = {"error": {"color": "#ff4d00",
@@ -53,6 +67,7 @@ STYLES = {"error": {"color": "#ff4d00",
           }
 
 EES_CODE_FONT_FAMILY = "Courier New"
+
 
 def get_html_string(key, text):
 

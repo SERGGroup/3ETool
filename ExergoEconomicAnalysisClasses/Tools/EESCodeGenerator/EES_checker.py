@@ -1,4 +1,4 @@
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 
 
 class Zones:

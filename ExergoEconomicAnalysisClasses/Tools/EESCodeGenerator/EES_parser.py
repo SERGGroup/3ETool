@@ -1,6 +1,6 @@
 from rply import LexerGenerator, ParserGenerator, Token
 from rply.token import BaseBox
-from res.costants import get_html_string
+from ExergoEconomicAnalysisClasses.costants import get_html_string
 
 
 class EESCodeAnalyzer:

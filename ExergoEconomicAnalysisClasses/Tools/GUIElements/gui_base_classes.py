@@ -1,7 +1,6 @@
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QPoint
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt5.QtGui import QColor, QContextMenuEvent, QIcon
 from PyQt5.QtWidgets import *
-from res import qrc_resources
 import os
 
 

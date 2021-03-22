@@ -1,5 +1,5 @@
-import os, base64
-from res import costants
+import os, base64, pyrebase
+from ExergoEconomicAnalysisClasses import costants
 from cryptography.fernet import Fernet
 import xml.etree.ElementTree as ETree
 
@@ -8,37 +8,39 @@ class FernetHandler:
 
     def __init__(self):
 
+        self.__fernet_key_path = os.path.join(costants.RES_DIR, "Other", "fernet_key.dat")
         self.key = self.__initialize_key_value()
 
-    @staticmethod
-    def __initialize_key_value():
+    def __initialize_key_value(self):
 
-        __fernet_key_path = os.path.join(costants.ROOT_DIR, "res", "Other", "fernet_key.dat")
+        """This method retrieve the cryptographic key stored in 'fernet_key.dat' file. If the key file is not present
+        in the local resources, python will try to download it from the firebase storage. If also this last passage
+        fails, probably due to a bad internet connection, the application will trow an exception as such key is
+        mandatory for the calculations """
 
-        if os.path.isfile(__fernet_key_path):
+        if os.path.isfile(self.__fernet_key_path):
 
-            file = open(__fernet_key_path, "rb")
+            file = open(self.__fernet_key_path, "rb")
             key = base64.urlsafe_b64encode(file.read())
             file.close()
 
         else:
 
-            key = Fernet.generate_key()
+            try:
+                self.retrieve_key()
+                key = self.__initialize_key_value()
 
-            file = open(__fernet_key_path, "wb")
-            file.write(base64.urlsafe_b64decode(key))
-            file.close()
+            except:
+
+                raise Exception("Unable to reach firebase server, cryptography key can not be retrieved hence the "
+                                "application can not be started. Check your internet connection and retry")
 
         return key
 
     def read_file(self, file_path):
 
-        # This method retrieve the correlation data from the .dat file. The file must be decrypted in order to access
-        # the xml tree containing the data. Xml file format can change for different cost correlation classes but the
-        # decryption process remains the same.
-
-        # After the decryption of the data the method reads the name of the correlation class from the xml file and
-        # use it to initialize the correct subclass
+        """ This method retrieve the data from the .dat file and convert it back to the original unencrypted xml.
+            The method return an xml tree initialized according to the stored data"""
 
         file = open(file_path, "rb")
         data = file.read()
@@ -51,9 +53,8 @@ class FernetHandler:
 
     def save_file(self, file_path, root: ETree.Element):
 
-        # This method save the correlation data to a .dat file containing an encrypted xml tree. Encryption is useful in
-        # order to prevent the user from modifying the file manually without going through the editor.
-        # Data format can change for different cost correlation classes but the encryption process remains the same.
+        """ This method encrypted and save the input xml tree in a .dat file. Encryption is used to prevent users
+        from modifying the file manually without going through the editor. """
 
         str_data = ETree.tostring(root)
 
@@ -63,3 +64,15 @@ class FernetHandler:
         xml_file = open(file_path, "wb")
         xml_file.write(str_data)
         xml_file.close()
+
+    def export_key(self):
+
+        firebase = pyrebase.initialize_app(costants.FIREBASE_CONFIG)
+        storage = firebase.storage()
+        storage.child("res/Other/fernet_key.dat").put(self.__fernet_key_path)
+
+    def retrieve_key(self):
+
+        firebase = pyrebase.initialize_app(costants.FIREBASE_CONFIG)
+        storage = firebase.storage()
+        storage.child("res/Other/fernet_key.dat").download("", self.__fernet_key_path)

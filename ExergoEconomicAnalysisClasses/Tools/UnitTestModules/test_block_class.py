@@ -2,7 +2,7 @@ import unittest
 from ExergoEconomicAnalysisClasses.MainModules.main_module import Block, Connection, ArrayHandler
 
 
-class blockTestCases(unittest.TestCase):
+class BlockTestCases(unittest.TestCase):
 
     def testStr(self):
 

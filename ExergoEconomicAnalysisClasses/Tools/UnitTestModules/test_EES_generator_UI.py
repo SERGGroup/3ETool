@@ -4,7 +4,7 @@ from ExergoEconomicAnalysisClasses.Tools.EESCodeGenerator.EES_checker import Zon
 from ExergoEconomicAnalysisClasses.Tools.modules_importer import import_excel_input
 from PyQt5.QtWidgets import QApplication
 import sys, os, traceback, unittest
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 
 
 def launch_app(widget):

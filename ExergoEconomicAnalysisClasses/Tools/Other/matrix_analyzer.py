@@ -29,6 +29,8 @@ class MatrixAnalyzer:
         self.columns.check()
         self.__check_assignments()
 
+        self.__ill_conditioned_matrix_warning = False
+
     def __initialize_matrix(self):
 
         for i in range(self.n_row):
@@ -91,6 +93,8 @@ class MatrixAnalyzer:
 
                 sol = numpy.linalg.lstsq(self.matrix, self.vector)
                 sol = sol[0]
+
+                self.__ill_conditioned_matrix_warning = True
 
             for i in range(len(self.columns)):
                 self.columns[i].set_solution(sol[i])
@@ -166,6 +170,17 @@ class MatrixAnalyzer:
                 sol_vector[i] = solution
 
         return sol_vector
+
+    @property
+    def is_ill_conditioned(self):
+
+        if self.sub_matrix is None:
+
+            return self.__ill_conditioned_matrix_warning
+
+        else:
+
+            return self.sub_matrix.is_ill_conditioned
 
 
 class MatrixElement:

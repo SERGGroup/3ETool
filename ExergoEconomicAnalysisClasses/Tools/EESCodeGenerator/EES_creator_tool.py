@@ -6,7 +6,7 @@ from PyQt5.QtGui import QFont, QKeySequence
 from PyQt5.QtCore import Qt
 from shutil import copy2 as copy_file
 import os
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 
 
 class DefineEESTextWidget(QDialog):

@@ -3,7 +3,6 @@ from ExergoEconomicAnalysisClasses.MainModules.main_module import ArrayHandler, 
 
 
 def generate_test_array_handler():
-
     array_handler = ArrayHandler()
 
     array_handler.append_block("Generic")
@@ -37,6 +36,7 @@ def generate_test_array_handler():
 
     return array_handler
 
+
 class MyTestCase(unittest.TestCase):
 
     def testDynamicImport(self):
@@ -58,6 +58,7 @@ class MyTestCase(unittest.TestCase):
         array_handler.calculate()
 
         self.assertAlmostEqual(61.667, array_handler.block_list[-1].output_connections[0].rel_cost, delta=2)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,7 +1,7 @@
 from ExergoEconomicAnalysisClasses.Tools.Other.fernet_handler import FernetHandler
 from ExergoEconomicAnalysisClasses.Tools.Other.handler import Handler
 from PyQt5.QtWidgets import QWidget
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 from abc import ABC
 import abc, os
 

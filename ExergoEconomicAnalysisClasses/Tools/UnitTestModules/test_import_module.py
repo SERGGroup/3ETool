@@ -1,7 +1,7 @@
 from ExergoEconomicAnalysisClasses.Tools.modules_importer import *
 from tkinter import filedialog
 import unittest, pandas, os
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 import tkinter as tk
 
 
@@ -98,6 +98,16 @@ class ImportTestCase(unittest.TestCase):
             excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
         a = 1
+
+    def test_download_link(self):
+
+        from ExergoEconomicAnalysisClasses.Tools.Other.fernet_handler import FernetHandler
+
+        fernet = FernetHandler()
+        fernet.export_key()
+        fernet.retrieve_key()
+
+        self.assertTrue(True)
 
 
 if __name__ == '__main__':

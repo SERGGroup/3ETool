@@ -1,7 +1,7 @@
 from ExergoEconomicAnalysisClasses.MainModules import Block
 from ExergoEconomicAnalysisClasses.MainModules.support_blocks import Drawer
 import xml.etree.ElementTree as ETree
-from res import costants
+from ExergoEconomicAnalysisClasses import costants
 
 
 class Pump(Block):
