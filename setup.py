@@ -9,6 +9,17 @@ setup(
 
     name='3ETool',
     version='0.0.2',
+    license='GNU GPLv3',
+
+    author='Pietro Ungar',
+    author_email='pietro.ungar@unifi.it',
+
+    description='Tools for performing exergo-economic and exergo-environmental analysis',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+
+    url='https://www.dief.unifi.it/vp-473-exergo-economic-analysis-software.html',
+    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.2.tar.gz',
 
     packages=[
 
@@ -17,12 +28,6 @@ setup(
         'src.BlockSubClasses', 'test'
 
     ],
-
-    url='https://www.dief.unifi.it/vp-473-exergo-economic-analysis-software.html',
-    license='GNU GPLv3',
-    author='Pietro Ungar',
-    author_email='pietro.ungar@unifi.it',
-    description='Tools for performing exergo-economic and exergo-environmental analysis',
 
     install_requires=[
 
@@ -41,9 +46,6 @@ setup(
         'Topic :: Scientific/Engineering',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
 
-      ],
-
-    long_description=long_description,
-    long_description_content_type='text/markdown'
+      ]
 
 )
