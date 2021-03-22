@@ -26,6 +26,15 @@ setup(
         'PyQt5>=5.15.4',
         'setuptools'
 
-    ]
+    ],
+
+    classifiers=[
+
+        'Development Status :: 2 - Pre-Alpha',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+
+      ]
 
 )
