@@ -19,7 +19,7 @@ setup(
     long_description_content_type='text/markdown',
 
     url='https://www.dief.unifi.it/vp-473-3et-app.html',
-    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.5.tar.gz',
+    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.6.tar.gz',
 
     packages=[
 
