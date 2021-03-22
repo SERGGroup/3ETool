@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ExergoEconomicAnalysis.iml" filepath="$PROJECT_DIR$/.idea/ExergoEconomicAnalysis.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/3ETool.iml" filepath="$PROJECT_DIR$/.idea/3ETool.iml" />
     </modules>
   </component>
 </project>
