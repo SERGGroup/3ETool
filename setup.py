@@ -10,6 +10,7 @@ setup(
         'src', 'src.Tools', 'src.Tools.Other', 'src.Tools.GUIElements', 'src.Tools.CostCorrelations',
         'src.Tools.CostCorrelations.CorrelationClasses', 'src.Tools.EESCodeGenerator', 'src.MainModules',
         'src.BlockSubClasses', 'test'
+
     ],
 
     url='https://www.dief.unifi.it/vp-473-exergo-economic-analysis-software.html',
