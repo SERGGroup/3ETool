@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='3ETool',
-    version='0.0.5',
+    version='0.0.6',
     license='GNU GPLv3',
 
     author='Pietro Ungar',
@@ -18,7 +18,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    url='https://www.dief.unifi.it/vp-473-exergo-economic-analysis-software.html',
+    url='https://www.dief.unifi.it/vp-473-3et-app.html',
     download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.5.tar.gz',
 
     packages=[
