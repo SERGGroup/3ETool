@@ -1,6 +1,6 @@
 import os
 import unittest
-from src.Tools.modules_handler import ModulesHandler
+from EEETools.Tools.modules_handler import ModulesHandler
 
 class ModulesHandlerTestCase(unittest.TestCase):
 

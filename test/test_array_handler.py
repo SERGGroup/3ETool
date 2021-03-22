@@ -1,5 +1,5 @@
 import unittest
-from src.MainModules.main_module import ArrayHandler, Connection
+from EEETools.MainModules.main_module import ArrayHandler, Connection
 
 
 def generate_test_array_handler():

@@ -1,6 +1,6 @@
 import unittest, traceback, os
-from src import costants
-from src.Tools.EESCodeGenerator.EES_parser import EESCodeAnalyzer
+from EEETools import costants
+from EEETools.Tools.EESCodeGenerator.EES_parser import EESCodeAnalyzer
 
 
 class EESCodeTestCase(unittest.TestCase):

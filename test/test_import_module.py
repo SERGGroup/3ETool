@@ -1,7 +1,7 @@
-from src.Tools.modules_importer import *
+from EEETools.Tools.modules_importer import *
 from tkinter import filedialog
 import unittest, pandas, os
-from src import costants
+from EEETools import costants
 import tkinter as tk
 
 
@@ -101,7 +101,7 @@ class ImportTestCase(unittest.TestCase):
 
     def test_download_link(self):
 
-        from src.Tools.Other.fernet_handler import FernetHandler
+        from EEETools.Tools.Other.fernet_handler import FernetHandler
 
         fernet = FernetHandler()
         fernet.export_key()

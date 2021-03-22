@@ -7,8 +7,8 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
 
-    name='EEETool',
-    version='0.0.3',
+    name='3ETool',
+    version='0.0.4',
     license='GNU GPLv3',
 
     author='Pietro Ungar',
@@ -19,13 +19,13 @@ setup(
     long_description_content_type='text/markdown',
 
     url='https://www.dief.unifi.it/vp-473-exergo-economic-analysis-software.html',
-    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.3.tar.gz',
+    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.4.tar.gz',
 
     packages=[
 
-        'src', 'src.Tools', 'src.Tools.Other', 'src.Tools.GUIElements', 'src.Tools.CostCorrelations',
-        'src.Tools.CostCorrelations.CorrelationClasses', 'src.Tools.EESCodeGenerator', 'src.MainModules',
-        'src.BlockSubClasses', 'test'
+        'EEETools', 'EEETools.Tools', 'EEETools.Tools.Other', 'EEETools.Tools.GUIElements', 'EEETools.Tools.CostCorrelations',
+        'EEETools.Tools.CostCorrelations.CorrelationClasses', 'EEETools.Tools.EESCodeGenerator', 'EEETools.MainModules',
+        'EEETools.BlockSubClasses', 'test'
 
     ],
 

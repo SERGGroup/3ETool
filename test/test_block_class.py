@@ -1,5 +1,5 @@
 import unittest
-from src.MainModules.main_module import Block, Connection, ArrayHandler
+from EEETools.MainModules.main_module import Block, Connection, ArrayHandler
 
 
 class BlockTestCases(unittest.TestCase):

@@ -1,10 +1,10 @@
-from src.Tools.EESCodeGenerator.EES_creator_tool import DefineEESTextWidget
-from src.Tools.EESCodeGenerator.EES_creator_tool import EESTextFilesManager
-from src.Tools.EESCodeGenerator.EES_checker import Zones
-from src.Tools.modules_importer import import_excel_input
+from EEETools.Tools.EESCodeGenerator.EES_creator_tool import DefineEESTextWidget
+from EEETools.Tools.EESCodeGenerator.EES_creator_tool import EESTextFilesManager
+from EEETools.Tools.EESCodeGenerator.EES_checker import Zones
+from EEETools.Tools.modules_importer import import_excel_input
 from PyQt5.QtWidgets import QApplication
 import sys, os, traceback, unittest
-from src import costants
+from EEETools import costants
 
 
 def launch_app(widget):

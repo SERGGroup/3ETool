@@ -1,5 +1,5 @@
-from src.Tools.CostCorrelations.cost_correlation_gui import *
-from src.Tools.CostCorrelations.CorrelationClasses.turton_correlation import *
+from EEETools.Tools.CostCorrelations.cost_correlation_gui import *
+from EEETools.Tools.CostCorrelations.CorrelationClasses.turton_correlation import *
 from PyQt5.QtWidgets import QApplication
 import unittest, sys
 
