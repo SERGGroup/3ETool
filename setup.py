@@ -19,7 +19,7 @@ setup(
     long_description_content_type='text/markdown',
 
     url='https://www.dief.unifi.it/vp-473-exergo-economic-analysis-software.html',
-    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.2.tar.gz',
+    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.3.tar.gz',
 
     packages=[
 
