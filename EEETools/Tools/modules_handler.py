@@ -10,7 +10,7 @@ class ModulesHandler(Handler):
         super().__init__()
 
         self.current_folder = os.path.join(costants.ROOT_DIR, "EEETools", "Tools")
-        self.data_folder = os.path.join(costants.ROOT_DIR, "res", "EES Code Data")
+        self.data_folder = os.path.join(costants.ROOT_DIR, "3ETool_res", "EES Code Data")
         self.subclass_directory_path = "EEETools.BlockSubClasses"
 
         self.name_list = self.list_modules()

@@ -97,7 +97,7 @@ class CostCorrelationHandler(Handler):
 
         super().__init__()
 
-        self.data_folder = os.path.join(costants.ROOT_DIR, "res", "Cost Correlation Data")
+        self.data_folder = os.path.join(costants.ROOT_DIR, "3ETool_res", "Cost Correlation Data")
         self.subclass_directory_path = "EEETools.Tools.CostCorrelations.CorrelationClasses"
 
         from EEETools.Tools.modules_handler import ModulesHandler

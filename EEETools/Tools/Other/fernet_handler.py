@@ -69,10 +69,10 @@ class FernetHandler:
 
         firebase = pyrebase.initialize_app(costants.FIREBASE_CONFIG)
         storage = firebase.storage()
-        storage.child("res/Other/fernet_key.dat").put(self.__fernet_key_path)
+        storage.child("3ETool_res/Other/fernet_key.dat").put(self.__fernet_key_path)
 
     def retrieve_key(self):
 
         firebase = pyrebase.initialize_app(costants.FIREBASE_CONFIG)
         storage = firebase.storage()
-        storage.child("res/Other/fernet_key.dat").download("", self.__fernet_key_path)
+        storage.child("3ETool_res/Other/fernet_key.dat").download("", self.__fernet_key_path)

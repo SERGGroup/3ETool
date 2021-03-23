@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='3ETool',
-    version='0.0.6',
+    version='0.0.7',
     license='GNU GPLv3',
 
     author='Pietro Ungar',
@@ -19,7 +19,7 @@ setup(
     long_description_content_type='text/markdown',
 
     url='https://www.dief.unifi.it/vp-473-3et-app.html',
-    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.6.tar.gz',
+    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.7.tar.gz',
 
     packages=[
 
@@ -32,7 +32,7 @@ setup(
     install_requires=[
 
         'cryptography>=3.4.6',
-        'pyrebase>=3.0.27',
+        'pyrebase4>=4.4.3',
         'numpy>=1.20.1',
         'pandas>=1.2.3',
         'PyQt5>=5.15.4',

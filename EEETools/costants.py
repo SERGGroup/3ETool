@@ -6,8 +6,17 @@ RUN_MODE = "administrator"
 
 # ROOT DIRECTORIES
 ROOT_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
-RES_DIR = os.path.join(ROOT_DIR, "res")
+RES_DIR = os.path.join(ROOT_DIR, "3ETool_res")
 TEST_RES_DIR = os.path.join(RES_DIR, "testResources")
+
+if not os.path.isdir(RES_DIR):
+
+    os.mkdir(RES_DIR)
+    os.mkdir(os.path.join(RES_DIR, "ButtonIcons"))
+    os.mkdir(os.path.join(RES_DIR, "EES Code Data"))
+    os.mkdir(os.path.join(RES_DIR, "Images"))
+    os.mkdir(os.path.join(RES_DIR, "Other"))
+    os.mkdir(os.path.join(RES_DIR, "testResources"))
 
 # FIREBASE CONFIGURATION DICT
 FIREBASE_CONFIG = {
@@ -68,7 +77,6 @@ STYLES = {"error": {"color": "#ff4d00",
 
 EES_CODE_FONT_FAMILY = "Courier New"
 
-
 def get_html_string(key, text):
 
     if not key in STYLES.keys():
@@ -86,7 +94,6 @@ def get_html_string(key, text):
     __html_text += '>' + text + '</span>'
 
     return __html_text
-
 
 # ZONE TYPES
 ZONE_TYPE_FLUID = "fluid"
