@@ -9,6 +9,7 @@ class Alternator(Block):
 
         super().__init__(inputID, main_class)
 
+
         self.type = "alternator"
         self.has_support_block = True
         self.support_block.append(Drawer(main_class, self))
@@ -61,6 +62,8 @@ class Alternator(Block):
     def append_xml_other_parameters(self, input_list: ETree.Element):
 
         self.efficiency = float(input_list.get("efficiency"))
+
+
 
     def export_xml_connection_list(self) -> ETree.Element:
 
@@ -171,6 +174,7 @@ class Alternator(Block):
             exergy_balance -= conn.exergy_value
 
         return exergy_balance
+
 
     @property
     def can_be_removed_in_pf_definition(self):

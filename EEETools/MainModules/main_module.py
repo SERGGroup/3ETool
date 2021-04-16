@@ -13,6 +13,12 @@ class Block:
     def __init__(self, inputID, main_class, is_support_block=False):
 
         self.__ID = inputID
+        self.r = 0.
+        self.f=0.
+        self.epsilon=0.
+        self.y=0.
+        self.loss = 0.
+        self.distruction = 0.
 
         self.index = inputID
         self.name = " "
@@ -53,6 +59,62 @@ class Block:
     @property
     def ID(self):
         return self.__ID
+
+    def calculate_coefficient(self):
+        # coefficiente r
+        sum = 0.
+        sum_1 = 0.
+        for conn in self.input_connections:
+            sum += conn.exergy_value * conn.rel_cost
+            sum_1 += conn.exergy_value
+        if sum_1 == 0 or sum == 0:
+            self.r = 0
+        else:
+            c_fuel = sum / sum_1
+            self.r = (self.output_cost - c_fuel) / c_fuel
+
+
+        # cefficiente epsilon
+        sum_2 = 0.
+        for conn in self.input_connections:
+            sum_2 += conn.exergy_value
+        if sum_2 == 0:
+            self.epsilon = 0
+        else:
+            self.epsilon = self.productive_exergy_output/abs(sum_2)
+
+        # coefficiente f
+        sum_3 = 0.
+        sum_4 = 0.
+        sum_5 = 0.
+        sum_6 = 0.
+        for conn in self.input_connections:
+            sum_3 += conn.exergy_value * conn.rel_cost
+            sum_4 += conn.exergy_value
+        if sum_3 == 0 or sum_4 == 0:
+            c_fuel = 0
+        else:
+            c_fuel = sum_3 / sum_4
+        for conn in self.input_connections:
+            sum_5+= conn.exergy_value
+        for conn in self.output_connections:
+            sum_6+= conn.exergy_value
+        self.distruction = sum_5 - sum_6
+        self.loss=0
+        for conn in self.output_connections:
+            if conn.is_loss== True:
+                self.loss+= conn.is_loss
+        e_d_l=self.distruction+self.loss
+        den = (self.comp_cost + (c_fuel * e_d_l))
+        if den == 0:
+            self.r = 0
+        else:
+            self.f = self.comp_cost / den
+    # coefficient y
+    def calculate_y (self,total_destruction):
+        self.y = self.distruction/total_destruction
+
+
 
     def add_connection(self, new_connection, is_input, append_to_support_block=None):
 
@@ -386,15 +448,15 @@ class Block:
 
             if redistribution_method == CalculationOptions.EXERGY_DESTRUCTION:
 
-                redistribution_index = abs(self.exergy_balance)/redistribution_sum
+                redistribution_index = abs(self.exergy_balance) / redistribution_sum
 
             elif redistribution_method == CalculationOptions.EXERGY_PRODUCT:
 
-                redistribution_index = abs(self.productive_exergy_output)/redistribution_sum
+                redistribution_index = abs(self.productive_exergy_output) / redistribution_sum
 
             else:
 
-                redistribution_index = abs(self.comp_cost)/redistribution_sum
+                redistribution_index = abs(self.comp_cost) / redistribution_sum
 
         return redistribution_index
 
@@ -625,7 +687,6 @@ class Block:
         productive_exergy_output = 0
 
         for conn in self.non_loss_output:
-
             productive_exergy_output += abs(conn.exergy_value)
 
         return productive_exergy_output
@@ -636,8 +697,7 @@ class Block:
         cost_balance = self.comp_cost
 
         for conn in self.input_connections:
-
-            cost_balance += conn.exergy_value*conn.rel_cost
+            cost_balance += conn.exergy_value * conn.rel_cost
 
         if self.is_dissipative:
 
@@ -646,8 +706,7 @@ class Block:
         else:
 
             for conn in self.output_connections:
-
-                cost_balance -= conn.exergy_value*conn.rel_cost
+                cost_balance -= conn.exergy_value * conn.rel_cost
 
         return cost_balance
 
@@ -1089,6 +1148,7 @@ class ArrayHandler:
 
         self.block_list = list()
         self.n_block = 0
+        self.total_destruction= 0.
 
         self.connection_list = list()
         self.n_connection = 0
@@ -1253,8 +1313,8 @@ class ArrayHandler:
                         redistribution_sum = block.redistribution_sum
 
                         for non_diss_blocks in block.redistribution_block_list:
-
-                            self.matrix[non_diss_blocks.ID, i] = -non_diss_blocks.redistribution_index(redistribution_sum)
+                            self.matrix[non_diss_blocks.ID, i] = -non_diss_blocks.redistribution_index(
+                                redistribution_sum)
 
                     i += 1
 
@@ -1296,6 +1356,7 @@ class ArrayHandler:
     def append_solution(self, sol):
 
         i = 0
+        self.total_destruction = 0.
 
         for block in self.block_list:
 
@@ -1307,6 +1368,11 @@ class ArrayHandler:
             else:
 
                 block.append_output_cost(0.)
+            block.calculate_coefficient()
+            self.total_destruction += block.distruction
+        for block in self.block_list:
+            block.calculate_y(self.total_destruction)
+
 
         self.__reset_IDs(reset_block=True)
         self.__reset_IDs(reset_block=False)
@@ -1370,7 +1436,6 @@ class ArrayHandler:
         overall_investment_cost = 0
 
         for block in self.block_list:
-
             overall_investment_cost += block.comp_cost
 
         return overall_investment_cost
@@ -1381,7 +1446,7 @@ class ArrayHandler:
         balance = self.overall_investment_cost
 
         for conn in self.system_inputs:
-            balance += conn.exergy_value*conn.rel_cost
+            balance += conn.exergy_value * conn.rel_cost
 
         for conn in self.system_outputs:
             balance -= conn.exergy_value * conn.rel_cost
@@ -1602,14 +1667,12 @@ class ArrayHandler:
 
 
 class CalculationOptions:
-
     # DISSIPATIVE COMPONENTS REDISTRIBUTION METHODS
     EXERGY_DESTRUCTION = 0
     EXERGY_PRODUCT = 1
     RELATIVE_COST = 2
 
     def __init__(self):
-
         self.calculate_on_pf_diagram = True
         self.loss_cost_is_zero = True
 
@@ -1620,7 +1683,6 @@ class CalculationOptions:
 
     @property
     def xml(self) -> ETree.Element:
-
         option_child = ETree.Element("options")
 
         option_child.set("calculate_on_pf_diagram", str(self.calculate_on_pf_diagram))
@@ -1634,7 +1696,6 @@ class CalculationOptions:
 
     @xml.setter
     def xml(self, xml_input: ETree.Element):
-
         self.calculate_on_pf_diagram = xml_input.get("calculate_on_pf_diagram") == "True"
         self.loss_cost_is_zero = xml_input.get("loss_cost_is_zero") == "True"
 

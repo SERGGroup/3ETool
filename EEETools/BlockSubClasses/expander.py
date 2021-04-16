@@ -9,6 +9,7 @@ class Expander(Block):
     def __init__(self, inputID, main_class):
         super().__init__(inputID, main_class)
 
+        self.r=0.
         self.type = "expander"
         self.has_support_block = True
         self.support_block.append(Drawer(main_class, self, allow_multiple_input=False))
@@ -74,6 +75,11 @@ class Expander(Block):
         self.__add_connection_by_index(fluid_connections, "input", append_to_support_block=0)
         self.__add_connection_by_index(fluid_connections, "output", append_to_support_block=0)
         self.__add_connection_by_index(mechanical_connections, "output")
+
+
+
+
+
 
     def __add_connection_by_index(self, input_list: ETree.Element, connection_name, append_to_support_block=None):
 
