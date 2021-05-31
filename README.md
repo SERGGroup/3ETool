@@ -6,11 +6,11 @@ of the [University of Florence](https://www.unifi.it/changelang-eng.html) for pe
 you can dawnload the beta version using __PIP__:
 
 ```
-pip install 3ETool
+pip install 3ETools
 ```
 Once the installation has been completed you can import the tool:
 ```python
-import EEETool
+import EEETools
 ```
 and then pasting the user manual:
 ```python
