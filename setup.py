@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='3ETool',
-    version='0.0.7',
+    version='0.0.8',
     license='GNU GPLv3',
 
     author='Pietro Ungar',
@@ -18,7 +18,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    url='https://www.dief.unifi.it/vp-473-3et-app.html',
+    url='https://tinyurl.com/SERG-3ETool',
     download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.7.tar.gz',
 
     packages=[
@@ -36,7 +36,9 @@ setup(
         'numpy>=1.20.1',
         'pandas>=1.2.3',
         'PyQt5>=5.15.4',
-        'setuptools'
+        'setuptools',
+        'xlrd',
+        'openpyxl'
 
     ],
 
