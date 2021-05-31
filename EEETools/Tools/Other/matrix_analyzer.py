@@ -200,7 +200,7 @@ class MatrixElement:
 
 class MatrixLine:
 
-    def __init__(self, vector: list[MatrixElement], initial_position):
+    def __init__(self, vector, initial_position):
 
         self.vector = vector
         self.module = self.__vector_module()
@@ -327,7 +327,7 @@ class MatrixLine:
 
 class MatrixColumn(MatrixLine):
 
-    def __init__(self, vector: list[MatrixElement], initial_position):
+    def __init__(self, vector, initial_position):
 
         super().__init__(vector, initial_position)
 
@@ -350,7 +350,7 @@ class MatrixColumn(MatrixLine):
 
 class MatrixRow(MatrixLine):
 
-    def __init__(self, vector: list[MatrixElement], initial_position):
+    def __init__(self, vector, initial_position):
         super().__init__(vector, initial_position)
         self.is_row = True
 
@@ -381,7 +381,7 @@ class MatrixLineList(list):
 
         return None
 
-    def add_to_list(self, vector: list[MatrixElement], initial_position: int):
+    def add_to_list(self, vector, initial_position: int):
 
         new_element = self.get_from_list(initial_position)
 

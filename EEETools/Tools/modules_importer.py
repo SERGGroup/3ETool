@@ -1,3 +1,4 @@
+from openpyxl import Workbook, load_workbook, styles, utils
 from datetime import date, datetime
 import math
 import pandas
@@ -103,12 +104,9 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
     today_str = today.strftime("%d %b")
     now_str = now.strftime("%H.%M")
 
-    with pandas.ExcelWriter(excel_path, mode="a") as writer:
+    for key in result_df.keys():
 
-        for key in result_df.keys():
-
-            pandas_df = pandas.DataFrame(data=result_df[key])
-            pandas_df.to_excel(writer, sheet_name=(key + " - " + today_str + " - " + now_str))
+        __write_excel_file(excel_path, sheet_name=(key + " - " + today_str + " - " + now_str), data_frame=result_df[key])
 
 
 def export_dat(dat_path, array_handler: ArrayHandler):
@@ -148,15 +146,15 @@ def write_csv_solution(dat_path, array_handler):
         pandas_df.to_csv(path_or_buf= csv_path, sep="\t")
 
 
-def get_result_data_frames(array_handler: ArrayHandler):
+def get_result_data_frames(array_handler: ArrayHandler) -> dict:
 
     # Stream Solution Data frame generation
     stream_data = {"Stream": list(),
                    "Name": list(),
                    "Exergy Value [kW]": list(),
-                   "Specific Cost [Euro/kJ]": list(),
-                   "Specific Cost [Euro/kWh]": list(),
-                   "Total Cost [Euro/s]": list()}
+                   "Specific Cost [€/kJ]": list(),
+                   "Specific Cost [€/kWh]": list(),
+                   "Total Cost [€/s]": list()}
 
     for conn in array_handler.connection_list:
 
@@ -165,26 +163,192 @@ def get_result_data_frames(array_handler: ArrayHandler):
             stream_data["Stream"].append(conn.index)
             stream_data["Name"].append(conn.name)
             stream_data["Exergy Value [kW]"].append(conn.exergy_value)
-            stream_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
-            stream_data["Specific Cost [Euro/kWh]"].append(conn.rel_cost*3600)
-            stream_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
+            stream_data["Specific Cost [€/kJ]"].append(conn.rel_cost)
+            stream_data["Specific Cost [€/kWh]"].append(conn.rel_cost*3600)
+            stream_data["Total Cost [€/s]"].append(conn.rel_cost * conn.exergy_value)
+
+    # Components Data frame generation
+    comp_data = {"Name": list(),
+                 "Comp Cost [€/s]": list(),
+
+                 "Exergy_fuel [kW]": list(),
+                 "Exergy_product [kW]": list(),
+                 "Exergy_destruction [kW]": list(),
+                 "Exergy_loss [kW]": list(),
+                 "Exergy_dl [kW]": list(),
+
+                 "Fuel Cost [€/kWh]": list(),
+                 "Fuel Cost [€/s]": list(),
+                 "Product Cost [€/kWh]": list(),
+                 "Product Cost [€/s]": list(),
+                 "Destruction Cost [€/kWh]": list(),
+                 "Destruction Cost [€/s]": list(),
+
+                 "eta": list(),
+                 "r": list(),
+                 "f": list(),
+                 "y": list()}
+
+    for block in array_handler.block_list:
+
+        if not block.is_support_block:
+
+            comp_data["Name"].append(block.name)
+            comp_data["Comp Cost [€/s]"].append(block.comp_cost)
+
+            comp_data["Exergy_fuel [kW]"].append(block.exergy_analysis["fuel"])
+            comp_data["Exergy_product [kW]"].append(block.exergy_analysis["product"])
+            comp_data["Exergy_destruction [kW]"].append(block.exergy_analysis["distruction"])
+            comp_data["Exergy_loss [kW]"].append(block.exergy_analysis["losses"])
+            comp_data["Exergy_dl [kW]"].append(block.exergy_analysis["distruction"] + block.exergy_analysis["losses"])
+
+            comp_data["Fuel Cost [€/kWh]"].append(block.coefficients["c_fuel"] * 3600)
+            comp_data["Product Cost [€/kWh]"].append(block.output_cost * 3600)
+            comp_data["Destruction Cost [€/kWh]"].append(block.coefficients["c_dest"] * 3600)
+
+            comp_data["Fuel Cost [€/s]"].append(block.coefficients["c_fuel"] * block.exergy_analysis["fuel"])
+            comp_data["Product Cost [€/s]"].append(block.output_cost * block.exergy_analysis["fuel"])
+            comp_data["Destruction Cost [€/s]"].append(block.coefficients["c_dest"] * (block.exergy_analysis["distruction"] + block.exergy_analysis["losses"]))
+
+            comp_data["eta"].append(block.coefficients["eta"])
+            comp_data["r"].append(block.coefficients["r"])
+            comp_data["f"].append(block.coefficients["f"])
+            comp_data["y"].append(block.coefficients["y"])
 
     # Output Stream Data frame generation
     useful_data = {"Stream": list(),
                    "Name": list(),
                    "Exergy Value [kW]": list(),
-                   "Specific Cost [Euro/kJ]": list(),
-                   "Specific Cost [Euro/kWh]": list(),
-                   "Total Cost [Euro/s]": list()}
+                   "Specific Cost [€/kJ]": list(),
+                   "Specific Cost [€/kWh]": list(),
+                   "Total Cost [€/s]": list()}
 
     for conn in array_handler.useful_effect_connections:
 
         useful_data["Stream"].append(conn.index)
         useful_data["Name"].append(conn.name)
         useful_data["Exergy Value [kW]"].append(conn.exergy_value)
-        useful_data["Specific Cost [Euro/kJ]"].append(conn.rel_cost)
-        useful_data["Specific Cost [Euro/kWh]"].append(conn.rel_cost * 3600)
-        useful_data["Total Cost [Euro/s]"].append(conn.rel_cost * conn.exergy_value)
+        useful_data["Specific Cost [€/kJ]"].append(conn.rel_cost)
+        useful_data["Specific Cost [€/kWh]"].append(conn.rel_cost * 3600)
+        useful_data["Total Cost [€/s]"].append(conn.rel_cost * conn.exergy_value)
 
     return {"Stream Out": stream_data,
+            "Comp Out": comp_data,
             "Eff Out": useful_data}
+
+
+def __convert_result_data_frames(data_frame: dict) -> dict:
+
+        new_data_frame = dict()
+
+        for key in data_frame.keys():
+
+            sub_dict = __get_sub_dict(key)
+            sub_dict.update({"values": list()})
+
+            if not sub_dict["name"] in new_data_frame.keys():
+
+                new_data_frame.update({sub_dict["name"]: sub_dict})
+
+            else:
+
+                (new_data_frame[sub_dict["name"]])["unit"].append(sub_dict["unit"][0])
+
+            (new_data_frame[sub_dict["name"]])["values"].append([data_frame[key]])
+
+        return new_data_frame
+
+
+def __get_sub_dict(key):
+
+    if "[" in key:
+
+        parts = key.split("[")
+
+        name = parts[0].replace("[", "")
+        measure_unit = [parts[1].split("]")[0].replace("]", "")]
+
+    else:
+
+        name = key
+        measure_unit = list()
+
+    return{"name": name, "unit": measure_unit}
+
+
+def __write_excel_file(excel_path, sheet_name, data_frame:dict):
+
+    data_frame = __convert_result_data_frames(data_frame)
+
+    if not os.path.isfile(excel_path):
+
+        wb = Workbook()
+
+    else:
+
+        wb = load_workbook(excel_path)
+
+    if not sheet_name in wb.sheetnames:
+
+        wb.create_sheet(sheet_name)
+
+    sheet = wb[sheet_name]
+
+    col = 2
+    for key in data_frame.keys():
+
+        row = 2
+        sub_data_frame = data_frame[key]
+        n_sub_element = len(sub_data_frame["unit"])
+
+        if key == "Name":
+
+            column_dimension = 35
+
+        elif key == "Stream":
+
+            column_dimension = 8
+
+        else:
+
+            column_dimension = 20
+
+        if n_sub_element == 0:
+
+            sheet.merge_cells(start_row=row, start_column=col, end_row=row + 1, end_column=col)
+            n_sub_element = 1
+
+        else:
+
+            if n_sub_element > 1:
+
+                sheet.merge_cells(start_row=row, start_column=col, end_row=row, end_column = col + n_sub_element - 1)
+
+            for n in range(n_sub_element):
+
+                row = 3
+                cell = sheet.cell(row, col + n, value="[" + sub_data_frame["unit"][n] + "]")
+                cell.alignment = styles.Alignment(horizontal="center", vertical="center")
+                cell.font = styles.Font(italic=True, size=10)
+
+        cell = sheet.cell(2, col, value=key)
+        cell.alignment = styles.Alignment(horizontal="center", vertical="center")
+        cell.font = styles.Font(bold=True)
+
+        for n in range(n_sub_element):
+
+            row = 5
+            data_list = (sub_data_frame["values"])[n][0]
+            sheet.column_dimensions[utils.get_column_letter(col)].width = column_dimension
+
+            for data in data_list:
+
+                sheet.cell(row, col, value=data)
+                row += 1
+
+            col += 1
+
+    wb.save(excel_path)
+
+
+

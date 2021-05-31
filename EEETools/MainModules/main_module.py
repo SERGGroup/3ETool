@@ -18,6 +18,9 @@ class Block:
         self.name = " "
         self.type = "generic"
 
+        self.coefficients = dict()
+        self.exergy_analysis = dict()
+
         self.comp_cost_corr = None
         self.comp_cost = 0.
         self.difference_cost = 0.
@@ -92,6 +95,8 @@ class Block:
 
             sel_block.add_connection(new_connection, is_input)
 
+        self.calculate_exergy_analysis()
+
     def remove_connection(self, deleted_conn):
 
         # This method tries to remove the connection from the input_connections List (it can do that because
@@ -151,6 +156,8 @@ class Block:
             # if the connection is found in the inputs its toBlockID is replaced with -1
             # (default for disconnected streams, it means that its an exergy loss)
             deleted_conn.set_block(None, is_from_block=False)
+
+        self.calculate_exergy_analysis()
 
     def append_output_cost(self, defined_steam_cost):
 
@@ -238,6 +245,8 @@ class Block:
 
     # Calculation Methods
     def get_matrix_row(self, n_elements):
+
+        self.calculate_exergy_analysis()
 
         if self.is_dissipative:
 
@@ -386,15 +395,15 @@ class Block:
 
             if redistribution_method == CalculationOptions.EXERGY_DESTRUCTION:
 
-                redistribution_index = abs(self.exergy_balance)/redistribution_sum
+                redistribution_index = abs(self.exergy_balance) / redistribution_sum
 
             elif redistribution_method == CalculationOptions.EXERGY_PRODUCT:
 
-                redistribution_index = abs(self.productive_exergy_output)/redistribution_sum
+                redistribution_index = abs(self.productive_exergy_output) / redistribution_sum
 
             else:
 
-                redistribution_index = abs(self.comp_cost)/redistribution_sum
+                redistribution_index = abs(self.comp_cost) / redistribution_sum
 
         return redistribution_index
 
@@ -486,6 +495,79 @@ class Block:
                 counter += 1
 
         return counter
+
+    def calculate_exergy_analysis(self):
+
+        fuel_exergy = 0.
+        lost_exergy = 0.
+        product_exergy = 0.
+
+        for conn in self.input_connections:
+            fuel_exergy += conn.exergy_value
+
+        for conn in self.output_connections:
+
+            if conn.is_loss:
+
+                lost_exergy += conn.exergy_value
+
+            else:
+
+                product_exergy += conn.exergy_value
+
+        destruction_exergy = fuel_exergy - product_exergy - lost_exergy
+        self.exergy_analysis.update({"fuel": fuel_exergy,
+                                     "product": product_exergy,
+                                     "losses": lost_exergy,
+                                     "distruction": destruction_exergy})
+
+    def calculate_coefficients(self, total_destruction):
+
+        r = 0
+        f = 0
+        y = 0
+        eta = 0
+
+        c_fuel = 0
+        c_dest = 0
+
+        fuel_exergy = self.exergy_analysis["fuel"]
+        dest_exergy = self.exergy_analysis["distruction"] + self.exergy_analysis["losses"]
+
+        fuel_cost = 0.
+
+        for conn in self.input_connections:
+
+            fuel_cost += conn.exergy_value * conn.rel_cost
+
+        if not fuel_exergy == 0:
+
+            eta = self.productive_exergy_output / abs(fuel_exergy)
+
+            if eta > 1:
+                eta = 1/eta
+
+            c_fuel = fuel_cost / abs(fuel_exergy)
+            c_dest = c_fuel * abs(dest_exergy)
+
+        if not c_fuel == 0:
+
+            r = (self.output_cost - c_fuel) / c_fuel
+
+        if not (self.comp_cost + c_dest) == 0:
+
+            f = self.comp_cost / (self.comp_cost + c_dest)
+
+        if not total_destruction == 0:
+
+            y = dest_exergy / total_destruction
+
+        self.coefficients.update({"r": r,
+                                  "f": f,
+                                  "y": y,
+                                  "eta": eta,
+                                  "c_fuel": c_fuel,
+                                  "c_dest": c_dest})
 
     # EES Methods
     @classmethod
@@ -625,7 +707,6 @@ class Block:
         productive_exergy_output = 0
 
         for conn in self.non_loss_output:
-
             productive_exergy_output += abs(conn.exergy_value)
 
         return productive_exergy_output
@@ -636,8 +717,7 @@ class Block:
         cost_balance = self.comp_cost
 
         for conn in self.input_connections:
-
-            cost_balance += conn.exergy_value*conn.rel_cost
+            cost_balance += conn.exergy_value * conn.rel_cost
 
         if self.is_dissipative:
 
@@ -646,8 +726,7 @@ class Block:
         else:
 
             for conn in self.output_connections:
-
-                cost_balance -= conn.exergy_value*conn.rel_cost
+                cost_balance -= conn.exergy_value * conn.rel_cost
 
         return cost_balance
 
@@ -1253,7 +1332,6 @@ class ArrayHandler:
                         redistribution_sum = block.redistribution_sum
 
                         for non_diss_blocks in block.redistribution_block_list:
-
                             self.matrix[non_diss_blocks.ID, i] = -non_diss_blocks.redistribution_index(redistribution_sum)
 
                     i += 1
@@ -1261,7 +1339,9 @@ class ArrayHandler:
                 matrix_analyzer = MatrixAnalyzer(self.matrix, self.vector)
                 matrix_analyzer.solve()
                 sol = matrix_analyzer.solution
+
                 self.append_solution(sol)
+                self.calculate_coefficients()
 
     def find_connection_by_index(self, index):
 
@@ -1310,6 +1390,14 @@ class ArrayHandler:
 
         self.__reset_IDs(reset_block=True)
         self.__reset_IDs(reset_block=False)
+
+    def calculate_coefficients(self):
+
+        total_destruction = self.total_destruction
+
+        for block in self.block_list:
+
+            block.calculate_coefficients(total_destruction)
 
     @property
     def useful_effect_connections(self):
@@ -1370,7 +1458,6 @@ class ArrayHandler:
         overall_investment_cost = 0
 
         for block in self.block_list:
-
             overall_investment_cost += block.comp_cost
 
         return overall_investment_cost
@@ -1381,7 +1468,7 @@ class ArrayHandler:
         balance = self.overall_investment_cost
 
         for conn in self.system_inputs:
-            balance += conn.exergy_value*conn.rel_cost
+            balance += conn.exergy_value * conn.rel_cost
 
         for conn in self.system_outputs:
             balance -= conn.exergy_value * conn.rel_cost
@@ -1407,6 +1494,21 @@ class ArrayHandler:
                 return True
 
         return False
+
+    @property
+    def total_destruction(self):
+
+        total_destruction = 0
+
+        for conn in self.system_inputs:
+
+            total_destruction += conn.exergy_value
+
+        for conn in self.useful_effect_connections:
+
+            total_destruction -= conn.exergy_value
+
+        return total_destruction
 
     @property
     def xml(self) -> ETree.Element:
@@ -1613,14 +1715,13 @@ class CalculationOptions:
         self.calculate_on_pf_diagram = True
         self.loss_cost_is_zero = True
 
-        self.valve_is_dissipative = False
+        self.valve_is_dissipative = True
         self.condenser_is_dissipative = True
 
-        self.redistribution_method = CalculationOptions.EXERGY_PRODUCT
+        self.redistribution_method = CalculationOptions.RELATIVE_COST
 
     @property
     def xml(self) -> ETree.Element:
-
         option_child = ETree.Element("options")
 
         option_child.set("calculate_on_pf_diagram", str(self.calculate_on_pf_diagram))
@@ -1634,7 +1735,6 @@ class CalculationOptions:
 
     @xml.setter
     def xml(self, xml_input: ETree.Element):
-
         self.calculate_on_pf_diagram = xml_input.get("calculate_on_pf_diagram") == "True"
         self.loss_cost_is_zero = xml_input.get("loss_cost_is_zero") == "True"
 

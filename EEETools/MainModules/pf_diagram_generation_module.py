@@ -23,6 +23,7 @@ class ProductBlock(Generic):
     def append_output_cost(self, defined_steam_cost):
 
         self.output_cost = defined_steam_cost
+        self.base_block.output_cost = defined_steam_cost
 
         for outConn in self.contained_connection:
 
@@ -35,6 +36,7 @@ class ProductBlock(Generic):
     def find_product_connections(self):
 
         for conn in self.base_block.output_connections:
+
             self.__check_connection(conn)
 
         self.__set_comp_cost()
@@ -48,6 +50,13 @@ class ProductBlock(Generic):
         else:
 
             return element in self.contained_blocks
+
+    def calculate_coefficients(self, total_destruction):
+
+        super(ProductBlock, self).calculate_coefficients(total_destruction)
+
+        self.base_block.coefficients = self.coefficients
+        self.base_block.exergy_analysis = self.exergy_analysis
 
     def __check_connection(self, conn):
 
