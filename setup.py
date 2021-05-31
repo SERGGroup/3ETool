@@ -19,7 +19,7 @@ setup(
     long_description_content_type='text/markdown',
 
     url='https://tinyurl.com/SERG-3ETool',
-    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.7.tar.gz',
+    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.9.tar.gz',
 
     packages=[
 
