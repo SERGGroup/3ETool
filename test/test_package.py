@@ -24,6 +24,16 @@ class MyTestCase(unittest.TestCase):
 
         self.assertTrue(True)
 
+    def test_main_modules(self):
+
+        import EEETools
+
+        EEETools.paste_components_documentation()
+        EEETools.paste_user_manual()
+        EEETools.paste_default_excel_file()
+
+        self.assertTrue(True)
+
 
 if __name__ == '__main__':
     unittest.main()
