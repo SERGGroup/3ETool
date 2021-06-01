@@ -1,9 +1,10 @@
 from EEETools.Tools.modules_importer import calculate_excel
+import urllib.request, warnings
 from tkinter import filedialog
 from EEETools import costants
 from shutil import copyfile
 import tkinter as tk
-import os, pyrebase, warnings
+import os, pyrebase
 
 
 def calculate():
@@ -63,5 +64,5 @@ def __retrieve_file(filename, file_position):
 
     firebase = pyrebase.initialize_app(costants.FIREBASE_CONFIG)
     storage = firebase.storage()
-
-    storage.child("3ETool_res/Other/" + filename).download("", file_position)
+    url = storage.child("3ETool_res/Other/" + filename).get_url(token=None)
+    urllib.request.urlretrieve(url, file_position)
