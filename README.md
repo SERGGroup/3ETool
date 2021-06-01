@@ -20,13 +20,15 @@ Finally, once the excel file has been compiled, the calculation can be initializ
 ```python
 EEETools.calculate()
 ```
-calculation options can be passed to the function as well (default values are _true_): 
+calculation options and user defined excel path can be passed to the function as well (default values are _true_); in case user does not pass the path, the app will automatically open a filedialog window so that it can be selected manually
 ```python
-EEETools.calculate( calculate_on_pf_diagram = True, 
-                    loss_cost_is_zero = True, 
-                    valve_is_dissipative = True, 
-                    condenser_is_dissipative = True)
+EEETools.calculate(excel_path="your_excel_file.xlsx"
+                   calculate_on_pf_diagram = True, 
+                   loss_cost_is_zero = True, 
+                   valve_is_dissipative = True, 
+                   condenser_is_dissipative = True)
 ```
+
 <br/><br/>
 __The application code is divided into 3 main folders:__<br/><br/>
 __MainModules__ directory contains Base modules such as _Block, Connection, ArrayHandler and Drawer Classes._<br/>

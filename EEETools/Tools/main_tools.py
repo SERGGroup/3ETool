@@ -9,14 +9,14 @@ import os, pyrebase
 import requests
 
 
-def calculate(calculate_on_pf_diagram = True, loss_cost_is_zero = True, valve_is_dissipative = True, condenser_is_dissipative = True):
-
-    root = tk.Tk()
-    root.withdraw()
-    excel_path = filedialog.askopenfilename()
+def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=True, valve_is_dissipative=True, condenser_is_dissipative=True):
 
     if excel_path == "":
+        root = tk.Tk()
+        root.withdraw()
+        excel_path = filedialog.askopenfilename()
 
+    if excel_path == "":
         return
 
     option = CalculationOptions()
@@ -41,7 +41,6 @@ def paste_components_documentation():
 
 
 def __import_file(filename):
-
     root = tk.Tk()
     root.withdraw()
 
@@ -78,7 +77,6 @@ def __import_file(filename):
 
 
 def __retrieve_file(filename, file_position):
-
     url = costants.GITHUB_CONGIF["url"] + filename.replace(" ", "%20")
     head = {'Authorization': 'token {}'.format(costants.GITHUB_CONGIF["token"])}
     r = requests.get(url, allow_redirects=True, headers=head)
