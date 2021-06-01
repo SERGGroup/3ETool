@@ -34,6 +34,13 @@ class MyTestCase(unittest.TestCase):
 
         self.assertTrue(True)
 
+    def test_main_modules_calculation(self):
+
+        import EEETools
+        EEETools.calculate()
+
+        self.assertTrue(True)
+
 
 if __name__ == '__main__':
     unittest.main()
