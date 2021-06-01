@@ -548,15 +548,15 @@ class Block:
                 eta = 1/eta
 
             c_fuel = fuel_cost / abs(fuel_exergy)
-            c_dest = c_fuel * abs(dest_exergy)
+            c_dest = c_fuel
 
         if not c_fuel == 0:
 
             r = (self.output_cost - c_fuel) / c_fuel
 
-        if not (self.comp_cost + c_dest) == 0:
+        if not (self.comp_cost + c_dest * abs(dest_exergy)) == 0:
 
-            f = self.comp_cost / (self.comp_cost + c_dest)
+            f = self.comp_cost / (self.comp_cost + c_dest * abs(dest_exergy))
 
         if not total_destruction == 0:
 
