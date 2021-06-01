@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='3ETool',
-    version='0.0.10',
+    version='0.0.11',
     license='GNU GPLv3',
 
     author='Pietro Ungar',
@@ -19,7 +19,15 @@ setup(
     long_description_content_type='text/markdown',
 
     url='https://tinyurl.com/SERG-3ETool',
-    download_url='https://github.com/SERGGroup/3ETool/archive/refs/tags/0.0.10.tar.gz',
+    download_url='https://github.com/SERGGroup/3ETool/archive/refs/tags/0.0.11.tar.gz',
+
+    project_urls={
+
+        'Documentation': 'https://firebasestorage.googleapis.com/v0/b/etapp-serggroup.appspot.com/o/3ETool_res%2FOther%2FUser%20Guide-eng.pdf?alt=media&token=db51ff1e-4c63-48b9-8b42-322a2eee44da',
+        'Source': 'https://github.com/SERGGroup/3ETool',
+        'Tracker': 'https://github.com/SERGGroup/3ETool/issues',
+
+    },
 
     packages=[
 

@@ -1,31 +1,22 @@
 # 3ETool
 
 __3ETool__ contains some useful tools developed by the [SERG research group](https://www.dief.unifi.it/vp-177-serg-group-english-version.html) 
-of the [University of Florence](https://www.unifi.it/changelang-eng.html) for performing exergo-economic and exergo environmental analysis.
+of the [University of Florence](https://www.unifi.it/changelang-eng.html) for performing exergo-economic and exergo environmental analysis. The __user manual__ can be downloaded [here](https://firebasestorage.googleapis.com/v0/b/etapp-serggroup.appspot.com/o/3ETool_res%2FOther%2FUser%20Guide-eng.pdf?alt=media&token=db51ff1e-4c63-48b9-8b42-322a2eee44da). Moreover, some [youtube tutorials](https://www.youtube.com/playlist?list=PLj6A7PjCJLfa9xNOFwRc3D_XroWhKlptj) have been uploaded in order to help the user in compiling the excel file.
 
-you can dawnload the beta version using __PIP__:
+The beta version can be downloaded using __PIP__:
 
 ```
-pip install 3ETools
+pip install 3ETool
 ```
-Once the installation has been completed you can import the tool:
+Once the installation has been completed the user can import the tool, and paste to a desired location the __user manual__, the __components documentation__ or the __default excel file__, as in the _matlab version_ of the app.
 ```python
 import EEETools
-```
-and then pasting the user manual:
-```python
+
 EEETools.paste_user_manual()
-```
-the components documentation
-```python
 EEETools.paste_components_documentation()
-```
-and the default excel file
-```python
 EEETools.paste_default_excel_file()
 ```
-to a desired path.<br/><br/>
-Finally, once the excel file has been compiled, the calculation can be initialized trough the command:
+Finally, once the excel file has been compiled, the calculation can be initialized trough this command:
 ```python
 EEETools.calculate()
 ```
@@ -39,4 +30,4 @@ the EES code generator, and the importer and exporter for both Excel and xml fil
 __-------------------------- !!! THIS IS A BETA VERSION !!! --------------------------__ 
 
 please report any bug or problems in the installation to _pietro.ungar@unifi.it_<br/>
-for further information visit: https://www.dief.unifi.it/vp-473-exergo-economic-analysis-software.html
+for further information visit: https://tinyurl.com/SERG-3ETool
