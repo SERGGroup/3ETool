@@ -5,6 +5,7 @@ from EEETools import costants
 from shutil import copyfile
 import tkinter as tk
 import os, pyrebase
+import ssl
 
 
 def calculate():
@@ -44,7 +45,7 @@ def __import_file(filename):
 
         except:
 
-            warning_message = "<----------------- !WARNING! ------------------->\n"
+            warning_message = "\n\n<----------------- !WARNING! ------------------->\n"
             warning_message += "Unable to save the file to the desired location!\n\n"
 
             warning_message += "file name:\t" + filename + "\n"
@@ -66,3 +67,4 @@ def __retrieve_file(filename, file_position):
     storage = firebase.storage()
     url = storage.child("3ETool_res/Other/" + filename).get_url(token=None)
     urllib.request.urlretrieve(url, file_position)
+    ssl.create_default_context()
