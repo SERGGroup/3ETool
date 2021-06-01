@@ -6,7 +6,7 @@ from EEETools import costants
 from shutil import copyfile
 import tkinter as tk
 import os, pyrebase
-import ssl
+import requests
 
 
 def calculate(calculate_on_pf_diagram = True, loss_cost_is_zero = True, valve_is_dissipative = True, condenser_is_dissipative = True):
@@ -79,8 +79,7 @@ def __import_file(filename):
 
 def __retrieve_file(filename, file_position):
 
-    firebase = pyrebase.initialize_app(costants.FIREBASE_CONFIG)
-    storage = firebase.storage()
-    url = storage.child("3ETool_res/Other/" + filename).get_url(token=None)
-    urllib.request.urlretrieve(url, file_position)
-    ssl.create_default_context()
+    url = costants.GITHUB_CONGIF["url"] + filename.replace(" ", "%20")
+    head = {'Authorization': 'token {}'.format(costants.GITHUB_CONGIF["token"])}
+    r = requests.get(url, allow_redirects=True, headers=head)
+    open(file_position, 'wb').write(r.content)
