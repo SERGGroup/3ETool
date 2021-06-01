@@ -10,7 +10,7 @@ pip install 3ETools
 ```
 Once the installation has been completed you can import the tool:
 ```python
-import EEETool
+import EEETools
 ```
 and then pasting the user manual:
 ```python
