@@ -1,12 +1,11 @@
 from EEETools.MainModules.main_module import CalculationOptions
 from EEETools.Tools.modules_importer import calculate_excel
-import urllib.request, warnings
+import os, requests, warnings
 from tkinter import filedialog
 from EEETools import costants
 from shutil import copyfile
 import tkinter as tk
-import os, pyrebase
-import requests
+
 
 
 def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=True, valve_is_dissipative=True, condenser_is_dissipative=True):

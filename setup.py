@@ -46,7 +46,8 @@ setup(
         'PyQt5>=5.15.4',
         'setuptools',
         'xlrd',
-        'openpyxl'
+        'openpyxl',
+        'requests'
 
     ],
 
