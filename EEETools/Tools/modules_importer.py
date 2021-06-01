@@ -105,8 +105,8 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
     now_str = now.strftime("%H.%M")
 
     for key in result_df.keys():
-
-        __write_excel_file(excel_path, sheet_name=(key + " - " + today_str + " - " + now_str), data_frame=result_df[key])
+        __write_excel_file(excel_path, sheet_name=(key + " - " + today_str + " - " + now_str),
+                           data_frame=result_df[key])
 
 
 def export_dat(dat_path, array_handler: ArrayHandler):
@@ -116,7 +116,6 @@ def export_dat(dat_path, array_handler: ArrayHandler):
 
 
 def import_dat(dat_path) -> ArrayHandler:
-
     array_handler = ArrayHandler()
     fernet = FernetHandler()
     root = fernet.read_file(dat_path)
@@ -126,7 +125,6 @@ def import_dat(dat_path) -> ArrayHandler:
 
 
 def write_csv_solution(dat_path, array_handler):
-
     result_df = get_result_data_frames(array_handler)
 
     # generation of time stamps for excel sheet name
@@ -138,16 +136,14 @@ def write_csv_solution(dat_path, array_handler):
     dir_path = os.path.dirname(dat_path)
 
     for key in result_df.keys():
-
         csv_path = key + " - " + today_str + " - " + now_str + ".csv"
         csv_path = os.path.join(dir_path, csv_path)
 
         pandas_df = pandas.DataFrame(data=result_df[key])
-        pandas_df.to_csv(path_or_buf= csv_path, sep="\t")
+        pandas_df.to_csv(path_or_buf=csv_path, sep="\t")
 
 
 def get_result_data_frames(array_handler: ArrayHandler) -> dict:
-
     # Stream Solution Data frame generation
     stream_data = {"Stream": list(),
                    "Name": list(),
@@ -159,12 +155,11 @@ def get_result_data_frames(array_handler: ArrayHandler) -> dict:
     for conn in array_handler.connection_list:
 
         if not conn.is_internal_stream:
-
             stream_data["Stream"].append(conn.index)
             stream_data["Name"].append(conn.name)
             stream_data["Exergy Value [kW]"].append(conn.exergy_value)
             stream_data["Specific Cost [€/kJ]"].append(conn.rel_cost)
-            stream_data["Specific Cost [€/kWh]"].append(conn.rel_cost*3600)
+            stream_data["Specific Cost [€/kWh]"].append(conn.rel_cost * 3600)
             stream_data["Total Cost [€/s]"].append(conn.rel_cost * conn.exergy_value)
 
     # Components Data frame generation
@@ -192,7 +187,6 @@ def get_result_data_frames(array_handler: ArrayHandler) -> dict:
     for block in array_handler.block_list:
 
         if not block.is_support_block:
-
             comp_data["Name"].append(block.name)
             comp_data["Comp Cost [€/s]"].append(block.comp_cost)
 
@@ -208,7 +202,8 @@ def get_result_data_frames(array_handler: ArrayHandler) -> dict:
 
             comp_data["Fuel Cost [€/s]"].append(block.coefficients["c_fuel"] * block.exergy_analysis["fuel"])
             comp_data["Product Cost [€/s]"].append(block.output_cost * block.exergy_analysis["fuel"])
-            comp_data["Destruction Cost [€/s]"].append(block.coefficients["c_dest"] * (block.exergy_analysis["distruction"] + block.exergy_analysis["losses"]))
+            comp_data["Destruction Cost [€/s]"].append(
+                block.coefficients["c_dest"] * (block.exergy_analysis["distruction"] + block.exergy_analysis["losses"]))
 
             comp_data["eta"].append(block.coefficients["eta"])
             comp_data["r"].append(block.coefficients["r"])
@@ -224,7 +219,6 @@ def get_result_data_frames(array_handler: ArrayHandler) -> dict:
                    "Total Cost [€/s]": list()}
 
     for conn in array_handler.useful_effect_connections:
-
         useful_data["Stream"].append(conn.index)
         useful_data["Name"].append(conn.name)
         useful_data["Exergy Value [kW]"].append(conn.exergy_value)
@@ -239,24 +233,24 @@ def get_result_data_frames(array_handler: ArrayHandler) -> dict:
 
 def __convert_result_data_frames(data_frame: dict) -> dict:
 
-        new_data_frame = dict()
+    new_data_frame = dict()
 
-        for key in data_frame.keys():
+    for key in data_frame.keys():
 
-            sub_dict = __get_sub_dict(key)
-            sub_dict.update({"values": list()})
+        sub_dict = __get_sub_dict(key)
+        sub_dict.update({"values": list()})
 
-            if not sub_dict["name"] in new_data_frame.keys():
+        if not sub_dict["name"] in new_data_frame.keys():
 
-                new_data_frame.update({sub_dict["name"]: sub_dict})
+            new_data_frame.update({sub_dict["name"]: sub_dict})
 
-            else:
+        else:
 
-                (new_data_frame[sub_dict["name"]])["unit"].append(sub_dict["unit"][0])
+            (new_data_frame[sub_dict["name"]])["unit"].append(sub_dict["unit"][0])
 
-            (new_data_frame[sub_dict["name"]])["values"].append([data_frame[key]])
+        (new_data_frame[sub_dict["name"]])["values"].append([data_frame[key]])
 
-        return new_data_frame
+    return new_data_frame
 
 
 def __get_sub_dict(key):
@@ -273,10 +267,10 @@ def __get_sub_dict(key):
         name = key
         measure_unit = list()
 
-    return{"name": name, "unit": measure_unit}
+    return {"name": name, "unit": measure_unit}
 
 
-def __write_excel_file(excel_path, sheet_name, data_frame:dict):
+def __write_excel_file(excel_path, sheet_name, data_frame: dict):
 
     data_frame = __convert_result_data_frames(data_frame)
 
@@ -289,7 +283,6 @@ def __write_excel_file(excel_path, sheet_name, data_frame:dict):
         wb = load_workbook(excel_path)
 
     if not sheet_name in wb.sheetnames:
-
         wb.create_sheet(sheet_name)
 
     sheet = wb[sheet_name]
@@ -321,11 +314,9 @@ def __write_excel_file(excel_path, sheet_name, data_frame:dict):
         else:
 
             if n_sub_element > 1:
-
-                sheet.merge_cells(start_row=row, start_column=col, end_row=row, end_column = col + n_sub_element - 1)
+                sheet.merge_cells(start_row=row, start_column=col, end_row=row, end_column=col + n_sub_element - 1)
 
             for n in range(n_sub_element):
-
                 row = 3
                 cell = sheet.cell(row, col + n, value="[" + sub_data_frame["unit"][n] + "]")
                 cell.alignment = styles.Alignment(horizontal="center", vertical="center")
@@ -342,13 +333,9 @@ def __write_excel_file(excel_path, sheet_name, data_frame:dict):
             sheet.column_dimensions[utils.get_column_letter(col)].width = column_dimension
 
             for data in data_list:
-
                 sheet.cell(row, col, value=data)
                 row += 1
 
             col += 1
 
     wb.save(excel_path)
-
-
-
