@@ -22,7 +22,7 @@ EEETools.calculate()
 ```
 calculation options and user defined excel path can be passed to the function as well (default values are _true_); in case user does not pass the path, the app will automatically open a filedialog window so that it can be selected manually
 ```python
-EEETools.calculate(excel_path="prova.xlsx"
+EEETools.calculate(excel_path="your_excel_file.xlsx"
                    calculate_on_pf_diagram = True, 
                    loss_cost_is_zero = True, 
                    valve_is_dissipative = True, 
