@@ -21,16 +21,23 @@ if not os.path.isdir(RES_DIR):
 # FIREBASE CONFIGURATION DICT
 FIREBASE_CONFIG = {
 
-            "apiKey": "AIzaSyBQ4ZKw45o3U06gz9u1pmLd53cImzYGHj8",
-            "databaseURL":"https://etapp-serggroup-default-rtdb.europe-west1.firebasedatabase.app",
-            "authDomain": "etapp-serggroup.firebaseapp.com",
-            "projectId": "etapp-serggroup",
-            "storageBucket": "etapp-serggroup.appspot.com",
-            "messagingSenderId": "12706429785",
-            "appId": "1:12706429785:web:66cd6f6b1c1ed13b9e2a48",
-            "measurementId": "G-T2SHVKSR9H"
+    "apiKey": "AIzaSyBQ4ZKw45o3U06gz9u1pmLd53cImzYGHj8",
+    "databaseURL":"https://etapp-serggroup-default-rtdb.europe-west1.firebasedatabase.app",
+    "authDomain": "etapp-serggroup.firebaseapp.com",
+    "projectId": "etapp-serggroup",
+    "storageBucket": "etapp-serggroup.appspot.com",
+    "messagingSenderId": "12706429785",
+    "appId": "1:12706429785:web:66cd6f6b1c1ed13b9e2a48",
+    "measurementId": "G-T2SHVKSR9H"
 
-        }
+}
+
+GITHUB_CONGIF ={
+
+    "url": "https://github.com/SERGGroup/3ETool/raw/master/3ETool_res/Other/",
+    "token": "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"
+
+}
 
 # EES FORMAT STYLES
 STYLES = {"error": {"color": "#ff4d00",

@@ -28,9 +28,9 @@ class MyTestCase(unittest.TestCase):
 
         import EEETools
 
-        EEETools.paste_components_documentation()
+        #EEETools.paste_components_documentation()
         EEETools.paste_user_manual()
-        EEETools.paste_default_excel_file()
+        #EEETools.paste_default_excel_file()
 
         self.assertTrue(True)
 
