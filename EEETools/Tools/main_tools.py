@@ -1,9 +1,9 @@
-from EEETools.Tools.modules_importer import *
+from EEETools.Tools.modules_importer import calculate_excel
 from tkinter import filedialog
 from EEETools import costants
 from shutil import copyfile
 import tkinter as tk
-import os, pyrebase
+import os, pyrebase, warnings
 
 
 def calculate():
@@ -37,15 +37,31 @@ def __import_file(filename):
 
     if not os.path.isfile(file_position):
 
-        __retrieve_file(filename)
+        try:
 
-    copyfile(file_position, file_path)
+            __retrieve_file(filename, file_position)
+
+        except:
+
+            warning_message = "<----------------- !WARNING! ------------------->\n"
+            warning_message += "Unable to save the file to the desired location!\n\n"
+
+            warning_message += "file name:\t" + filename + "\n"
+            warning_message += "file position:\t" + file_position + "\n"
+            warning_message += "new file position:\t" + file_path + "\n\n"
+
+            warnings.warn(warning_message)
+
+            __retrieve_file(filename, file_path)
+
+        else:
+
+            copyfile(file_position, file_path)
 
 
-def __retrieve_file(filename):
+def __retrieve_file(filename, file_position):
 
     firebase = pyrebase.initialize_app(costants.FIREBASE_CONFIG)
     storage = firebase.storage()
 
-    file_position = os.path.join(costants.RES_DIR, "Other", filename)
     storage.child("3ETool_res/Other/" + filename).download("", file_position)

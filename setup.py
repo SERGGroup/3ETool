@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='3ETool',
-    version='0.0.9',
+    version='0.0.10',
     license='GNU GPLv3',
 
     author='Pietro Ungar',
@@ -19,7 +19,7 @@ setup(
     long_description_content_type='text/markdown',
 
     url='https://tinyurl.com/SERG-3ETool',
-    download_url='https://github.com/pietroUngar/3ETool/archive/refs/tags/0.0.9.tar.gz',
+    download_url='https://github.com/SERGGroup/3ETool/archive/refs/tags/0.0.10.tar.gz',
 
     packages=[
 
