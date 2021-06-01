@@ -1,3 +1,4 @@
+from EEETools.MainModules.main_module import CalculationOptions
 from openpyxl import Workbook, load_workbook, styles, utils
 from datetime import date, datetime
 import math
@@ -8,10 +9,15 @@ from EEETools.MainModules.main_module import ArrayHandler
 from EEETools.Tools.Other.fernet_handler import FernetHandler
 
 
-def calculate_excel(excel_path):
+def calculate_excel(excel_path, calculation_option=None):
 
     array_handler = import_excel_input(excel_path)
     array_handler.calculate()
+
+    if calculation_option is not None and type(calculation_option) == CalculationOptions:
+
+        array_handler.options = calculation_option
+
     export_solution_to_excel(excel_path, array_handler)
 
 

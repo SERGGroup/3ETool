@@ -1,3 +1,4 @@
+from EEETools.MainModules.main_module import CalculationOptions
 from EEETools.Tools.modules_importer import calculate_excel
 import urllib.request, warnings
 from tkinter import filedialog
@@ -8,12 +9,23 @@ import os, pyrebase
 import ssl
 
 
-def calculate():
+def calculate(calculate_on_pf_diagram = True, loss_cost_is_zero = True, valve_is_dissipative = True, condenser_is_dissipative = True):
 
     root = tk.Tk()
     root.withdraw()
     excel_path = filedialog.askopenfilename()
-    calculate_excel(excel_path)
+
+    if excel_path == "":
+
+        return
+
+    option = CalculationOptions()
+    option.calculate_on_pf_diagram = calculate_on_pf_diagram
+    option.loss_cost_is_zero = loss_cost_is_zero
+    option.valve_is_dissipative = valve_is_dissipative
+    option.condenser_is_dissipative = condenser_is_dissipative
+
+    calculate_excel(excel_path, option)
 
 
 def paste_default_excel_file():
@@ -34,6 +46,10 @@ def __import_file(filename):
     root.withdraw()
 
     dir_path = filedialog.askdirectory()
+
+    if dir_path == "":
+        return
+
     file_path = os.path.join(dir_path, filename)
     file_position = os.path.join(costants.RES_DIR, "Other", filename)
 
