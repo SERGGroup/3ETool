@@ -34,8 +34,9 @@ FIREBASE_CONFIG = {
 
 GITHUB_CONGIF ={
 
-    "url": "https://github.com/SERGGroup/3ETool/raw/master/3ETool_res/Other/",
-    "token": "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"
+    "repo": "3ETool",
+    "token": "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",
+    "path": "3ETool_res/Other/"
 
 }
 

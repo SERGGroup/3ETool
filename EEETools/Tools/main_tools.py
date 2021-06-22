@@ -5,11 +5,11 @@ from tkinter import filedialog
 from EEETools import costants
 from shutil import copyfile
 import tkinter as tk
+from github import Github
 
 
-
-def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=True, valve_is_dissipative=True, condenser_is_dissipative=True):
-
+def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=True, valve_is_dissipative=True,
+              condenser_is_dissipative=True):
     if excel_path == "":
         root = tk.Tk()
         root.withdraw()
@@ -62,13 +62,13 @@ def __import_file(filename):
             warning_message = "\n\n<----------------- !WARNING! ------------------->\n"
             warning_message += "Unable to save the file to the desired location!\n\n"
 
-            warning_message += "file name:\t" + filename + "\n"
-            warning_message += "file position:\t" + file_position + "\n"
+            warning_message += "file name:\t\t\t" + filename + "\n"
+            warning_message += "file position:\t\t" + file_position + "\n"
             warning_message += "new file position:\t" + file_path + "\n\n"
 
             warnings.warn(warning_message)
 
-            __retrieve_file(filename, file_path)
+            __retrieve_file(filename, file_position)
 
         else:
 
@@ -76,7 +76,31 @@ def __import_file(filename):
 
 
 def __retrieve_file(filename, file_position):
-    url = costants.GITHUB_CONGIF["url"] + filename.replace(" ", "%20")
-    head = {'Authorization': 'token {}'.format(costants.GITHUB_CONGIF["token"])}
-    r = requests.get(url, allow_redirects=True, headers=head)
-    open(file_position, 'wb').write(r.content)
+
+    token = costants.GITHUB_CONGIF["token"]
+    base_repo = costants.GITHUB_CONGIF["repo"]
+    base_path = costants.GITHUB_CONGIF["path"]
+
+    github = Github(token)
+    repo = github.get_user().get_repo(base_repo)
+    content = repo.get_contents(base_path + filename)
+
+    url = content.download_url
+    r = requests.get(url)
+
+    if r.status_code == 200:
+
+        with open(file_position, "wb") as file:
+
+            file.write(r.content)
+
+    else:
+
+        warning_message = "\n\n<----------------- !ERROR! ------------------->\n"
+        warning_message += "Unable to download the file!\n\n"
+
+        warning_message += "file name:\t\t" + filename + "\n"
+        warning_message += "status_code:\t\t" + str(r.status_code) + "\n"
+        warning_message += "url:\t\t\t" + url + "\n\n"
+
+        raise RuntimeError(warning_message)
