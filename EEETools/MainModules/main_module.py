@@ -193,7 +193,7 @@ class Block:
         for conn in _tmpConnectionArray:
             self.remove_connection(conn)
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         raise (NotImplementedError, "block.append_excel_connection_list() must be overloaded in subclasses")
 
@@ -439,6 +439,17 @@ class Block:
             return self.ID
 
     @property
+    def get_main_name(self):
+
+        if self.is_support_block:
+
+            return self.main_block.get_main_name
+
+        else:
+
+            return self.name
+
+    @property
     def is_dissipative(self):
 
         # this method returns true if all the outputs are exergy losses or have an exergy value equal to 0
@@ -659,7 +670,7 @@ class Block:
             if not connection.is_internal_stream:
                 input_connections.append(connection)
 
-        if self.is_support_block and self.has_support_block:
+        if self.has_support_block:
             for block in self.support_block:
                 input_connections.extend(block.external_input_connections)
 
@@ -669,14 +680,14 @@ class Block:
     def external_output_connections(self):
 
         output_connections = list()
+
         for connection in self.output_connections:
             if not connection.is_internal_stream:
                 output_connections.append(connection)
 
         if self.has_support_block:
             for block in self.support_block:
-                if "Drawer" not in str(type(block)):
-                    output_connections.extend(block.external_output_connections)
+                output_connections.extend(block.external_output_connections)
 
         return output_connections
 
@@ -1357,6 +1368,40 @@ class ArrayHandler:
 
         return None
 
+    def find_block_by_ID(self, ID) -> Block:
+
+        ID = int(ID)
+
+        for block in self.block_list:
+
+            try:
+
+                if block.ID == ID:
+                    return block
+
+            except:
+
+                pass
+
+        return None
+
+    def find_connection_by_ID(self, ID) -> Connection:
+
+        ID = int(ID)
+
+        for conn in self.connection_list:
+
+            try:
+
+                if conn.ID == ID:
+                    return conn
+
+            except:
+
+                pass
+
+        return None
+
     def append_excel_costs_and_useful_output(self, input_list, add_useful_output, input_cost):
 
         for elem in input_list:
@@ -1398,6 +1443,31 @@ class ArrayHandler:
         for block in self.block_list:
 
             block.calculate_coefficients(total_destruction)
+
+    @property
+    def standard_block_IDs(self):
+
+        IDs = list()
+
+        for block in self.block_list:
+
+            if not block.is_support_block:
+
+                IDs.append(block.ID)
+
+        return IDs
+
+    @property
+    def standard_conn_IDs(self):
+
+        IDs = list()
+
+        for conn in self.connection_list:
+
+            if not conn.is_internal_stream:
+                IDs.append(conn.ID)
+
+        return IDs
 
     @property
     def useful_effect_connections(self):

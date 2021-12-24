@@ -1,15 +1,17 @@
+from EEETools.Tools.GUIElements.connection_and_block_check import CheckConnectionWidget
+from EEETools.Tools.modules_importer import calculate_excel, import_excel_input
 from EEETools.MainModules.main_module import CalculationOptions
-from EEETools.Tools.modules_importer import calculate_excel
 import os, requests, warnings
 from tkinter import filedialog
 from EEETools import costants
 from shutil import copyfile
-import tkinter as tk
 from github import Github
+import tkinter as tk
 
 
 def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=True, valve_is_dissipative=True,
               condenser_is_dissipative=True):
+
     if excel_path == "":
         root = tk.Tk()
         root.withdraw()
@@ -25,6 +27,20 @@ def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=Tru
     option.condenser_is_dissipative = condenser_is_dissipative
 
     calculate_excel(excel_path, option)
+
+
+def launch_connection_debug(excel_path=""):
+
+    if excel_path == "":
+        root = tk.Tk()
+        root.withdraw()
+        excel_path = filedialog.askopenfilename()
+
+    if excel_path == "":
+        return
+
+    array_handler = import_excel_input(excel_path)
+    CheckConnectionWidget.launch(array_handler)
 
 
 def paste_default_excel_file():

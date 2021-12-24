@@ -28,7 +28,7 @@ class HeatExchanger(Block):
 
         return True
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         if str(input_list[0]) in ["Heat Exchanger", "Scambiatore"]:
 

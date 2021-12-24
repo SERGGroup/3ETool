@@ -31,7 +31,7 @@ class Alternator(Block):
         new_conn.automatically_generated_connection = True
         new_conn.exergy_value = self.exergy_balance
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         self.efficiency = float(input_list[0])
 

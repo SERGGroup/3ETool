@@ -29,7 +29,7 @@ class Valve(Block):
         if self.main_class.options.valve_is_dissipative:
             self.support_block[0].prepare_for_calculation()
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         new_input_conn = self.main_class.find_connection_by_index(input_list[0])
         new_output_conn = self.main_class.find_connection_by_index(input_list[1])

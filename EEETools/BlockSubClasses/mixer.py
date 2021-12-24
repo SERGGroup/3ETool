@@ -12,7 +12,7 @@ class Mixer(Block):
     def is_ready_for_calculation(self):
         return len(self.input_connections) >= 1 and len(self.output_connections) >= 1
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         for elem in input_list:
 

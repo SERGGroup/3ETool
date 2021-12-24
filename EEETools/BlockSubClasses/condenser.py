@@ -38,7 +38,7 @@ class Condenser(Block):
             new_conn.exergy_value = self.exergy_balance
             new_conn.is_fluid_stream = False
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         new_input_conn = self.main_class.find_connection_by_index(input_list[0])
         new_output_conn = self.main_class.find_connection_by_index(input_list[1])

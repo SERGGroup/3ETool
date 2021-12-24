@@ -20,7 +20,7 @@ class CombustionChamber(Block):
         return len(self.input_connections) >= 1 and len(self.support_block[0].output_connections) >= 1 and len(
             self.support_block[0].input_connections) >= 1
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         new_conn_fuel_in = self.main_class.find_connection_by_index(abs(input_list[0]))
         new_conn_input_flow = self.main_class.find_connection_by_index(abs(input_list[1]))
@@ -92,6 +92,7 @@ class CombustionChamber(Block):
 
     @classmethod
     def return_EES_needed_index(cls):
+
         return_dict = {"fuel input": [0, False],
                        "flow input": [1, False],
                        "flow output": [2, False]}

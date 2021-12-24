@@ -30,7 +30,7 @@ class Evaporator(Block):
 
         return True
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         new_conn_input_product = self.main_class.find_connection_by_index(abs(input_list[0]))
         new_conn_output_product = self.main_class.find_connection_by_index(abs(input_list[1]))

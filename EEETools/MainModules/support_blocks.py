@@ -100,7 +100,7 @@ class Drawer(Block):
 
         self.update_main_connection()
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         for elem in input_list:
 

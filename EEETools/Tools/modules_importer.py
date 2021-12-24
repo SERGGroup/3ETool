@@ -1,12 +1,9 @@
 from EEETools.MainModules.main_module import CalculationOptions
-from openpyxl import Workbook, load_workbook, styles, utils
-from datetime import date, datetime
-import math
-import pandas
-import os
-
-from EEETools.MainModules.main_module import ArrayHandler
 from EEETools.Tools.Other.fernet_handler import FernetHandler
+from openpyxl import Workbook, load_workbook, styles, utils
+from EEETools.MainModules.main_module import ArrayHandler
+from datetime import date, datetime
+import math, pandas, os
 
 
 def calculate_excel(excel_path, calculation_option=None):
@@ -91,7 +88,7 @@ def import_excel_input(excel_path) -> ArrayHandler:
                 new_block.name = str(line[1])
                 new_block.comp_cost = line[3]
 
-                new_block.append_excel_connection_list(excel_connection_list)
+                new_block.initialize_connection_list(excel_connection_list)
 
             else:
 
@@ -202,19 +199,36 @@ def get_result_data_frames(array_handler: ArrayHandler) -> dict:
             comp_data["Exergy_loss [kW]"].append(block.exergy_analysis["losses"])
             comp_data["Exergy_dl [kW]"].append(block.exergy_analysis["distruction"] + block.exergy_analysis["losses"])
 
-            comp_data["Fuel Cost [€/kWh]"].append(block.coefficients["c_fuel"] * 3600)
-            comp_data["Product Cost [€/kWh]"].append(block.output_cost * 3600)
-            comp_data["Destruction Cost [€/kWh]"].append(block.coefficients["c_dest"] * 3600)
+            try:
 
-            comp_data["Fuel Cost [€/s]"].append(block.coefficients["c_fuel"] * block.exergy_analysis["fuel"])
-            comp_data["Product Cost [€/s]"].append(block.output_cost * block.exergy_analysis["fuel"])
-            comp_data["Destruction Cost [€/s]"].append(
-                block.coefficients["c_dest"] * (block.exergy_analysis["distruction"] + block.exergy_analysis["losses"]))
+                comp_data["Fuel Cost [€/kWh]"].append(block.coefficients["c_fuel"] * 3600)
+                comp_data["Product Cost [€/kWh]"].append(block.output_cost * 3600)
+                comp_data["Destruction Cost [€/kWh]"].append(block.coefficients["c_dest"] * 3600)
 
-            comp_data["eta"].append(block.coefficients["eta"])
-            comp_data["r"].append(block.coefficients["r"])
-            comp_data["f"].append(block.coefficients["f"])
-            comp_data["y"].append(block.coefficients["y"])
+                comp_data["Fuel Cost [€/s]"].append(block.coefficients["c_fuel"] * block.exergy_analysis["fuel"])
+                comp_data["Product Cost [€/s]"].append(block.output_cost * block.exergy_analysis["fuel"])
+                comp_data["Destruction Cost [€/s]"].append(
+                    block.coefficients["c_dest"] * (block.exergy_analysis["distruction"] + block.exergy_analysis["losses"]))
+
+                comp_data["eta"].append(block.coefficients["eta"])
+                comp_data["r"].append(block.coefficients["r"])
+                comp_data["f"].append(block.coefficients["f"])
+                comp_data["y"].append(block.coefficients["y"])
+
+            except:
+
+                comp_data["Fuel Cost [€/kWh]"].append(0)
+                comp_data["Product Cost [€/kWh]"].append(0)
+                comp_data["Destruction Cost [€/kWh]"].append(0)
+
+                comp_data["Fuel Cost [€/s]"].append(0)
+                comp_data["Product Cost [€/s]"].append(0)
+                comp_data["Destruction Cost [€/s]"].append(0)
+
+                comp_data["eta"].append(0)
+                comp_data["r"].append(0)
+                comp_data["f"].append(0)
+                comp_data["y"].append(0)
 
     # Output Stream Data frame generation
     useful_data = {"Stream": list(),

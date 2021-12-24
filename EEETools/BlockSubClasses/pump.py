@@ -21,7 +21,7 @@ class Pump(Block):
 
         return len(self.output_connections) >= 1 and len(self.support_block[0].output_connections) >= 1 and len(self.support_block[0].input_connections) >= 1
 
-    def append_excel_connection_list(self, input_list):
+    def initialize_connection_list(self, input_list):
 
         new_conn_power = self.main_class.find_connection_by_index(abs(input_list[0]))
         new_conn_input_flow = self.main_class.find_connection_by_index(abs(input_list[1]))
