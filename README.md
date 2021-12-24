@@ -28,7 +28,12 @@ EEETools.calculate(excel_path="your_excel_file.xlsx"
                    valve_is_dissipative = True, 
                    condenser_is_dissipative = True)
 ```
-
+Excel file can be debugged using a specific tool that can be launched using the following command (please select the 
+excel file that you want to debug on program request):
+```python
+import EEETools
+EEETools.launch_connection_debug()
+```
 <br/><br/>
 __The application code is divided into 3 main folders:__<br/><br/>
 __MainModules__ directory contains Base modules such as _Block, Connection, ArrayHandler and Drawer Classes._<br/>

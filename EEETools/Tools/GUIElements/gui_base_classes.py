@@ -246,7 +246,7 @@ class AbstractTable(QTableView):
 
         super().__init__()
 
-        new_model = IndexSetterTableModel(main_window, title)
+        new_model = self.table_model(main_window, title)
         self.setModel(new_model)
 
         self.currentRow = 0
@@ -301,6 +301,11 @@ class AbstractTable(QTableView):
     def onModifyPressed(self):
         self.model().onModifyClicked(self.currentRow)
 
+    @property
+    def table_model(self):
+
+        return IndexSetterTableModel
+
 
 class IndexSetterTableModel(QAbstractTableModel):
 
@@ -340,7 +345,7 @@ class IndexSetterTableModel(QAbstractTableModel):
 
         else:
 
-            __current_type_name = str(self.main_window.type_combobox.currentText())
+            __current_type_name = str(self.main_window.block_ID_combobox.currentText())
             __current_type_class = self.main_window.modules_handler.import_correct_sub_class(__current_type_name)
             data: dict = __current_type_class.return_EES_base_equations()
 

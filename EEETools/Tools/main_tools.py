@@ -1,15 +1,17 @@
+from EEETools.Tools.GUIElements.connection_and_block_check import CheckConnectionWidget
+from EEETools.Tools.modules_importer import calculate_excel, import_excel_input
 from EEETools.MainModules.main_module import CalculationOptions
-from EEETools.Tools.modules_importer import calculate_excel
 import os, requests, warnings
 from tkinter import filedialog
 from EEETools import costants
 from shutil import copyfile
-import tkinter as tk
 from github import Github
+import tkinter as tk
 
 
 def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=True, valve_is_dissipative=True,
               condenser_is_dissipative=True):
+
     if excel_path == "":
         root = tk.Tk()
         root.withdraw()
@@ -25,6 +27,20 @@ def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=Tru
     option.condenser_is_dissipative = condenser_is_dissipative
 
     calculate_excel(excel_path, option)
+
+
+def launch_connection_debug(excel_path=""):
+
+    if excel_path == "":
+        root = tk.Tk()
+        root.withdraw()
+        excel_path = filedialog.askopenfilename()
+
+    if excel_path == "":
+        return
+
+    array_handler = import_excel_input(excel_path)
+    CheckConnectionWidget.launch(array_handler)
 
 
 def paste_default_excel_file():
@@ -72,11 +88,27 @@ def __import_file(filename):
 
         else:
 
-            copyfile(file_position, file_path)
+            try:
+
+                copyfile(file_position, file_path)
+
+            except:
+
+                warning_message = "\n\n<----------------- !WARNING! ------------------->\n"
+                warning_message += "Unable to copy the file to the desired location!\n\n"
+
+            else:
+
+                warning_message = "\n\n<----------------- !SUCCESS! ------------------->\n"
+                warning_message += "File successfully copied to the desired location!\n\n"
+
+            warning_message += "file name:\t\t\t" + filename + "\n"
+            warning_message += "file position:\t" + file_path + "\n\n"
+
+            warnings.warn(warning_message)
 
 
 def __retrieve_file(filename, file_position):
-
     token = costants.GITHUB_CONGIF["token"]
     base_repo = costants.GITHUB_CONGIF["repo"]
     base_path = costants.GITHUB_CONGIF["path"]

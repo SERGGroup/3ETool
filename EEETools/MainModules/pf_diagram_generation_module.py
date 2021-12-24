@@ -35,11 +35,17 @@ class ProductBlock(Generic):
 
     def find_product_connections(self):
 
-        for conn in self.base_block.output_connections:
+        try:
 
-            self.__check_connection(conn)
+            for conn in self.base_block.output_connections:
 
-        self.__set_comp_cost()
+                self.__check_connection(conn)
+
+            self.__set_comp_cost()
+
+        except:
+
+            a = 10
 
     def contains(self, element):
 
