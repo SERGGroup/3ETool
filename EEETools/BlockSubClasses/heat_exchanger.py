@@ -74,15 +74,6 @@ class HeatExchanger(Block):
                     is_input = (elem > 0)
                     self.add_connection(new_conn, is_input=is_input, append_to_support_block=1)
 
-    def export_xml_other_parameters(self) -> ETree.Element:
-
-        other_tree = ETree.Element("Other")
-        return other_tree
-
-    def append_xml_other_parameters(self, input_list: ETree.Element):
-
-        pass
-
     def export_xml_connection_list(self) -> ETree.Element:
 
         xml_connection_list = ETree.Element("Connections")

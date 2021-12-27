@@ -54,13 +54,14 @@ class Alternator(Block):
 
     def export_xml_other_parameters(self) -> ETree.Element:
 
-        other_tree = ETree.Element("Other")
-        other_tree.set("efficiency", str(self.efficiency))
+        other_tree = ETree.Element("efficiency")
+        other_tree.set("value", str(self.efficiency))
         return other_tree
 
     def append_xml_other_parameters(self, input_list: ETree.Element):
 
-        self.efficiency = float(input_list.get("efficiency"))
+        efficiency_tree = input_list.find("efficiency")
+        self.efficiency = float(efficiency_tree.get("value"))
 
     def export_xml_connection_list(self) -> ETree.Element:
 

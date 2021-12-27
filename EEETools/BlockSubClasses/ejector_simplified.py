@@ -1,21 +1,39 @@
+from EEETools.MainModules.support_blocks import Drawer, get_drawer_sub_class
 from EEETools.MainModules import Block
-from EEETools.MainModules.support_blocks import Drawer
 import xml.etree.ElementTree as ETree
 from EEETools import costants
 
 
-class Expander(Block):
+class EjectorSimplified(Block):
 
     def __init__(self, inputID, main_class):
 
         super().__init__(inputID, main_class)
 
-        self.type = "expander"
+        self.type = "Ejector Simplified"
         self.has_support_block = True
-        self.support_block.append(Drawer(main_class, self, allow_multiple_input=False))
 
-    def add_connection_to_support_block(self, new_connection, is_input):
-        self.support_block[0].add_connection(new_connection, is_input)
+        self.mass_ratio = 0.
+
+        SupportMixer = get_drawer_sub_class("mixer", main_class)
+
+        self.support_block.append(Drawer(main_class, self))
+        self.support_block.append(Drawer(main_class, self, is_input=False))
+        self.support_block.append(SupportMixer(main_class, self))
+
+    def add_connection_to_support_block(self, support_block, new_connection, is_input):
+
+        if support_block == "expander":
+
+            self.support_block[0].add_connection(new_connection, is_input)
+
+        elif support_block == "compressor":
+
+            self.support_block[0].add_connection(new_connection, is_input)
+
+        elif support_block == "mixer":
+
+            self.support_block[0].add_connection(new_connection, is_input)
 
     def is_ready_for_calculation(self):
         return len(self.output_connections) >= 1 and len(self.support_block[0].output_connections) >= 1 and len(
@@ -23,15 +41,27 @@ class Expander(Block):
 
     def initialize_connection_list(self, input_list):
 
-        new_conn_power = self.main_class.find_connection_by_index(abs(input_list[0]))
-        new_conn_input_flow = self.main_class.find_connection_by_index(abs(input_list[1]))
-        new_conn_output_flow = self.main_class.find_connection_by_index(abs(input_list[2]))
+        self.mass_ratio = float(input_list[0])
 
-        new_conn_power.is_fluid_stream = False
+        conn_output = self.main_class.find_connection_by_index(abs(input_list[1]))
+        conn_input_driving = self.main_class.find_connection_by_index(abs(input_list[2]))
+        conn_input_driven = self.main_class.find_connection_by_index(abs(input_list[3]))
 
-        self.add_connection(new_conn_power, is_input=False)
-        self.add_connection(new_conn_input_flow, is_input=True, append_to_support_block=0)
-        self.add_connection(new_conn_output_flow, is_input=False, append_to_support_block=0)
+        self.add_connection(conn_output, is_input=False, append_to_support_block=2)
+        self.support_block[0].add_connection(conn_input_driving, is_input=True, append_to_support_block=0)
+        self.support_block[1].add_connection(conn_input_driven, is_input=False, append_to_support_block=0)
+
+        new_conn = self.main_class.append_connection(from_block=self)
+
+    def prepare_for_calculation(self):
+
+        self.support_block[0].prepare_for_calculation()
+
+        new_conn = self.main_class.append_connection(from_block=self)
+        new_conn.name = "electrical power output"
+        new_conn.is_useful_effect = True
+        new_conn.automatically_generated_connection = True
+        new_conn.exergy_value = self.exergy_balance
 
     def export_xml_connection_list(self) -> ETree.Element:
 
