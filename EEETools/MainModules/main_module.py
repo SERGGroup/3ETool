@@ -1,13 +1,14 @@
 from EEETools.Tools.Other.matrix_analyzer import MatrixAnalyzer
 from EEETools.Tools.modules_handler import ModulesHandler
 import xml.etree.ElementTree as ETree
+from abc import ABC, abstractmethod
 from EEETools import costants
 import numpy as np
 import warnings
 import copy
 
 
-class Block:
+class Block(ABC):
 
     # Construction Methods
     def __init__(self, inputID, main_class, is_support_block=False):
@@ -193,6 +194,7 @@ class Block:
         for conn in _tmpConnectionArray:
             self.remove_connection(conn)
 
+    @abstractmethod
     def initialize_connection_list(self, input_list):
 
         raise (NotImplementedError, "block.append_excel_connection_list() must be overloaded in subclasses")
@@ -208,7 +210,7 @@ class Block:
         block_child.set("comp_cost", str(self.comp_cost))
         block_child.set("comp_cost_corr", str(self.comp_cost_corr))
 
-        block_child.append(self.export_xml_other_parameters())
+        block_child.append(self.__export_xml_other_parameters())
         block_child.append(self.export_xml_connection_list())
 
         return block_child
@@ -226,19 +228,31 @@ class Block:
         self.append_xml_other_parameters(xml_input.find("Other"))
         self.append_xml_connection_list(xml_input.find("Connections"))
 
-    def export_xml_other_parameters(self) -> ETree.Element:
+    def __export_xml_other_parameters(self) -> ETree.Element:
 
         other_tree = ETree.Element("Other")
+        tree_to_append = self.export_xml_other_parameters()
+
+        if tree_to_append is not None:
+
+            other_tree.append(tree_to_append)
+
         return other_tree
+
+    def export_xml_other_parameters(self) -> ETree.Element:
+
+        pass
 
     def append_xml_other_parameters(self, input_list: ETree.Element):
 
         pass
 
+    @abstractmethod
     def export_xml_connection_list(self) -> ETree.Element:
 
         raise (NotImplementedError, "block.__export_xml_connection_list() must be overloaded in subclasses")
 
+    @abstractmethod
     def append_xml_connection_list(self, input_list: ETree.Element):
 
         raise (NotImplementedError, "block.__append_xml_connection_list() must be overloaded in subclasses")
@@ -416,6 +430,7 @@ class Block:
 
     # Support Methods
     @property
+    @abstractmethod
     def is_ready_for_calculation(self):
 
         # This method is used to check if the block has every input it needs to perform a calculation.
@@ -582,6 +597,7 @@ class Block:
 
     # EES Methods
     @classmethod
+    @abstractmethod
     def return_EES_needed_index(cls):
 
         # WARNING: This methods must be overloaded in subclasses!!
@@ -650,6 +666,7 @@ class Block:
             raise (NotImplementedError, "block.is_ready_for_calculation() must be overloaded in subclasses")
 
     @classmethod
+    @abstractmethod
     def return_EES_base_equations(cls):
 
         # WARNING: This methods must be overloaded in subclasses!!
@@ -741,6 +758,7 @@ class Block:
 
         return cost_balance
 
+    @abstractmethod
     def return_other_zone_connections(self, zone_type, input_connection):
 
         # WARNING: This methods must be overloaded in subclasses!!
@@ -1213,6 +1231,7 @@ class ArrayHandler:
             new_blocks = list()
 
             for elem in input_element:
+
                 new_block = self.append_block(elem)
                 new_blocks.append(new_block)
 
@@ -1368,7 +1387,7 @@ class ArrayHandler:
 
         return None
 
-    def find_block_by_ID(self, ID) -> Block:
+    def find_block_by_ID(self, ID):
 
         ID = int(ID)
 
@@ -1385,7 +1404,7 @@ class ArrayHandler:
 
         return None
 
-    def find_connection_by_ID(self, ID) -> Connection:
+    def find_connection_by_ID(self, ID):
 
         ID = int(ID)
 

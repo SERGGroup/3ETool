@@ -109,6 +109,11 @@ class ImportTestCase(unittest.TestCase):
 
         self.assertTrue(True)
 
+    def test_excel_calculate(self):
+
+        import EEETools
+        EEETools.calculate()
+        self.assertTrue(True)
 
 if __name__ == '__main__':
     unittest.main()

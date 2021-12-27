@@ -1,9 +1,9 @@
 from EEETools.Tools.Other.fernet_handler import FernetHandler
 from EEETools.Tools.Other.handler import Handler
+from abc import ABC, abstractmethod
 from PyQt5.QtWidgets import QWidget
 from EEETools import costants
-from abc import ABC
-import abc, os
+import os
 
 
 class AbstractCostCorrelation(ABC):
@@ -31,15 +31,15 @@ class AbstractCostCorrelation(ABC):
         data = self.export_xml_tree()
         self.fernet_handler.save_file(file_path, data)
 
-    @abc.abstractmethod
+    @abstractmethod
     def import_xml_tree(self, data):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def export_xml_tree(self):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_cost(self):
         raise NotImplementedError()
 
@@ -52,41 +52,41 @@ class AbstractCostCorrelation(ABC):
         self.__current_cepci = input_cepci
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def parameter_dict(self) -> dict:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def set_parameters(self, input_dict):
         raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def coefficient_dict(self):
         raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def coefficients(self):
         raise NotImplementedError()
 
     @coefficients.setter
-    @abc.abstractmethod
+    @abstractmethod
     def coefficients(self, input_dict: dict):
         raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def description(self):
         pass
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def edit_correlation_widget(self) -> QWidget:
         raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def parameter_settings_widget(self):
         raise NotImplementedError()
 

@@ -1,5 +1,6 @@
 from EEETools.Tools.GUIElements.connection_and_block_check import CheckConnectionWidget
 from EEETools.Tools.modules_importer import calculate_excel, import_excel_input
+from EEETools.Tools.GUIElements.net_plot_modules import display_network
 from EEETools.MainModules.main_module import CalculationOptions
 import os, requests, warnings
 from tkinter import filedialog
@@ -13,6 +14,7 @@ def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=Tru
               condenser_is_dissipative=True):
 
     if excel_path == "":
+
         root = tk.Tk()
         root.withdraw()
         excel_path = filedialog.askopenfilename()
@@ -41,6 +43,20 @@ def launch_connection_debug(excel_path=""):
 
     array_handler = import_excel_input(excel_path)
     CheckConnectionWidget.launch(array_handler)
+
+
+def launch_network_display(excel_path=""):
+
+    if excel_path == "":
+        root = tk.Tk()
+        root.withdraw()
+        excel_path = filedialog.askopenfilename()
+
+    if excel_path == "":
+        return
+
+    array_handler = import_excel_input(excel_path)
+    display_network(array_handler)
 
 
 def paste_default_excel_file():

@@ -1,3 +1,5 @@
+from xml.etree import ElementTree as ETree
+
 from EEETools.MainModules import Block, ArrayHandler
 
 
@@ -96,6 +98,7 @@ class Drawer(Block):
         if self.has_support_block:
 
             for block in self.support_block:
+
                 block.prepare_for_calculation()
 
         self.update_main_connection()
@@ -107,6 +110,7 @@ class Drawer(Block):
             new_conn = self.main_class.find_connection_by_index(abs(elem))
 
             if not new_conn is None:
+
                 is_input = (elem > 0)
                 self.add_connection(new_conn, is_input)
 
@@ -138,7 +142,7 @@ class Drawer(Block):
 
     def return_other_zone_connections(self, zone_type, input_connection):
 
-            return self.main_block.return_other_zone_connections(zone_type, input_connection)
+        return self.main_block.return_other_zone_connections(zone_type, input_connection)
 
     def initialize_main_connection(self):
 
@@ -152,6 +156,7 @@ class Drawer(Block):
     def update_main_connection(self):
 
         if self.connection_with_main is None:
+
             self.initialize_main_connection()
             self.connection_with_main.is_fluid_stream = False
 
@@ -194,7 +199,7 @@ class Drawer(Block):
 
         if is_input:
 
-            block_subclass = get_support_block_class("mixer", modules_handler)
+            block_subclass = get_drawer_sub_class("mixer", modules_handler)
             self.input_mixer = block_subclass(self.main_class, self, True)
             self.support_block.append(self.input_mixer)
 
@@ -212,7 +217,7 @@ class Drawer(Block):
 
         else:
 
-            block_subclass = get_support_block_class("separator", modules_handler)
+            block_subclass = get_drawer_sub_class("separator", modules_handler)
             self.output_separator = block_subclass(self.main_class, self, False)
             self.support_block.append(self.output_separator)
 
@@ -260,14 +265,28 @@ class Drawer(Block):
     @property
     def is_connected(self):
         return not self.connection_with_main is None
-    
+
     def __str__(self):
 
         self.name = "Support block of: " + str(self.main_block.name)
         return super(Drawer, self).__str__()
 
+    def export_xml_connection_list(self) -> ETree.Element:
+        pass
 
-def get_support_block_class(block_subclass_name, modules_handler):
+    def append_xml_connection_list(self, input_list: ETree.Element):
+        pass
+
+    @classmethod
+    def return_EES_needed_index(cls):
+        pass
+
+    @classmethod
+    def return_EES_base_equations(cls):
+        pass
+
+
+def get_drawer_sub_class(block_subclass_name, modules_handler):
 
     block_subclass = modules_handler.import_correct_sub_class(block_subclass_name)
 
@@ -375,6 +394,121 @@ def get_support_block_class(block_subclass_name, modules_handler):
 
         @property
         def is_connected(self):
+
+            return not self.connection_with_main is None
+
+    return SupportSeparator
+
+
+def get_support_block_sub_class(block_subclass_name, modules_handler):
+
+    block_subclass = modules_handler.import_correct_sub_class(block_subclass_name)
+
+    class SupportSeparator(block_subclass):
+
+        def __init__(self, main_class: ArrayHandler, main_block: Block, is_input=None):
+
+            super().__init__(-100, main_class)
+
+            self.is_support_block = True
+            self.main_block = main_block
+
+            self.__define_is_input(is_input)
+
+            self.type += "-support block"
+            self.name = "Support block of: " + str(main_block.name)
+
+            self.connection_with_main = None
+
+        def initialize_main_connection(self):
+
+            if self.is_input:
+
+                self.connection_with_main = self.main_class.append_connection(from_block=self, to_block=self.main_block)
+
+            else:
+
+                self.connection_with_main = self.main_class.append_connection(from_block=self.main_block, to_block=self)
+
+        def update_main_connection(self):
+
+            if self.connection_with_main is None:
+                self.initialize_main_connection()
+
+            if self.is_input:
+                self.connection_with_main.exergy_value += self.__return_exergy_balance()
+
+            else:
+                self.connection_with_main.exergy_value -= self.__return_exergy_balance()
+
+        def disconnect(self):
+
+            if self.is_input:
+                connection_list = self.input_connections
+
+            else:
+                connection_list = self.output_connections
+
+            if self.connection_with_main is not None:
+                self.main_class.remove_connection(self.connection_with_main)
+
+            for conn in connection_list:
+                self.main_block.add_connection(conn, is_input=self.is_input)
+
+        def prepare_for_calculation(self):
+
+            self.update_main_connection()
+
+        def is_ready_for_calculation(self):
+
+            return self.n_input >= 1 and self.n_output >= 1
+
+        def __return_exergy_balance(self):
+
+            exergy_balance = 0
+
+            for conn in self.input_connections:
+                exergy_balance += conn.exergy_value
+
+            for conn in self.output_connections:
+                exergy_balance -= conn.exergy_value
+
+            return exergy_balance
+
+        def __define_is_input(self, is_input):
+
+            if is_input is None:
+
+                if self.type == "mixer":
+
+                    self.is_input = True
+
+                elif self.type == "separator":
+
+                    self.is_input = False
+
+                else:
+
+                    self.is_input = False
+
+            else:
+
+                self.is_input = is_input
+
+        @property
+        def is_needed(self):
+
+            if self.is_input:
+
+                return self.n_input > 1
+
+            else:
+
+                return self.n_output > 1
+
+        @property
+        def is_connected(self):
+
             return not self.connection_with_main is None
 
     return SupportSeparator

@@ -6,6 +6,7 @@ from EEETools import costants
 class Mixer(Block):
 
     def __init__(self, inputID, main_class):
+
         Block.__init__(self, inputID, main_class)
         self.type = "mixer"
 
@@ -22,15 +23,6 @@ class Mixer(Block):
 
                 is_input = (elem > 0)
                 self.add_connection(new_conn, is_input)
-
-    def export_xml_other_parameters(self) -> ETree.Element:
-
-        other_tree = ETree.Element("Other")
-        return other_tree
-
-    def append_xml_other_parameters(self, input_list: ETree.Element):
-
-        pass
 
     def export_xml_connection_list(self) -> ETree.Element:
 
