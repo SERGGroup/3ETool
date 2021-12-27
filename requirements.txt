@@ -9,3 +9,4 @@ openpyxl
 requests
 PyGithub
 pywin32
+pyvis

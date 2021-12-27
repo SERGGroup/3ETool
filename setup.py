@@ -49,7 +49,8 @@ setup(
         'openpyxl',
         'requests',
         'PyGithub',
-        'pywin32'
+        'pywin32',
+        'pyvis'
 
     ],
 
