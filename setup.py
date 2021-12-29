@@ -1,3 +1,4 @@
+from EEETools.costants import VERSION
 from setuptools import setup
 from os import path
 
@@ -5,10 +6,11 @@ this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+
 setup(
 
     name='3ETool',
-    version='0.2.5',
+    version=VERSION,
     license='GNU GPLv3',
 
     author='Pietro Ungar',
@@ -19,11 +21,11 @@ setup(
     long_description_content_type='text/markdown',
 
     url='https://tinyurl.com/SERG-3ETool',
-    download_url='https://github.com/SERGGroup/3ETool/archive/refs/tags/0.2.5.tar.gz',
+    download_url='https://github.com/SERGGroup/3ETool/archive/refs/tags/{}.tar.gz'.format(VERSION),
 
     project_urls={
 
-        'Documentation': 'https://firebasestorage.googleapis.com/v0/b/etapp-serggroup.appspot.com/o/3ETool_res%2FOther%2FUser%20Guide-eng.pdf?alt=media&token=db51ff1e-4c63-48b9-8b42-322a2eee44da',
+        'Documentation': 'https://drive.google.com/file/d/1Dzdz4_EAKyY9c8nOm2SKTIqSXfV74w2-/view?usp=sharing',
         'Source': 'https://github.com/SERGGroup/3ETool',
         'Tracker': 'https://github.com/SERGGroup/3ETool/issues',
 
@@ -50,7 +52,8 @@ setup(
         'requests',
         'PyGithub',
         'pywin32',
-        'pyvis'
+        'pyvis',
+        'googledrivedownloader'
 
     ],
 

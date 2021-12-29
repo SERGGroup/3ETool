@@ -72,6 +72,7 @@ def paste_components_documentation():
 
 
 def __import_file(filename):
+
     root = tk.Tk()
     root.withdraw()
 

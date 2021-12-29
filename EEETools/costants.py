@@ -1,22 +1,91 @@
-import os
+from google_drive_downloader import GoogleDriveDownloader as gdd
+import os, shutil
 
 # RUN MODE
 RUN_MODE = "administrator"
+VERSION = "0.2.6"
 # RUN_MODE = "standard"
 
 # ROOT DIRECTORIES
 ROOT_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
 RES_DIR = os.path.join(ROOT_DIR, "3ETool_res")
 TEST_RES_DIR = os.path.join(RES_DIR, "testResources")
+GOOGLE_DRIVE_RES_IDs = {
 
-if not os.path.isdir(RES_DIR):
+    "0.2.5": "1gn2RFJQcw-iSkINS1O8gINDYE75-S_vM"
 
-    os.mkdir(RES_DIR)
-    os.mkdir(os.path.join(RES_DIR, "ButtonIcons"))
-    os.mkdir(os.path.join(RES_DIR, "EES Code Data"))
-    os.mkdir(os.path.join(RES_DIR, "Images"))
-    os.mkdir(os.path.join(RES_DIR, "Other"))
-    os.mkdir(os.path.join(RES_DIR, "testResources"))
+}
+
+
+def __download_resource_folder(file_position, version, failure_possible=True):
+
+    if os.path.exists(file_position):
+
+        try:
+
+            shutil.rmtree(file_position)
+
+        except:
+
+            pass
+
+    try:
+
+        gdd.download_file_from_google_drive(
+
+            file_id=GOOGLE_DRIVE_RES_IDs[version],
+            dest_path=file_position,
+            overwrite=True,
+            unzip=True
+
+        )
+
+    except:
+
+        warning_message = "\n\n<----------------- !ERROR! ------------------->\n"
+        warning_message += "Unable to download the resources!\n"
+        warning_message += "Check your internet connection and retry!\n"
+
+        if not failure_possible:
+            raise RuntimeError(warning_message)
+
+        else:
+            print(warning_message)
+
+
+def __update_resource_folder(version=VERSION):
+
+    file_position = os.path.join(ROOT_DIR, "new_res.zip")
+
+    if not version in GOOGLE_DRIVE_RES_IDs.keys():
+
+        version = list(GOOGLE_DRIVE_RES_IDs.keys())[0]
+
+    if not os.path.isdir(RES_DIR):
+
+        __download_resource_folder(file_position, version, failure_possible=False)
+
+    else:
+
+        __version_file = os.path.join(RES_DIR, "res_version.dat")
+
+        if not os.path.isfile(__version_file):
+
+            shutil.rmtree(RES_DIR)
+            __download_resource_folder(file_position, version)
+
+        else:
+
+            with open(__version_file) as file:
+
+                if not (str(file.readline()).strip() == version):
+
+                    shutil.rmtree(RES_DIR)
+                    __download_resource_folder(file_position, version)
+
+
+__update_resource_folder()
+
 
 # FIREBASE CONFIGURATION DICT
 FIREBASE_CONFIG = {
@@ -41,47 +110,53 @@ GITHUB_CONGIF ={
 }
 
 # EES FORMAT STYLES
-STYLES = {"error": {"color": "#ff4d00",
-                    "font-weight": "bold",
-                    "font-style": "normal",
-                    "text-decoration": "none"},
+STYLES = {
 
-          "comments": {"color": "#8C8C8C",
-                       "font-weight": "bold",
-                       "font-style": "italic",
-                       "text-decoration": "none"},
+    "error": {
 
-          "variable": {"color": "#0033B3",
-                       "font-weight": "bold",
-                       "font-style": "normal",
-                       "text-decoration": "none"},
+        "color": "#ff4d00",
+        "font-weight": "bold",
+        "font-style": "normal",
+        "text-decoration": "none"
 
-          "repeated_keyword": {"color": "#008080",
-                               "font-weight": "bold",
-                               "font-style": "normal",
-                               "text-decoration": "none"},
+    },
 
-          "known_keyword": {"color": "#008080",
-                            "font-weight": "bold",
-                            "font-style": "normal",
-                            "text-decoration": "none"},
+    "comments": {"color": "#8C8C8C",
+                   "font-weight": "bold",
+                   "font-style": "italic",
+                   "text-decoration": "none"},
 
-          "unknown_function": {"color": "#94558D",
-                               "font-weight": "bold",
-                               "font-style": "italic",
-                               "text-decoration": "underline"},
+    "variable": {"color": "#0033B3",
+                   "font-weight": "bold",
+                   "font-style": "normal",
+                   "text-decoration": "none"},
 
-          "known_function": {"color": "#94558D",
-                             "font-weight": "bold",
-                             "font-style": "normal",
-                             "text-decoration": "none"},
+    "repeated_keyword": {"color": "#008080",
+                           "font-weight": "bold",
+                           "font-style": "normal",
+                           "text-decoration": "none"},
 
-          "default": {"color": "#000000",
-                      "font-weight": "bold",
-                      "font-style": "normal",
-                      "text-decoration": "none"}
+    "known_keyword": {"color": "#008080",
+                        "font-weight": "bold",
+                        "font-style": "normal",
+                        "text-decoration": "none"},
 
-          }
+    "unknown_function": {"color": "#94558D",
+                           "font-weight": "bold",
+                           "font-style": "italic",
+                           "text-decoration": "underline"},
+
+    "known_function": {"color": "#94558D",
+                         "font-weight": "bold",
+                         "font-style": "normal",
+                         "text-decoration": "none"},
+
+    "default": {"color": "#000000",
+                  "font-weight": "bold",
+                  "font-style": "normal",
+                  "text-decoration": "none"}
+
+}
 
 EES_CODE_FONT_FAMILY = "Courier New"
 
@@ -110,3 +185,8 @@ ZONE_TYPE_PRESSURE = "pressure"
 ZONE_TYPE_ENERGY = "energy"
 
 ZONES = [ZONE_TYPE_ENERGY, ZONE_TYPE_PRESSURE, ZONE_TYPE_FLUID, ZONE_TYPE_FLOW_RATE]
+
+
+if __name__ == "__main__":
+
+    __update_resource_folder()
