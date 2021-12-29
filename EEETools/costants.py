@@ -35,7 +35,7 @@ FIREBASE_CONFIG = {
 GITHUB_CONGIF ={
 
     "repo": "3ETool",
-    "token": "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",
+    "token": "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",
     "path": "3ETool_res/Other/"
 
 }

@@ -77,12 +77,12 @@ def import_excel_input(excel_path) -> ArrayHandler:
                     new_block = array_handler.append_block("Heat Exchanger")
                     excel_connection_list = list()
                     excel_connection_list.append(str(line[2]))
-                    excel_connection_list.extend(line[5:-1])
+                    excel_connection_list.extend(line[5:])
 
                 else:
 
                     new_block = array_handler.append_block(str(line[2]))
-                    excel_connection_list = line[5:-1]
+                    excel_connection_list = line[5:]
 
                 new_block.index = line[0]
                 new_block.name = str(line[1])

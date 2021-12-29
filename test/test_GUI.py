@@ -30,6 +30,26 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(True, True)
 
+    def test_network_product_fuel(self):
+
+        root = tk.Tk()
+        root.withdraw()
+        excel_path = filedialog.askopenfilename()
+
+        array_handler = import_excel_input(excel_path)
+
+        try:
+
+            array_handler.calculate()
+
+        except:
+
+            pass
+
+        display_network(array_handler.pf_diagram)
+
+        self.assertEqual(True, True)
+
 
 if __name__ == '__main__':
 
