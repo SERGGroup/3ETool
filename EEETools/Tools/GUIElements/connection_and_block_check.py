@@ -333,6 +333,7 @@ class CheckerAbstractTable(QTableView):
         menu.exec(event.globalPos())
 
     def __set_actions(self):
+
         self.show_action = QAction(self)
         self.show_action.setText("&Show")
         self.show_action.triggered.connect(self.onShowPressed)
