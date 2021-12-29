@@ -34,6 +34,11 @@ excel file that you want to debug on program request):
 import EEETools
 EEETools.launch_connection_debug()
 ```
+Topology can be displayed using:
+```python
+import EEETools
+EEETools.launch_network_display()
+```
 <br/><br/>
 __The application code is divided into 3 main folders:__<br/><br/>
 __MainModules__ directory contains Base modules such as _Block, Connection, ArrayHandler and Drawer Classes._<br/>

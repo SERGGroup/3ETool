@@ -32,10 +32,16 @@ class HeatExchanger(Block):
 
         if str(input_list[0]) in ["Heat Exchanger", "Scambiatore"]:
 
-            new_conn_input_product = self.main_class.find_connection_by_index(abs(input_list[1]))
-            new_conn_output_product = self.main_class.find_connection_by_index(abs(input_list[2]))
-            new_conn_input_fuel = self.main_class.find_connection_by_index(abs(input_list[3]))
-            new_conn_output_fuel = self.main_class.find_connection_by_index(abs(input_list[4]))
+            try:
+
+                new_conn_input_product = self.main_class.find_connection_by_index(abs(input_list[1]))
+                new_conn_output_product = self.main_class.find_connection_by_index(abs(input_list[2]))
+                new_conn_input_fuel = self.main_class.find_connection_by_index(abs(input_list[3]))
+                new_conn_output_fuel = self.main_class.find_connection_by_index(abs(input_list[4]))
+
+            except:
+
+                print(input_list)
 
             self.add_connection(new_conn_input_product, is_input=True, append_to_support_block=1)
             self.add_connection(new_conn_output_product, is_input=False, append_to_support_block=1)
