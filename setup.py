@@ -1,4 +1,4 @@
-from EEETools.costants import VERSION
+from EEETools.version import VERSION
 from setuptools import setup
 from os import path
 
