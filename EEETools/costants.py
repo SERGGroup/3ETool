@@ -1,9 +1,9 @@
 from google_drive_downloader import GoogleDriveDownloader as gdd
+from EEETools.version import VERSION
 import os, shutil
 
 # RUN MODE
 RUN_MODE = "administrator"
-VERSION = "0.2.6"
 # RUN_MODE = "standard"
 
 # ROOT DIRECTORIES
