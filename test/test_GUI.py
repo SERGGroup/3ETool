@@ -1,6 +1,6 @@
 from EEETools.Tools.GUIElements.connection_and_block_check import CheckConnectionWidget
 from EEETools.Tools.GUIElements.net_plot_modules import display_network
-from EEETools.Tools.modules_importer import import_excel_input
+from EEETools.Tools.API.ExcelAPI.modules_importer import import_excel_input
 from tkinter import filedialog
 import tkinter as tk
 import unittest

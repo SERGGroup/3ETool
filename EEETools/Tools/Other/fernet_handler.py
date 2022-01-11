@@ -1,7 +1,9 @@
-import os, base64, pyrebase
-from EEETools import costants
+from EEETools.Tools.Other.resource_downloader import update_resource_folder
 from cryptography.fernet import Fernet
+from EEETools import costants
+
 import xml.etree.ElementTree as ETree
+import os, base64
 
 
 class FernetHandler:
@@ -11,7 +13,7 @@ class FernetHandler:
         self.__fernet_key_path = os.path.join(costants.RES_DIR, "Other", "fernet_key.dat")
         self.key = self.__initialize_key_value()
 
-    def __initialize_key_value(self):
+    def __initialize_key_value(self, retrieve_if_necessary=True):
 
         """This method retrieve the cryptographic key stored in 'fernet_key.dat' file. If the key file is not present
         in the local resources, python will try to download it from the firebase storage. If also this last passage
@@ -24,16 +26,30 @@ class FernetHandler:
             key = base64.urlsafe_b64encode(file.read())
             file.close()
 
-        else:
+        elif retrieve_if_necessary:
 
             try:
-                self.retrieve_key()
-                key = self.__initialize_key_value()
+
+                update_resource_folder()
+                key = self.__initialize_key_value(retrieve_if_necessary=False)
 
             except:
 
-                raise Exception("Unable to reach firebase server, cryptography key can not be retrieved hence the "
-                                "application can not be started. Check your internet connection and retry")
+                raise Exception(
+
+                    "Unable to reach resources, cryptography key can not be retrieved hence the "
+                    "application can not be started. Check your internet connection and retry"
+
+                )
+
+        else:
+
+            raise Exception(
+
+                "Unable to find resources, cryptography key can not be retrieved hence the "
+                "application can not be started. Check your internet connection and retry"
+
+            )
 
         return key
 
@@ -64,15 +80,3 @@ class FernetHandler:
         xml_file = open(file_path, "wb")
         xml_file.write(str_data)
         xml_file.close()
-
-    def export_key(self):
-
-        firebase = pyrebase.initialize_app(costants.FIREBASE_CONFIG)
-        storage = firebase.storage()
-        storage.child("3ETool_res/Other/fernet_key.dat").put(self.__fernet_key_path)
-
-    def retrieve_key(self):
-
-        firebase = pyrebase.initialize_app(costants.FIREBASE_CONFIG)
-        storage = firebase.storage()
-        storage.child("3ETool_res/Other/fernet_key.dat").download("", self.__fernet_key_path)

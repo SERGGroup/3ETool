@@ -1,5 +1,4 @@
 from xml.etree import ElementTree as ETree
-
 from EEETools.MainModules import Block, ArrayHandler
 
 
