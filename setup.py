@@ -36,7 +36,9 @@ def __get_install_requires():
 def __get_packages() -> list:
 
     ROOT_DIR = path.join(path.dirname(__file__), "EEETools")
+    TEST_DIR = path.join(path.dirname(__file__), "test")
     packages = append_sub_dir(ROOT_DIR, list())
+    packages = append_sub_dir(TEST_DIR, packages)
     return packages
 
 

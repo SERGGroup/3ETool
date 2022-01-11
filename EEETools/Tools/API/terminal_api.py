@@ -81,7 +81,7 @@ def __import_file(filename):
         return
 
     file_path = os.path.join(dir_path, filename)
-    file_position = os.path.join(costants.RES_DIR, "../Other", filename)
+    file_position = os.path.join(costants.RES_DIR, "Other", filename)
 
     if not os.path.isfile(file_position):
 
@@ -101,23 +101,23 @@ def __import_file(filename):
 
             warnings.warn(warning_message)
 
+    else:
+
+        try:
+
+            copyfile(file_position, file_path)
+
+        except:
+
+            warning_message = "\n\n<----------------- !WARNING! ------------------->\n"
+            warning_message += "Unable to copy the file to the desired location!\n\n"
+
         else:
 
-            try:
+            warning_message = "\n\n<----------------- !SUCCESS! ------------------->\n"
+            warning_message += "File successfully copied to the desired location!\n\n"
 
-                copyfile(file_position, file_path)
+        warning_message += "file name:\t\t\t" + filename + "\n"
+        warning_message += "file position:\t" + file_path + "\n\n"
 
-            except:
-
-                warning_message = "\n\n<----------------- !WARNING! ------------------->\n"
-                warning_message += "Unable to copy the file to the desired location!\n\n"
-
-            else:
-
-                warning_message = "\n\n<----------------- !SUCCESS! ------------------->\n"
-                warning_message += "File successfully copied to the desired location!\n\n"
-
-            warning_message += "file name:\t\t\t" + filename + "\n"
-            warning_message += "file position:\t" + file_path + "\n\n"
-
-            warnings.warn(warning_message)
+        warnings.warn(warning_message)
