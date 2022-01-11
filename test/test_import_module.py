@@ -1,16 +1,21 @@
-from EEETools.Tools.modules_importer import *
-from tkinter import filedialog
-import unittest, pandas, os
-from EEETools import costants
 import tkinter as tk
+import unittest
+from tkinter import filedialog
+
+from EEETools import costants
+from EEETools.Tools.API.DatAPI.modules_importer import import_dat
+from EEETools.Tools.API.ExcelAPI.modules_importer import *
 
 
 def import_matlab_result(excel_path):
 
     try:
+
         result_data = pandas.read_excel(excel_path, sheet_name="Eff Out").values
         return result_data[1, 6]
+
     except:
+
         return -100
 
 
@@ -78,34 +83,29 @@ class ImportTestCase(unittest.TestCase):
             result_dat = array_handler_dat.useful_effect_connections
 
             difference = 0
-            sum = 0
+            sum_exergy = 0
 
             for result in result_dat:
 
                 difference += result.rel_cost*result.exergy_value
-                sum += result.rel_cost*result.exergy_value
+                sum_exergy += result.rel_cost*result.exergy_value
 
             for result in result_excel:
 
                 difference -= result.rel_cost * result.exergy_value
-                sum += result.rel_cost * result.exergy_value
+                sum_exergy += result.rel_cost * result.exergy_value
 
-            err = 2*difference/sum
+            err = 2*difference/sum_exergy
 
             self.assertEqual(round(err, 7), 0)
 
             i += 1
             excel_path = os.path.join(resource_excel_path, "Sample Excel Input " + str(i) + ".xlsm")
 
-        a = 1
-
     def test_download_link(self):
 
         from EEETools.Tools.Other.fernet_handler import FernetHandler
-
-        fernet = FernetHandler()
-        fernet.export_key()
-        fernet.retrieve_key()
+        FernetHandler()
 
         self.assertTrue(True)
 
@@ -114,6 +114,7 @@ class ImportTestCase(unittest.TestCase):
         import EEETools
         EEETools.calculate()
         self.assertTrue(True)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,7 +1,7 @@
 from EEETools.Tools.EESCodeGenerator.EES_creator_tool import DefineEESTextWidget
 from EEETools.Tools.EESCodeGenerator.EES_creator_tool import EESTextFilesManager
 from EEETools.Tools.EESCodeGenerator.EES_checker import Zones
-from EEETools.Tools.modules_importer import import_excel_input
+from EEETools.Tools.API.ExcelAPI.modules_importer import import_excel_input
 from PyQt5.QtWidgets import QApplication
 import sys, os, traceback, unittest
 from EEETools import costants

@@ -1,11 +1,13 @@
-from EEETools.Tools.Other.matrix_analyzer import MatrixAnalyzer
-from EEETools.Tools.modules_handler import ModulesHandler
+import copy
+import warnings
 import xml.etree.ElementTree as ETree
 from abc import ABC, abstractmethod
-from EEETools import costants
+
 import numpy as np
-import warnings
-import copy
+
+from EEETools import costants
+from EEETools.Tools.Other.matrix_analyzer import MatrixAnalyzer
+from EEETools.Tools.modules_handler import ModulesHandler
 
 
 class Block(ABC):

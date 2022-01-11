@@ -1,7 +1,10 @@
 import unittest
 import tkinter as tk
 from tkinter import filedialog
-from EEETools.Tools import modules_importer
+
+import EEETools.Tools.API.DatAPI.modules_importer
+from EEETools.Tools.API.ExcelAPI import modules_importer
+from EEETools.Tools.API.terminal_api import paste_default_excel_file
 
 
 class MyTestCase(unittest.TestCase):
@@ -20,17 +23,13 @@ class MyTestCase(unittest.TestCase):
         root = tk.Tk()
         root.withdraw()
         excel_path = filedialog.askopenfilename()
-        modules_importer.calculate_dat(excel_path)
+        EEETools.Tools.API.DatAPI.modules_importer.calculate_dat(excel_path)
 
         self.assertTrue(True)
 
     def test_main_modules(self):
 
-        import EEETools
-
-        #EEETools.paste_components_documentation()
-        #EEETools.paste_user_manual()
-        EEETools.paste_default_excel_file()
+        paste_default_excel_file()
 
         self.assertTrue(True)
 
