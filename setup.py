@@ -1,11 +1,25 @@
 from EEETools.version import VERSION
 from setuptools import setup
 from os import path
+import platform
 
 this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+install_requires = list()
+
+with open("requirements.txt") as file:
+
+    new_requirements = file.readline().strip("\n").strip("\t").strip()
+
+    while new_requirements:
+
+        if not (not platform.system() == "Windows" and "pywin32" in new_requirements):
+
+            install_requires.append(new_requirements)
+
+        new_requirements = file.readline().strip("\n").strip("\t").strip()
 
 setup(
 
@@ -39,23 +53,7 @@ setup(
 
     ],
 
-    install_requires=[
-
-        'cryptography>=3.4.6',
-        'pyrebase4>=4.4.3',
-        'numpy>=1.20.1',
-        'pandas>=1.2.3',
-        'PyQt5>=5.15.4',
-        'setuptools',
-        'xlrd',
-        'openpyxl',
-        'requests',
-        'PyGithub',
-        'pywin32',
-        'pyvis',
-        'googledrivedownloader'
-
-    ],
+    install_requires=install_requires,
 
     classifiers=[
 
