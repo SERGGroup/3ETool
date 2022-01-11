@@ -7,19 +7,25 @@ this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-install_requires = list()
+install_requires = [
 
-with open("requirements.txt") as file:
+    'googledrivedownloader',
+    'future~=0.18.2',
+    'PyQt5~=5.15.4',
+    'pandas~=1.2.3',
+    'openpyxl~=3.0.7',
+    'cryptography~=3.4.6',
+    'pyvis~=0.1.9',
+    'rply~=0.7.8',
+    'setuptools~=54.2.0',
+    'xlrd~=1.2.0',
+    'numpy'
 
-    new_requirements = file.readline().strip("\n").strip("\t").strip()
+]
 
-    while new_requirements:
+if platform.system() == "Windows":
 
-        if not (not platform.system() == "Windows" and "pywin32" in new_requirements):
-
-            install_requires.append(new_requirements)
-
-        new_requirements = file.readline().strip("\n").strip("\t").strip()
+    install_requires.append('pywin32')
 
 setup(
 
