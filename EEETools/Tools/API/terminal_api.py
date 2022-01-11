@@ -27,7 +27,10 @@ def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=Tru
     option.valve_is_dissipative = valve_is_dissipative
     option.condenser_is_dissipative = condenser_is_dissipative
 
-    calculate_excel(excel_path, option)
+    with warnings.catch_warnings():
+
+        warnings.simplefilter("ignore")
+        calculate_excel(excel_path, option)
 
 
 def launch_connection_debug(excel_path=""):

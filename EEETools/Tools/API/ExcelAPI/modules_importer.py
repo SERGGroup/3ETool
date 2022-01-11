@@ -219,10 +219,4 @@ def __get_sub_dict(key):
 
 def __check_excel_version(excel_path):
 
-    try:
-
-        excel_connection_data = pandas.read_excel(excel_path, sheet_name="Stream")
-
-    except:
-
-        Warning()
+    pass
