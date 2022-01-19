@@ -2,6 +2,7 @@ from EEETools.Tools.API.ExcelAPI.modules_importer import calculate_excel, import
 from EEETools.Tools.GUIElements.connection_and_block_check import CheckConnectionWidget
 from EEETools.Tools.GUIElements.net_plot_modules import display_network
 from EEETools.MainModules.main_module import CalculationOptions
+from EEETools.Tools.API.Tools.file_handler import get_file_position
 from tkinter import filedialog
 from EEETools import costants
 from shutil import copyfile
@@ -84,25 +85,18 @@ def __import_file(filename):
         return
 
     file_path = os.path.join(dir_path, filename)
-    file_position = os.path.join(costants.RES_DIR, "Other", filename)
+    file_position = get_file_position(filename)
 
-    if not os.path.isfile(file_position):
+    if file_position == "":
 
-        try:
+        warning_message = "\n\n<----------------- !WARNING! ------------------->\n"
+        warning_message += "Unable to save the file to the desired location!\n\n"
 
-            from EEETools.Tools.Other.resource_downloader import update_resource_folder
-            update_resource_folder()
+        warning_message += "file name:\t\t\t" + filename + "\n"
+        warning_message += "file position:\t\t" + file_position + "\n"
+        warning_message += "new file position:\t" + file_path + "\n\n"
 
-        except:
-
-            warning_message = "\n\n<----------------- !WARNING! ------------------->\n"
-            warning_message += "Unable to save the file to the desired location!\n\n"
-
-            warning_message += "file name:\t\t\t" + filename + "\n"
-            warning_message += "file position:\t\t" + file_position + "\n"
-            warning_message += "new file position:\t" + file_path + "\n\n"
-
-            warnings.warn(warning_message)
+        warnings.warn(warning_message)
 
     else:
 
