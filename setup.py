@@ -11,7 +11,6 @@ def __get_install_requires():
 
     install_requires = [
 
-        'googledrivedownloader',
         'future~=0.18.2',
         'PyQt5~=5.15.4',
         'pandas~=1.2.3',
