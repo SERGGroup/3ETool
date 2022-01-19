@@ -1,4 +1,4 @@
-from google_drive_downloader import GoogleDriveDownloader as gdd
+from EEETools.Tools.Other.google_drive_downloader import GoogleDriveDownloader as gdd
 from EEETools.costants import GOOGLE_DRIVE_RES_IDs, ROOT_DIR, RES_DIR
 from EEETools.version import VERSION
 import os, shutil

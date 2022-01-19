@@ -11,7 +11,6 @@ def __get_install_requires():
 
     install_requires = [
 
-        'googledrivedownloader',
         'future~=0.18.2',
         'PyQt5~=5.15.4',
         'pandas~=1.2.3',
@@ -21,7 +20,8 @@ def __get_install_requires():
         'rply~=0.7.8',
         'setuptools~=54.2.0',
         'xlrd~=1.2.0',
-        'numpy'
+        'numpy',
+        'requests'
 
     ]
 
