@@ -20,7 +20,8 @@ def __get_install_requires():
         'rply~=0.7.8',
         'setuptools~=54.2.0',
         'xlrd~=1.2.0',
-        'numpy'
+        'numpy',
+        'requests'
 
     ]
 
