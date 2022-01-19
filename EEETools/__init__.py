@@ -16,5 +16,11 @@ if not called_from_setup:
 
 else:
 
-    from EEETools.Tools.Other.resource_downloader import update_resource_folder
-    update_resource_folder(force_update=True)
+    try:
+
+        from EEETools.Tools.Other.resource_downloader import update_resource_folder
+        update_resource_folder(force_update=True)
+
+    except:
+
+        pass
