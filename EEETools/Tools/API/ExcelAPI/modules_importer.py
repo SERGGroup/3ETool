@@ -111,7 +111,7 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
 def __write_excel_file(excel_path, sheet_name, data_frame: dict):
     data_frame = __convert_result_data_frames(data_frame)
 
-    if not os.path.isfile(excel_path):
+    if not os.path.isfile(str(excel_path)):
 
         wb = Workbook()
 
