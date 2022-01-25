@@ -9,13 +9,8 @@ import math, pandas, os
 
 def calculate_excel(excel_path, calculation_option=None):
 
-    array_handler = import_excel_input(excel_path)
+    array_handler = import_excel_input(excel_path, calculation_option)
     array_handler.calculate()
-
-    if calculation_option is not None and type(calculation_option) == CalculationOptions:
-
-        array_handler.options = calculation_option
-
     export_solution_to_excel(excel_path, array_handler)
 
 
@@ -38,10 +33,14 @@ def convert_excel_to_dat(excel_path: str):
     export_dat(dat_path, array_handler)
 
 
-def import_excel_input(excel_path) -> ArrayHandler:
+def import_excel_input(excel_path, calculation_option=None) -> ArrayHandler:
 
     __check_excel_version(excel_path)
     array_handler = ArrayHandler()
+
+    if calculation_option is not None and type(calculation_option) == CalculationOptions:
+
+        array_handler.options = calculation_option
 
     # import connections
     excel_connection_data = pandas.read_excel(excel_path, sheet_name="Stream")
