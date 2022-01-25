@@ -560,7 +560,8 @@ class Block(ABC):
         c_dest = 0
 
         fuel_exergy = self.exergy_analysis["fuel"]
-        dest_exergy = self.exergy_analysis["distruction"] + self.exergy_analysis["losses"]
+        dest_exergy = self.exergy_analysis["distruction"]
+        dest_loss_exergy = self.exergy_analysis["distruction"] + self.exergy_analysis["losses"]
 
         fuel_cost = 0.
 
@@ -582,9 +583,9 @@ class Block(ABC):
 
             r = (self.output_cost - c_fuel) / c_fuel
 
-        if not (self.comp_cost + c_dest * abs(dest_exergy)) == 0:
+        if not (self.comp_cost + c_dest * abs(dest_loss_exergy)) == 0:
 
-            f = self.comp_cost / (self.comp_cost + c_dest * abs(dest_exergy))
+            f = self.comp_cost / (self.comp_cost + c_dest * abs(dest_loss_exergy))
 
         if not total_destruction == 0:
 

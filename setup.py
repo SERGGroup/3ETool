@@ -18,7 +18,7 @@ def __get_install_requires():
         'cryptography~=3.4.6',
         'pyvis~=0.1.9',
         'rply~=0.7.8',
-        'setuptools~=54.2.0',
+        'setuptools',
         'xlrd~=1.2.0',
         'numpy',
         'requests'

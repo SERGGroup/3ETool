@@ -4,7 +4,6 @@ from EEETools.Tools.GUIElements.net_plot_modules import display_network
 from EEETools.MainModules.main_module import CalculationOptions
 from EEETools.Tools.API.Tools.file_handler import get_file_position
 from tkinter import filedialog
-from EEETools import costants
 from shutil import copyfile
 import tkinter as tk
 import os, warnings
