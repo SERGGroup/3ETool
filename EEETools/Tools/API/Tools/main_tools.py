@@ -62,9 +62,12 @@ def get_result_data_frames(array_handler: ArrayHandler) -> dict:
                 comp_data["Destruction Cost [€/kWh]"].append(block.coefficients["c_dest"] * 3600)
 
                 comp_data["Fuel Cost [€/s]"].append(block.coefficients["c_fuel"] * block.exergy_analysis["fuel"])
-                comp_data["Product Cost [€/s]"].append(block.output_cost * block.exergy_analysis["fuel"])
+                comp_data["Product Cost [€/s]"].append(block.output_cost * block.exergy_analysis["product"])
                 comp_data["Destruction Cost [€/s]"].append(
-                    block.coefficients["c_dest"] * (block.exergy_analysis["distruction"] + block.exergy_analysis["losses"]))
+
+                    block.coefficients["c_dest"] * (block.exergy_analysis["distruction"] + block.exergy_analysis["losses"])
+
+                )
 
                 comp_data["eta"].append(block.coefficients["eta"])
                 comp_data["r"].append(block.coefficients["r"])
