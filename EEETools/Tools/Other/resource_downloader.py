@@ -5,6 +5,7 @@ import os, shutil
 
 
 def __download_resource_folder(file_position, version, failure_possible):
+
     if os.path.exists(file_position):
 
         try:
