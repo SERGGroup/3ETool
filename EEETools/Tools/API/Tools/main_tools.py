@@ -1,6 +1,24 @@
 from EEETools.MainModules import ArrayHandler
 
 
+def update_exergy_values(array_handler: ArrayHandler, exergy_list:list) -> ArrayHandler:
+
+    """
+    :param array_handler: an array_handler
+    :param exergy_list: a list of dictionaries having the following keys:
+        "index" -> stream index as defined in the array_handler
+        "value" -> exergy value for the specified stream in [kW]
+    :return: the updated array handler
+
+    """
+    for stream in exergy_list:
+
+        connection = array_handler.find_connection_by_index(stream["index"])
+        connection.exergy_value = stream["value"]
+
+    return array_handler
+
+
 def get_result_data_frames(array_handler: ArrayHandler) -> dict:
 
     # Stream Solution Data frame generation

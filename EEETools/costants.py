@@ -11,8 +11,9 @@ TEST_RES_DIR = os.path.join(RES_DIR, "testResources")
 
 GOOGLE_DRIVE_RES_IDs = {
 
-    "0.3.0": "11Yyl88YGVCEfeQKDryl4buHmq6Ejla36",
-    "0.2.5": "1gn2RFJQcw-iSkINS1O8gINDYE75-S_vM"
+    "0.3.12": "1Exf-G2vXhPbSPKM2i5xhYNsCYNS4WsP5",
+    "0.3.0":  "11Yyl88YGVCEfeQKDryl4buHmq6Ejla36",
+    "0.2.5":  "1gn2RFJQcw-iSkINS1O8gINDYE75-S_vM"
 
 }
 

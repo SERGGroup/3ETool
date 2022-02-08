@@ -1,17 +1,27 @@
-from EEETools.MainModules.main_module import CalculationOptions
+from EEETools.Tools.API.Tools.main_tools import get_result_data_frames, update_exergy_values
 from EEETools.Tools.API.DatAPI.modules_importer import export_dat
-from EEETools.Tools.API.Tools.main_tools import get_result_data_frames
+from EEETools.MainModules.main_module import CalculationOptions
 from openpyxl import Workbook, load_workbook, styles, utils
 from EEETools.MainModules.main_module import ArrayHandler
 from datetime import date, datetime
 import math, pandas, os
 
 
-def calculate_excel(excel_path, calculation_option=None):
+def calculate_excel(excel_path, calculation_option=None, new_exergy_list=None, export_solution=True):
 
     array_handler = import_excel_input(excel_path, calculation_option)
+
+    if new_exergy_list is not None:
+
+        array_handler = update_exergy_values(array_handler, new_exergy_list)
+
     array_handler.calculate()
-    export_solution_to_excel(excel_path, array_handler)
+
+    if export_solution:
+
+        export_solution_to_excel(excel_path, array_handler)
+
+    return array_handler
 
 
 def convert_excel_to_dat(excel_path: str):
@@ -108,6 +118,7 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
 
 
 def __write_excel_file(excel_path, sheet_name, data_frame: dict):
+
     data_frame = __convert_result_data_frames(data_frame)
 
     if not os.path.isfile(str(excel_path)):

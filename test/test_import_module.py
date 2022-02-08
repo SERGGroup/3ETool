@@ -115,6 +115,26 @@ class ImportTestCase(unittest.TestCase):
         EEETools.calculate(valve_is_dissipative=False)
         self.assertTrue(True)
 
+    def test_excel_update(self):
+
+        resource_excel_path = os.path.join(costants.TEST_RES_DIR, "ImportTestResources", "ExcelTestFiles")
+        excel_path = os.path.join(resource_excel_path, "BHE_simple_analysis.xlsx")
+        updated_exergy_values = [
+
+            {"index": 1,  "value": 82.86},
+            {"index": 2,  "value": 87.76},
+            {"index": 3,  "value": 91.91},
+            {"index": 4,  "value": 86.54},
+            {"index": 20, "value": 0.5 * 9.81},
+            {"index": 21, "value": (343.63 - 343.63) * (1 - 292.15 / 325.15)},
+            {"index": 22, "value": 3.68}
+
+        ]
+
+        connection = updated_exergy_values[0]
+        array_handler = calculate_excel(excel_path, new_exergy_list=updated_exergy_values, export_solution=False)
+        self.assertEqual(connection["value"], array_handler.find_connection_by_index(connection["index"]).exergy_value)
+
 
 if __name__ == '__main__':
     unittest.main()
