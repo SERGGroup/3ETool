@@ -1528,6 +1528,19 @@ class ArrayHandler:
         return return_list
 
     @property
+    def overall_efficiency(self):
+
+        input_exergy = 0
+        for connection in self.system_inputs:
+            input_exergy += connection.exergy_value
+
+        output_exergy = 0
+        for connection in self.system_outputs:
+            output_exergy += connection.exergy_value
+
+        return output_exergy / input_exergy
+
+    @property
     def non_dissipative_blocks(self):
 
         return_list = list()
