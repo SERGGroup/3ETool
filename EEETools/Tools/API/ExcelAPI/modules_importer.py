@@ -5,6 +5,7 @@ from openpyxl import Workbook, load_workbook, styles, utils
 from EEETools.MainModules.main_module import ArrayHandler
 from datetime import date, datetime
 import math, pandas, os
+import warnings
 
 
 def calculate_excel(excel_path, calculation_option=None, new_exergy_list=None, export_solution=True):
@@ -45,60 +46,64 @@ def convert_excel_to_dat(excel_path: str):
 
 def import_excel_input(excel_path, calculation_option=None) -> ArrayHandler:
 
-    __check_excel_version(excel_path)
-    array_handler = ArrayHandler()
+    with warnings.catch_warnings():
 
-    if calculation_option is not None and type(calculation_option) == CalculationOptions:
+        warnings.simplefilter("ignore")
 
-        array_handler.options = calculation_option
+        __check_excel_version(excel_path)
+        array_handler = ArrayHandler()
 
-    # import connections
-    excel_connection_data = pandas.read_excel(excel_path, sheet_name="Stream")
+        if calculation_option is not None and type(calculation_option) == CalculationOptions:
 
-    for line in excel_connection_data.values:
+            array_handler.options = calculation_option
 
-        line = line.tolist()
-        if not math.isnan(line[0]):
-            new_conn = array_handler.append_connection()
+        # import connections
+        excel_connection_data = pandas.read_excel(excel_path, sheet_name="Stream")
 
-            new_conn.index = line[0]
-            new_conn.name = str(line[1])
-            new_conn.exergy_value = line[2]
+        for line in excel_connection_data.values:
 
-    # import blocks
-    excel_block_data = pandas.read_excel(excel_path, sheet_name="Componenti")
+            line = line.tolist()
+            if not math.isnan(line[0]):
+                new_conn = array_handler.append_connection()
 
-    for line in excel_block_data.values:
+                new_conn.index = line[0]
+                new_conn.name = str(line[1])
+                new_conn.exergy_value = line[2]
 
-        line = line.tolist()
+        # import blocks
+        excel_block_data = pandas.read_excel(excel_path, sheet_name="Componenti")
 
-        if not (math.isnan(line[0]) or type(line[0]) is str):
+        for line in excel_block_data.values:
 
-            if line[0] > 0:
+            line = line.tolist()
 
-                if "Heat Exchanger" in str(line[2]) or "Scambiatore" in str(line[2]):
+            if not (math.isnan(line[0]) or type(line[0]) is str):
 
-                    new_block = array_handler.append_block("Heat Exchanger")
-                    excel_connection_list = list()
-                    excel_connection_list.append(str(line[2]))
-                    excel_connection_list.extend(line[5:])
+                if line[0] > 0:
+
+                    if "Heat Exchanger" in str(line[2]) or "Scambiatore" in str(line[2]):
+
+                        new_block = array_handler.append_block("Heat Exchanger")
+                        excel_connection_list = list()
+                        excel_connection_list.append(str(line[2]))
+                        excel_connection_list.extend(line[5:])
+
+                    else:
+
+                        new_block = array_handler.append_block(str(line[2]))
+                        excel_connection_list = line[5:]
+
+                    new_block.index = line[0]
+                    new_block.name = str(line[1])
+                    new_block.comp_cost = line[3]
+
+                    new_block.initialize_connection_list(excel_connection_list)
 
                 else:
 
-                    new_block = array_handler.append_block(str(line[2]))
-                    excel_connection_list = line[5:]
+                    array_handler.append_excel_costs_and_useful_output(line[5:-1], line[0] == 0, line[3])
 
-                new_block.index = line[0]
-                new_block.name = str(line[1])
-                new_block.comp_cost = line[3]
-
-                new_block.initialize_connection_list(excel_connection_list)
-
-            else:
-
-                array_handler.append_excel_costs_and_useful_output(line[5:-1], line[0] == 0, line[3])
-
-    return array_handler
+        return array_handler
 
 
 def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
