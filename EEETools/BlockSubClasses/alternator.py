@@ -66,7 +66,6 @@ class Alternator(Block):
     def export_xml_connection_list(self) -> ETree.Element:
 
         xml_connection_list = ETree.Element("Connections")
-
         mechanical_connections = ETree.SubElement(xml_connection_list, "MechanicalConnections")
 
         for input_connection in self.support_block[0].external_input_connections:
@@ -104,8 +103,6 @@ class Alternator(Block):
 
     def append_xml_connection_list(self, input_list: ETree.Element):
 
-        a = ETree.tostring(input_list)
-
         mechanical_connections = input_list.find("MechanicalConnections")
         electrical_connections = input_list.find("ElectricalConnections")
 
@@ -115,7 +112,7 @@ class Alternator(Block):
         self.__add_connection_by_index(electrical_connections, "input")
         self.__add_connection_by_index(electrical_connections, "output")
 
-    def __add_connection_by_index(self, input_list: ETree.Element, connection_name, append_to_support_block = None):
+    def __add_connection_by_index(self, input_list: ETree.Element, connection_name, append_to_support_block=None):
 
         if connection_name == "input":
 
