@@ -112,7 +112,7 @@ class ImportTestCase(unittest.TestCase):
     def test_excel_calculate(self):
 
         import EEETools
-        EEETools.calculate(valve_is_dissipative=False)
+        EEETools.calculate()
         self.assertTrue(True)
 
     def test_excel_update(self):

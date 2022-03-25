@@ -7,8 +7,9 @@ class ProductBlock(Generic):
     def __init__(self, inputID, main_class, base_block: Block):
 
         super().__init__(inputID, main_class)
-        self.base_block = base_block
 
+        self.base_block = base_block
+        self.name = base_block.name
         self.contained_blocks = [base_block]
         self.contained_connection = list()
 
@@ -32,6 +33,13 @@ class ProductBlock(Generic):
 
             else:
                 outConn.set_cost(defined_steam_cost)
+
+    def generate_output_cost_decomposition(self, inverse_matrix_row):
+
+        super(ProductBlock, self).generate_output_cost_decomposition(inverse_matrix_row)
+
+        for block in self.contained_blocks:
+            block.output_cost_decomposition = self.output_cost_decomposition
 
     def find_product_connections(self):
 
@@ -108,6 +116,7 @@ class ProductConnection(Connection):
         super().__init__(base_connection.ID)
 
         self.base_connection = base_connection
+        self.name = self.base_connection.name
 
         self.exergy_value = base_connection.exergy_value
         self.rel_cost = base_connection.rel_cost
@@ -129,11 +138,16 @@ class ProductConnection(Connection):
 
 class PFArrayHandler(ArrayHandler):
 
+    # -------------------------------------
+    # ------ Initialization  Methods ------
+    # -------------------------------------
+
     def __init__(self, base_array_handler: ArrayHandler):
 
         super().__init__()
         self.base_array_handler = base_array_handler
         self.__generate_lists()
+        self.__identify_support_blocks()
 
     def __generate_lists(self):
 
@@ -142,12 +156,21 @@ class PFArrayHandler(ArrayHandler):
             new_block = connection.to_block
             self.generate_product_block(new_block, input_connection=connection)
 
+    def __identify_support_blocks(self):
+
+        for prod_block in self.block_list:
+
+            if prod_block.base_block.is_support_block:
+
+                prod_block.is_support_block = True
+                prod_block.main_block = self.find_element(prod_block.base_block.main_block)
+
     def generate_product_connection(self, input_connection: Connection, from_product_block=None, to_product_block=None):
 
         new_conn = ProductConnection(input_connection)
         self.append_connection(new_conn, from_block=from_product_block, to_block=to_product_block)
 
-    def generate_product_block(self, input_block: Block, input_connection=None, from_block = None):
+    def generate_product_block(self, input_block: Block, input_connection=None, from_block=None):
 
         new_block = self.find_element(input_block)
 
@@ -169,6 +192,10 @@ class PFArrayHandler(ArrayHandler):
             self.generate_product_connection(input_connection, to_product_block=new_block, from_product_block=from_block)
 
         return new_block
+
+    # -------------------------------------
+    # ---------- Support Methods ----------
+    # -------------------------------------
 
     def find_element(self, element):
 

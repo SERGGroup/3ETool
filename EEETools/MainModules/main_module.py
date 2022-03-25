@@ -12,7 +12,10 @@ from EEETools.Tools.modules_handler import ModulesHandler
 
 class Block(ABC):
 
-    # Construction Methods
+    # -------------------------------------
+    # ------ Initialization  Methods ------
+    # -------------------------------------
+
     def __init__(self, inputID, main_class, is_support_block=False):
 
         self.__ID = inputID
@@ -28,6 +31,7 @@ class Block(ABC):
         self.comp_cost = 0.
         self.difference_cost = 0.
         self.output_cost = 0.
+        self.output_cost_decomposition = dict()
 
         self.input_connections = list()
         self.output_connections = list()
@@ -48,7 +52,6 @@ class Block(ABC):
         self.main_block = None
         self.connection_with_main = None
 
-    # Getter and Setter
     def modify_ID(self, newID):
 
         # When the ID of the block is modified, for exemple in ordering the BlockArray List, the ID has to be modified
@@ -59,6 +62,400 @@ class Block(ABC):
     @property
     def ID(self):
         return self.__ID
+
+    @property
+    def get_main_ID(self):
+
+        if self.is_support_block:
+
+            return self.main_block.get_main_ID
+
+        else:
+
+            return self.ID
+
+    @property
+    def get_main_name(self):
+
+        if self.is_support_block:
+
+            return self.main_block.get_main_name
+
+        else:
+
+            return self.name
+
+    # -------------------------------------
+    # -------- Calculation Methods --------
+    # -------------------------------------
+
+    # - Matrix Row generation -
+
+    def get_matrix_row(self, n_elements):
+
+        self.calculate_exergy_analysis()
+
+        if self.is_dissipative:
+
+            return self.__get_dissipative_matrix_row(n_elements)
+
+        else:
+
+            return self.__get_standard_matrix_row(n_elements)
+
+    def __get_standard_matrix_row(self, n_blocks):
+
+        # This Methods returns the row of the Cost Matrix corresponding to the current block in a block-oriented
+        # computation scheme
+
+        # The Cost Matrix is a squared matrix of size NXN where N is the number of blocks. Another column,
+        # representing the known variables vector has been added at the end of the matrix, hence its actual
+        # dimensions are NX(N+1). In the Cost Matrix the elements on the diagonal correspond to the Exergetic value
+        # of the flows exiting from the block while the off-diagonal elements match with the input flows into the
+        # blocks. Off-diagonal terms must be negative. For example at column "m" you will find the exergy flux coming
+        # into the component from block with ID "m".
+
+        # The last column represent known variable and should be filled with the known costs
+        # For further details please refers to the paper (to be quoted)
+
+        # line initialization with an array of zeroes (dimension N+1)
+        row = np.zeros(n_blocks + 1)
+        element_cost = self.comp_cost
+        exergy_sum = 0
+
+        # This part of the code scrolls the input connections, for each of them it checks if the connection
+        # came form another block (it's an internal connection) or if it's a system input.
+        # In the latter case its absolute cost must be known so it will be considered as a known variable
+        # ant the result is written in the last column
+
+        for conn in self.input_connections:
+
+            if not (conn.is_system_input or conn.exergy_value == 0):
+
+                row[conn.fromID] = -conn.exergy_value
+
+            else:
+
+                element_cost += conn.exergy_value * conn.rel_cost
+
+        row[-1] = element_cost
+
+        # Output connections are scrolled, if they are not exergy losses their exergy values is summed up
+        # result is written in the column related to the current block
+
+        for conn in self.output_connections:
+
+            if not conn.is_loss or (not self.main_class.options.loss_cost_is_zero):
+                exergy_sum += conn.exergy_value
+
+        row[self.ID] = exergy_sum
+
+        return row
+
+    def __get_dissipative_matrix_row(self, n_blocks):
+
+        # This Methods returns the rows of the Cost Matrix corresponding to the a dissipative block
+
+        # The Cost Matrix is a squared matrix of size NXN where N is the number of blocks. Another column,
+        # representing the known variables vector has been added at the end of the matrix, hence its actual
+        # dimensions are NX(N+1).
+        #
+        # In the Cost Matrix the elements on the diagonal for dissipative blocks is equal to 1 as the i-th column in
+        # the matrix represent the cost difference variable. While the off-diagonal elements match with the input
+        # flows into the blocks. Off-diagonal terms must be negative. For example at column "m" you will find the
+        # exergy flux coming into the component from block with ID "m".
+
+        # The last column represent known variable and should be filled with the known costs
+        # For further details please refers to the paper (to be quoted)
+
+        # line initialization with an array of zeroes (dimension N+1)
+        row = np.zeros(n_blocks + 1)
+        element_cost = self.comp_cost
+
+        # This part of the code scrolls the input connections, for each of them it checks if che connection
+        # came form another block (it's an internal connection) or if it's a system input.
+        # In the latter case its absolute cost must be known so it will be considered as a known variable
+        # result is written in the last column
+
+        for conn in self.input_connections:
+
+            if not (conn.is_system_input or conn.exergy_value == 0):
+
+                row[conn.fromID] = -conn.exergy_value
+
+            else:
+
+                element_cost += conn.exergy_value * conn.rel_cost
+
+        row[-1] = element_cost
+
+        # diagonal element is set to overall_exergy_input
+
+        row[self.ID] = self.exergy_input
+
+        return row
+
+    # - Loss Redistribution Handling -
+
+    @property
+    def redistribution_index(self):
+
+        if self.is_dissipative:
+
+            redistribution_index = 0
+
+        else:
+
+            redistribution_method = self.main_class.options.redistribution_method
+
+            if redistribution_method == CalculationOptions.EXERGY_DESTRUCTION:
+
+                redistribution_index = abs(self.exergy_balance)
+
+            elif redistribution_method == CalculationOptions.EXERGY_PRODUCT:
+
+                redistribution_index = abs(self.productive_exergy_output)
+
+            else:
+
+                redistribution_index = abs(self.comp_cost)
+
+        return redistribution_index
+
+    @property
+    def redistribution_block_list(self):
+
+        # TODO it can be overloaded in sub classes
+
+        if self.is_dissipative:
+
+            return self.main_class.non_dissipative_blocks
+
+        else:
+
+            return list()
+
+    @property
+    def redistribution_sum(self):
+
+        redistribution_sum = 0
+        for block in self.redistribution_block_list:
+            redistribution_sum += block.redistribution_index
+
+        return redistribution_sum
+
+    # - Exergo-Economic Analysis Coefficient Evaluation -
+
+    def calculate_exergy_analysis(self):
+
+        fuel_exergy = 0.
+        lost_exergy = 0.
+        product_exergy = 0.
+
+        for conn in self.input_connections:
+            fuel_exergy += conn.exergy_value
+
+        for conn in self.output_connections:
+
+            if conn.is_loss:
+
+                lost_exergy += conn.exergy_value
+
+            else:
+
+                product_exergy += conn.exergy_value
+
+        destruction_exergy = fuel_exergy - product_exergy - lost_exergy
+        self.exergy_analysis.update({"fuel": fuel_exergy,
+                                     "product": product_exergy,
+                                     "losses": lost_exergy,
+                                     "distruction": destruction_exergy})
+
+    def calculate_coefficients(self, total_destruction):
+
+        r = 0
+        f = 0
+        y = 0
+        eta = 0
+
+        c_fuel = 0
+        c_dest = 0
+
+        fuel_exergy = self.exergy_analysis["fuel"]
+        dest_exergy = self.exergy_analysis["distruction"]
+        dest_loss_exergy = self.exergy_analysis["distruction"] + self.exergy_analysis["losses"]
+
+        fuel_cost = 0.
+
+        for conn in self.input_connections:
+
+            fuel_cost += conn.exergy_value * conn.rel_cost
+
+        if not fuel_exergy == 0:
+
+            eta = self.productive_exergy_output / abs(fuel_exergy)
+
+            if eta > 1:
+                eta = 1/eta
+
+            c_fuel = fuel_cost / abs(fuel_exergy)
+            c_dest = c_fuel
+
+        if not c_fuel == 0:
+
+            r = (self.output_cost - c_fuel) / c_fuel
+
+        if not (self.comp_cost + c_dest * abs(dest_loss_exergy)) == 0:
+
+            f = self.comp_cost / (self.comp_cost + c_dest * abs(dest_loss_exergy))
+
+        if not total_destruction == 0:
+
+            y = dest_exergy / total_destruction
+
+        self.coefficients.update({"r": r,
+                                  "f": f,
+                                  "y": y,
+                                  "eta": eta,
+                                  "c_fuel": c_fuel,
+                                  "c_dest": c_dest})
+
+    # - Support Methods -
+
+    def prepare_for_calculation(self):
+
+        # This method is used in block's subclasses to execute the calculations needed before the launch of the main
+        # calculation, it has to be overloaded if needed
+
+        pass
+
+    def append_output_cost(self, defined_steam_cost):
+
+        # The stream cost is calculated in the overall calculation,
+        # this method is meant to be used in order to assign the
+        # right cost to the output streams
+
+        # Cost of the exergy losses will be considered as 0
+
+        if self.is_dissipative:
+
+            self.difference_cost = defined_steam_cost
+
+        else:
+
+            self.output_cost = defined_steam_cost
+
+            for outConn in self.output_connections:
+
+                if outConn.is_loss and self.main_class.options.loss_cost_is_zero:
+                    outConn.set_cost(0.)
+
+                else:
+                    outConn.set_cost(defined_steam_cost)
+
+    def generate_output_cost_decomposition(self, inverse_matrix_row):
+
+        overall_sum = self.__sum_decomposition_values(inverse_matrix_row)
+
+        for block in self.main_class.block_list:
+
+            if not block.comp_cost == 0.:
+
+                decomposition_value = inverse_matrix_row[block.ID] * block.comp_cost
+                self.__append_decomposition_value(block.name, decomposition_value, overall_sum)
+
+        for input_conn in self.main_class.system_inputs:
+
+            if not input_conn.rel_cost == 0.:
+
+                decomposition_value = inverse_matrix_row[input_conn.to_block.ID] * input_conn.abs_cost
+                self.__append_decomposition_value(input_conn.name, decomposition_value, overall_sum)
+
+    def __sum_decomposition_values(self, inverse_matrix_row):
+
+        sum = 0
+
+        for block in self.main_class.block_list:
+
+            if not block.comp_cost == 0.:
+
+                sum += inverse_matrix_row[block.ID] * block.comp_cost
+
+        for input_conn in self.main_class.system_inputs:
+
+            if not input_conn.rel_cost == 0.:
+
+                sum += inverse_matrix_row[input_conn.to_block.ID] * input_conn.abs_cost
+
+        return sum
+
+    def __append_decomposition_value(self, input_name, absolute_decomposition_value, overall_sum):
+
+        if overall_sum == 0.:
+
+            decomposition_value = 0.
+
+        else:
+
+            decomposition_value = absolute_decomposition_value / overall_sum
+
+        self.output_cost_decomposition.update({input_name: decomposition_value})
+
+    @property
+    def productive_exergy_output(self):
+
+        productive_exergy_output = 0
+
+        for conn in self.non_loss_output:
+            productive_exergy_output += abs(conn.exergy_value)
+
+        return productive_exergy_output
+
+    @property
+    def exergy_input(self):
+
+        overall_exergy_input = 0
+
+        for conn in self.input_connections:
+            overall_exergy_input += abs(conn.exergy_value)
+
+        return overall_exergy_input
+
+    @property
+    def exergy_balance(self):
+
+        exergy_balance = 0
+
+        for conn in self.input_connections:
+            exergy_balance += conn.exergy_value
+
+        for conn in self.output_connections:
+            exergy_balance -= conn.exergy_value
+
+        return exergy_balance
+
+    @property
+    def cost_balance(self):
+
+        cost_balance = self.comp_cost
+
+        for conn in self.input_connections:
+            cost_balance += conn.exergy_value * conn.rel_cost
+
+        if self.is_dissipative:
+
+            cost_balance -= self.difference_cost
+
+        else:
+
+            for conn in self.output_connections:
+                cost_balance -= conn.exergy_value * conn.rel_cost
+
+        return cost_balance
+
+    # -------------------------------------
+    # ---- Connection Handling Methods ----
+    # -------------------------------------
 
     def add_connection(self, new_connection, is_input, append_to_support_block=None):
 
@@ -162,30 +559,6 @@ class Block(ABC):
 
         self.calculate_exergy_analysis()
 
-    def append_output_cost(self, defined_steam_cost):
-
-        # The stream cost is calculated in the overall calculation,
-        # this method is meant to be used in order to assign the
-        # right cost to the output streams
-
-        # Cost of the exergy losses will be considered as 0
-
-        if self.is_dissipative:
-
-            self.difference_cost = defined_steam_cost
-
-        else:
-
-            self.output_cost = defined_steam_cost
-
-            for outConn in self.output_connections:
-
-                if outConn.is_loss and self.main_class.options.loss_cost_is_zero:
-                    outConn.set_cost(0.)
-
-                else:
-                    outConn.set_cost(defined_steam_cost)
-
     def disconnect_block(self):
 
         # this method will remove every connection from the block, it is usefull if the block has to be deleted
@@ -196,10 +569,63 @@ class Block(ABC):
         for conn in _tmpConnectionArray:
             self.remove_connection(conn)
 
+    def connection_is_in_connections_list(self, connection):
+
+        return connection in self.input_connections or connection in self.output_connections
+
+    def get_fluid_stream_connections(self):
+
+        connection_list = list()
+
+        for connection in self.input_connections:
+
+            if connection.is_fluid_stream:
+                connection_list.append(connection)
+
+        for connection in self.output_connections:
+
+            if connection.is_fluid_stream:
+                connection_list.append(connection)
+
+        return connection_list
+
+    @property
+    def external_input_connections(self):
+
+        input_connections = list()
+        for connection in self.input_connections:
+            if not connection.is_internal_stream:
+                input_connections.append(connection)
+
+        if self.has_support_block:
+            for block in self.support_block:
+                input_connections.extend(block.external_input_connections)
+
+        return input_connections
+
+    @property
+    def external_output_connections(self):
+
+        output_connections = list()
+
+        for connection in self.output_connections:
+            if not connection.is_internal_stream:
+                output_connections.append(connection)
+
+        if self.has_support_block:
+            for block in self.support_block:
+                output_connections.extend(block.external_output_connections)
+
+        return output_connections
+
+    # -------------------------------------
+    # --------- Save/Load Methods ---------
+    # -------------------------------------
+
     @abstractmethod
     def initialize_connection_list(self, input_list):
 
-        raise (NotImplementedError, "block.append_excel_connection_list() must be overloaded in subclasses")
+        raise (NotImplementedError, "block.initialize_connection_list() must be overloaded in subclasses")
 
     @property
     def xml(self) -> ETree.Element:
@@ -259,178 +685,10 @@ class Block(ABC):
 
         raise (NotImplementedError, "block.__append_xml_connection_list() must be overloaded in subclasses")
 
-    # Calculation Methods
-    def get_matrix_row(self, n_elements):
+    # -------------------------------------
+    # ---------- Support Methods ----------
+    # -------------------------------------
 
-        self.calculate_exergy_analysis()
-
-        if self.is_dissipative:
-
-            return self.__get_dissipative_matrix_row(n_elements)
-
-        else:
-
-            return self.__get_standard_matrix_row(n_elements)
-
-    def __get_standard_matrix_row(self, n_blocks):
-
-        # This Methods returns the row of the Cost Matrix corresponding to the current block in a block-oriented
-        # computation scheme
-
-        # The Cost Matrix is a squared matrix of size NXN where N is the number of blocks. Another column,
-        # representing the known variables vector has been added at the end of the matrix, hence its actual
-        # dimensions are NX(N+1). In the Cost Matrix the elements on the diagonal correspond to the Exergetic value
-        # of the flows exiting from the block while the off-diagonal elements match with the input flows into the
-        # blocks. Off-diagonal terms must be negative. For example at column "m" you will find the exergy flux coming
-        # into the component from block with ID "m".
-
-        # The last column represent known variable and should be filled with the known costs
-        # For further details please refers to the paper (to be quoted)
-
-        # line initialization with an array of zeroes (dimension N+1)
-        row = np.zeros(n_blocks + 1)
-        element_cost = self.comp_cost
-        exergy_sum = 0
-
-        # This part of the code scrolls the input connections, for each of them it checks if che connection
-        # came form another block (it's an internal connection) or if it's a system input.
-        # In the latter case its absolute cost must be known so it will be considered as a known variable
-        # result is written in the last column
-
-        for conn in self.input_connections:
-
-            if not (conn.is_system_input or conn.exergy_value == 0):
-
-                row[conn.fromID] = -conn.exergy_value
-
-            else:
-
-                element_cost += conn.exergy_value * conn.rel_cost
-
-        row[-1] = element_cost
-
-        # Output connections are scrolled, if they are not exergy losses their exergy values is summed up
-        # result is written in the column related to the current block
-
-        for conn in self.output_connections:
-
-            if not conn.is_loss or (not self.main_class.options.loss_cost_is_zero):
-                exergy_sum += conn.exergy_value
-
-        row[self.ID] = exergy_sum
-
-        return row
-
-    def __get_dissipative_matrix_row(self, n_blocks):
-
-        # This Methods returns the rows of the Cost Matrix corresponding to the a dissipative block
-
-        # The Cost Matrix is a squared matrix of size NXN where N is the number of blocks. Another column,
-        # representing the known variables vector has been added at the end of the matrix, hence its actual
-        # dimensions are NX(N+1).
-        #
-        # In the Cost Matrix the elements on the diagonal for dissipative blocks is equal to 1 as the i-th column in
-        # the matrix represent the cost difference variable. While the off-diagonal elements match with the input
-        # flows into the blocks. Off-diagonal terms must be negative. For example at column "m" you will find the
-        # exergy flux coming into the component from block with ID "m".
-
-        # The last column represent known variable and should be filled with the known costs
-        # For further details please refers to the paper (to be quoted)
-
-        # line initialization with an array of zeroes (dimension N+1)
-        row = np.zeros(n_blocks + 1)
-        element_cost = self.comp_cost
-
-        # This part of the code scrolls the input connections, for each of them it checks if che connection
-        # came form another block (it's an internal connection) or if it's a system input.
-        # In the latter case its absolute cost must be known so it will be considered as a known variable
-        # result is written in the last column
-
-        for conn in self.input_connections:
-
-            if not (conn.is_system_input or conn.exergy_value == 0):
-
-                row[conn.fromID] = -conn.exergy_value
-
-            else:
-
-                element_cost += conn.exergy_value * conn.rel_cost
-
-        row[-1] = element_cost
-
-        # diagonal element is set to 1
-
-        row[self.ID] = 1
-
-        return row
-
-    @property
-    def redistribution_block_list(self):
-
-        # TODO it can be overloaded in sub classes
-
-        if self.is_dissipative:
-
-            return self.main_class.non_dissipative_blocks
-
-        else:
-
-            return list()
-
-    @property
-    def redistribution_sum(self):
-
-        redistribution_sum = 0
-        redistribution_method = self.main_class.options.redistribution_method
-
-        for block in self.redistribution_block_list:
-
-            if redistribution_method == CalculationOptions.EXERGY_DESTRUCTION:
-
-                redistribution_sum += abs(block.exergy_balance)
-
-            elif redistribution_method == CalculationOptions.EXERGY_PRODUCT:
-
-                redistribution_sum += abs(block.productive_exergy_output)
-
-            else:
-
-                redistribution_sum += abs(block.comp_cost)
-
-        return redistribution_sum
-
-    def redistribution_index(self, redistribution_sum):
-
-        if self.is_dissipative:
-
-            redistribution_index = 0
-
-        else:
-
-            redistribution_method = self.main_class.options.redistribution_method
-
-            if redistribution_method == CalculationOptions.EXERGY_DESTRUCTION:
-
-                redistribution_index = abs(self.exergy_balance) / redistribution_sum
-
-            elif redistribution_method == CalculationOptions.EXERGY_PRODUCT:
-
-                redistribution_index = abs(self.productive_exergy_output) / redistribution_sum
-
-            else:
-
-                redistribution_index = abs(self.comp_cost) / redistribution_sum
-
-        return redistribution_index
-
-    def prepare_for_calculation(self):
-
-        # This method is used in block's subclasses to execute the calculations needed before the launch of the main
-        # calculation, it has to be overloaded if needed
-
-        pass
-
-    # Support Methods
     @property
     @abstractmethod
     def is_ready_for_calculation(self):
@@ -443,28 +701,6 @@ class Block(ABC):
 
         else:
             raise (NotImplementedError, "block.is_ready_for_calculation() must be overloaded in subclasses")
-
-    @property
-    def get_main_ID(self):
-
-        if self.is_support_block:
-
-            return self.main_block.get_main_ID
-
-        else:
-
-            return self.ID
-
-    @property
-    def get_main_name(self):
-
-        if self.is_support_block:
-
-            return self.main_block.get_main_name
-
-        else:
-
-            return self.name
 
     @property
     def is_dissipative(self):
@@ -481,6 +717,14 @@ class Block(ABC):
                 return False
 
         return True
+
+    @property
+    def can_be_removed_in_pf_definition(self):
+
+        if self.exergy_balance == 0 and self.n_input == 1 and self.comp_cost == 0. and not self.is_dissipative:
+            return True
+
+        return False
 
     @property
     def non_loss_output(self):
@@ -503,19 +747,14 @@ class Block(ABC):
         # This method the number of non-loss output, hence it scrolls the output connection and count the number of
         # them which are not losses
 
-        counter = 0
-        for outConn in self.output_connections:
-
-            if (not outConn.is_loss) and (not outConn.exergy_value == 0):
-                counter += 1
-
-        return counter
+        return len(self.non_loss_output)
 
     @property
     def n_non_empty_output(self):
 
         # This method the number of non-empty output, hence it scrolls the output connection and count the number of
         # them which are not empty
+
         counter = 0
         for outConn in self.output_connections:
 
@@ -524,81 +763,11 @@ class Block(ABC):
 
         return counter
 
-    def calculate_exergy_analysis(self):
+    # -------------------------------------
+    # ------  EES Generation Methods  -----
+    # ------   (to be eliminated)     -----
+    # -------------------------------------
 
-        fuel_exergy = 0.
-        lost_exergy = 0.
-        product_exergy = 0.
-
-        for conn in self.input_connections:
-            fuel_exergy += conn.exergy_value
-
-        for conn in self.output_connections:
-
-            if conn.is_loss:
-
-                lost_exergy += conn.exergy_value
-
-            else:
-
-                product_exergy += conn.exergy_value
-
-        destruction_exergy = fuel_exergy - product_exergy - lost_exergy
-        self.exergy_analysis.update({"fuel": fuel_exergy,
-                                     "product": product_exergy,
-                                     "losses": lost_exergy,
-                                     "distruction": destruction_exergy})
-
-    def calculate_coefficients(self, total_destruction):
-
-        r = 0
-        f = 0
-        y = 0
-        eta = 0
-
-        c_fuel = 0
-        c_dest = 0
-
-        fuel_exergy = self.exergy_analysis["fuel"]
-        dest_exergy = self.exergy_analysis["distruction"]
-        dest_loss_exergy = self.exergy_analysis["distruction"] + self.exergy_analysis["losses"]
-
-        fuel_cost = 0.
-
-        for conn in self.input_connections:
-
-            fuel_cost += conn.exergy_value * conn.rel_cost
-
-        if not fuel_exergy == 0:
-
-            eta = self.productive_exergy_output / abs(fuel_exergy)
-
-            if eta > 1:
-                eta = 1/eta
-
-            c_fuel = fuel_cost / abs(fuel_exergy)
-            c_dest = c_fuel
-
-        if not c_fuel == 0:
-
-            r = (self.output_cost - c_fuel) / c_fuel
-
-        if not (self.comp_cost + c_dest * abs(dest_loss_exergy)) == 0:
-
-            f = self.comp_cost / (self.comp_cost + c_dest * abs(dest_loss_exergy))
-
-        if not total_destruction == 0:
-
-            y = dest_exergy / total_destruction
-
-        self.coefficients.update({"r": r,
-                                  "f": f,
-                                  "y": y,
-                                  "eta": eta,
-                                  "c_fuel": c_fuel,
-                                  "c_dest": c_dest})
-
-    # EES Methods
     @classmethod
     @abstractmethod
     def return_EES_needed_index(cls):
@@ -682,85 +851,6 @@ class Block(ABC):
         else:
             raise (NotImplementedError, "block.is_ready_for_calculation() must be overloaded in subclasses")
 
-    @property
-    def external_input_connections(self):
-
-        input_connections = list()
-        for connection in self.input_connections:
-            if not connection.is_internal_stream:
-                input_connections.append(connection)
-
-        if self.has_support_block:
-            for block in self.support_block:
-                input_connections.extend(block.external_input_connections)
-
-        return input_connections
-
-    @property
-    def external_output_connections(self):
-
-        output_connections = list()
-
-        for connection in self.output_connections:
-            if not connection.is_internal_stream:
-                output_connections.append(connection)
-
-        if self.has_support_block:
-            for block in self.support_block:
-                output_connections.extend(block.external_output_connections)
-
-        return output_connections
-
-    @property
-    def can_be_removed_in_pf_definition(self):
-
-        if self.exergy_balance == 0 and self.n_input == 1 and self.comp_cost == 0. and not self.is_dissipative:
-            return True
-
-        return False
-
-    @property
-    def exergy_balance(self):
-
-        exergy_balance = 0
-
-        for conn in self.input_connections:
-            exergy_balance += conn.exergy_value
-
-        for conn in self.output_connections:
-            exergy_balance -= conn.exergy_value
-
-        return exergy_balance
-
-    @property
-    def productive_exergy_output(self):
-
-        productive_exergy_output = 0
-
-        for conn in self.non_loss_output:
-            productive_exergy_output += abs(conn.exergy_value)
-
-        return productive_exergy_output
-
-    @property
-    def cost_balance(self):
-
-        cost_balance = self.comp_cost
-
-        for conn in self.input_connections:
-            cost_balance += conn.exergy_value * conn.rel_cost
-
-        if self.is_dissipative:
-
-            cost_balance -= self.difference_cost
-
-        else:
-
-            for conn in self.output_connections:
-                cost_balance -= conn.exergy_value * conn.rel_cost
-
-        return cost_balance
-
     @abstractmethod
     def return_other_zone_connections(self, zone_type, input_connection):
 
@@ -782,27 +872,9 @@ class Block(ABC):
         else:
             raise (NotImplementedError, "block.is_ready_for_calculation() must be overloaded in subclasses")
 
-    def connection_is_in_connections_list(self, connection):
-
-        return connection in self.input_connections or connection in self.output_connections
-
-    def get_fluid_stream_connections(self):
-
-        connection_list = list()
-
-        for connection in self.input_connections:
-
-            if connection.is_fluid_stream:
-                connection_list.append(connection)
-
-        for connection in self.output_connections:
-
-            if connection.is_fluid_stream:
-                connection_list.append(connection)
-
-        return connection_list
-
-    # Overloaded Method
+    # -------------------------------------
+    # -------- Sequencing  Methods --------
+    # -------------------------------------
 
     def __this_has_higher_skipping_order(self, other):
 
@@ -1067,6 +1139,11 @@ class Connection:
         self.is_useful_effect = input_xml.get("is_useful_effect") == "True"
 
     @property
+    def abs_cost(self) -> float:
+
+        return self.__rel_cost * self.exergy_value
+
+    @property
     def rel_cost(self) -> float:
 
         return self.__rel_cost
@@ -1213,6 +1290,182 @@ class ArrayHandler:
         self.pf_diagram = None
         self.options = CalculationOptions()
 
+    # -------------------------------------
+    # ----- Main Calculations Methods -----
+    # -------------------------------------
+
+    def calculate(self):
+
+        # This methods generate the cost matrix combining the lines returned by each block and then solve it. Before
+        # doing so, it invokes the method "__prepare_system" that prepares the system to be solved asking the
+        # blocks to generate their own support blocks (if needed) and appending them to the block list.
+
+        # If the user requires to perform the calculation on the product-fuels diagram rather than on the physical
+        # system the program generates and solve it automatically
+
+        if not self.is_ready_for_calculation:
+
+            warning_string = "The system is not ready - calculation not started"
+            warnings.warn(warning_string)
+
+        else:
+
+            self.__prepare_system()
+
+            if self.options.calculate_on_pf_diagram and "PFArrayHandler" not in str(type(self)):
+
+                from EEETools.MainModules.pf_diagram_generation_module import PFArrayHandler
+                self.pf_diagram = PFArrayHandler(self)
+                self.pf_diagram.calculate()
+
+            else:
+
+                i = 0
+                n_elements = self.n_block
+
+                self.matrix = np.zeros((n_elements, n_elements))
+                self.vector = np.zeros(n_elements)
+
+                for block in self.block_list:
+
+                    row = block.get_matrix_row(n_elements)
+                    self.vector[i] += row[-1]
+                    self.matrix[i, :] += row[0:-1]
+
+                    if block.is_dissipative:
+
+                        red_sum = block.redistribution_sum
+                        exergy_dissipated = block.exergy_input
+
+                        for non_dissipative_blocks in block.redistribution_block_list:
+
+                            red_perc = non_dissipative_blocks.redistribution_index / red_sum
+                            self.matrix[non_dissipative_blocks.ID, i] -= exergy_dissipated * red_perc
+
+                    i += 1
+
+                matrix_analyzer = MatrixAnalyzer(self.matrix, self.vector)
+                matrix_analyzer.solve()
+                sol = matrix_analyzer.solution
+
+                self.append_solution(sol)
+                self.calculate_coefficients()
+                self.decompose_component_output_cost()
+
+    def append_solution(self, sol):
+
+        i = 0
+
+        for block in self.block_list:
+
+            if not block.is_dissipative:
+
+                block.append_output_cost(sol[i])
+                i += 1
+
+            else:
+
+                block.append_output_cost(0.)
+
+        self.__reset_IDs(reset_block=True)
+        self.__reset_IDs(reset_block=False)
+
+    def calculate_coefficients(self):
+
+        total_destruction = self.total_destruction
+
+        for block in self.block_list:
+
+            block.calculate_coefficients(total_destruction)
+
+    def decompose_component_output_cost(self):
+
+        if self.options.calculate_component_decomposition:
+
+            try:
+
+                __inverse_matrix = np.linalg.inv(self.matrix)
+
+                for block in self.block_list:
+
+                    block.generate_output_cost_decomposition(__inverse_matrix[block.ID, ])
+
+            except:
+
+                self.options.calculate_component_decomposition = False
+
+    def __prepare_system(self):
+
+        # this method has to be called just before the calculation, it asks the blocks to prepare themselves for the
+        # calculation
+
+        self.__update_block_list()
+
+        for block in self.block_list:
+            block.prepare_for_calculation()
+
+        if self.there_are_dissipative_blocks:
+            self.__move_skipped_element_at_the_end()
+
+    # ------------------------------------
+    # -------- Overall Properties --------
+    # ------------------------------------
+
+    @property
+    def overall_investment_cost(self):
+
+        overall_investment_cost = 0
+
+        for block in self.block_list:
+            overall_investment_cost += block.comp_cost
+
+        return overall_investment_cost
+
+    @property
+    def overall_external_balance(self):
+
+        balance = self.overall_investment_cost
+
+        for conn in self.system_inputs:
+            balance += conn.exergy_value * conn.rel_cost
+
+        for conn in self.system_outputs:
+            balance -= conn.exergy_value * conn.rel_cost
+
+        return balance
+
+    @property
+    def overall_efficiency(self):
+
+        input_exergy = 0
+        for connection in self.system_inputs:
+            input_exergy += connection.exergy_value
+
+        output_exergy = 0
+        for connection in self.system_outputs:
+            output_exergy += connection.exergy_value
+
+        return output_exergy / input_exergy
+
+    @property
+    def total_destruction(self):
+
+        total_destruction = 0
+
+        for conn in self.system_inputs:
+
+            total_destruction += conn.exergy_value
+
+        for conn in self.useful_effect_connections:
+
+            total_destruction -= conn.exergy_value
+
+        return total_destruction
+
+    # -------------------------------------
+    # ----- Elements Handling Methods -----
+    # -------------------------------------
+
     def append_block(self, input_element="Generic"):
 
         # this method accepts three types of inputs:
@@ -1322,59 +1575,29 @@ class ArrayHandler:
 
         self.__reset_IDs(reset_block=False)
 
-    def calculate(self):
+    def __try_append_connection(self, new_conn, block_input, is_input):
 
-        # This methods generate the cost matrix combining the lines returned by each block and then solve it. Before
-        # doing so, it invokes the method "__prepare_system" that prepares the system to be solved asking the
-        # blocks to generate their own support blocks (if needed) and appending them to the block list.
+        if not block_input is None:
 
-        # If the user requires to perform the calculation on the product-fuels diagram rather than on the physical
-        # system the program generates and solve it automatically
+            if issubclass(type(block_input), Block) or type(block_input) is Block:
 
-        if not self.is_ready_for_calculation:
-
-            warning_string = "The system is not ready - calculation not started"
-            warnings.warn(warning_string)
-
-        else:
-
-            self.__prepare_system()
-
-            if self.options.calculate_on_pf_diagram and "PFArrayHandler" not in str(type(self)):
-
-                from EEETools.MainModules.pf_diagram_generation_module import PFArrayHandler
-                self.pf_diagram = PFArrayHandler(self)
-                self.pf_diagram.calculate()
+                block_input.add_connection(new_conn, is_input=is_input)
 
             else:
 
-                i = 0
-                n_elements = self.n_block
+                try:
 
-                self.matrix = np.zeros((n_elements, n_elements))
-                self.vector = np.zeros(n_elements)
+                    self.block_list[int(block_input)].add_connection(new_conn, is_input=is_input)
 
-                for block in self.block_list:
+                except:
 
-                    row = block.get_matrix_row(n_elements)
-                    self.vector[i] = row[-1]
-                    self.matrix[i, :] = row[0:-1]
+                    warningString = ""
+                    warningString += str(block_input) + " is not an accepted input"
+                    warnings.warn(warningString)
 
-                    if block.is_dissipative:
-
-                        redistribution_sum = block.redistribution_sum
-
-                        for non_diss_blocks in block.redistribution_block_list:
-                            self.matrix[non_diss_blocks.ID, i] = -non_diss_blocks.redistribution_index(redistribution_sum)
-
-                    i += 1
-
-                matrix_analyzer = MatrixAnalyzer(self.matrix, self.vector)
-                matrix_analyzer.solve()
-                sol = matrix_analyzer.solution
-
-                self.append_solution(sol)
-                self.calculate_coefficients()
+    # -------------------------------------
+    # -- Elements Identification Methods --
+    # -------------------------------------
 
     def find_connection_by_index(self, index):
 
@@ -1423,48 +1646,6 @@ class ArrayHandler:
                 pass
 
         return None
-
-    def append_excel_costs_and_useful_output(self, input_list, add_useful_output, input_cost):
-
-        for elem in input_list:
-
-            new_conn = self.find_connection_by_index(elem)
-
-            if not new_conn is None:
-
-                if add_useful_output:
-                    new_conn.is_useful_effect = True
-
-                else:
-                    new_conn.rel_cost = input_cost
-
-            # Overloaded Methods
-
-    def append_solution(self, sol):
-
-        i = 0
-
-        for block in self.block_list:
-
-            if not block.is_dissipative:
-
-                block.append_output_cost(sol[i])
-                i += 1
-
-            else:
-
-                block.append_output_cost(0.)
-
-        self.__reset_IDs(reset_block=True)
-        self.__reset_IDs(reset_block=False)
-
-    def calculate_coefficients(self):
-
-        total_destruction = self.total_destruction
-
-        for block in self.block_list:
-
-            block.calculate_coefficients(total_destruction)
 
     @property
     def standard_block_IDs(self):
@@ -1528,19 +1709,6 @@ class ArrayHandler:
         return return_list
 
     @property
-    def overall_efficiency(self):
-
-        input_exergy = 0
-        for connection in self.system_inputs:
-            input_exergy += connection.exergy_value
-
-        output_exergy = 0
-        for connection in self.system_outputs:
-            output_exergy += connection.exergy_value
-
-        return output_exergy / input_exergy
-
-    @property
     def non_dissipative_blocks(self):
 
         return_list = list()
@@ -1552,68 +1720,25 @@ class ArrayHandler:
 
         return return_list
 
-    # support methods
-    def import_correct_sub_class(self, subclass_name):
+    # -------------------------------------
+    # ------- Input/Output Methods --------
+    # -------------------------------------
 
-        return self.modules_handler.import_correct_sub_class(subclass_name)
+    def append_excel_costs_and_useful_output(self, input_list, add_useful_output, input_cost):
 
-    @property
-    def overall_investment_cost(self):
+        for elem in input_list:
 
-        overall_investment_cost = 0
+            new_conn = self.find_connection_by_index(elem)
 
-        for block in self.block_list:
-            overall_investment_cost += block.comp_cost
+            if not new_conn is None:
 
-        return overall_investment_cost
+                if add_useful_output:
+                    new_conn.is_useful_effect = True
 
-    @property
-    def overall_external_balance(self):
+                else:
+                    new_conn.rel_cost = input_cost
 
-        balance = self.overall_investment_cost
-
-        for conn in self.system_inputs:
-            balance += conn.exergy_value * conn.rel_cost
-
-        for conn in self.system_outputs:
-            balance -= conn.exergy_value * conn.rel_cost
-
-        return balance
-
-    @property
-    def is_ready_for_calculation(self):
-
-        for block in self.block_list:
-
-            if not block.is_ready_for_calculation:
-                return False
-
-        return True
-
-    @property
-    def there_are_dissipative_blocks(self):
-
-        for block in self.block_list:
-
-            if block.is_dissipative:
-                return True
-
-        return False
-
-    @property
-    def total_destruction(self):
-
-        total_destruction = 0
-
-        for conn in self.system_inputs:
-
-            total_destruction += conn.exergy_value
-
-        for conn in self.useful_effect_connections:
-
-            total_destruction -= conn.exergy_value
-
-        return total_destruction
+            # Overloaded Methods
 
     @property
     def xml(self) -> ETree.Element:
@@ -1652,6 +1777,38 @@ class ArrayHandler:
             new_block = self.append_block(block.get("type"))
             new_block.xml = block
 
+    # -------------------------------------
+    # ---------- Support Methods ----------
+    # -------------------------------------
+
+    def import_correct_sub_class(self, subclass_name):
+
+        return self.modules_handler.import_correct_sub_class(subclass_name)
+
+    @property
+    def is_ready_for_calculation(self):
+
+        for block in self.block_list:
+
+            if not block.is_ready_for_calculation:
+                return False
+
+        return True
+
+    @property
+    def there_are_dissipative_blocks(self):
+
+        for block in self.block_list:
+
+            if block.is_dissipative:
+                return True
+
+        return False
+
+    # -------------------------------------
+    # ---- Elements Sequencing Methods ----
+    # -------------------------------------
+
     def __reset_IDs(self, reset_block=True):
 
         if reset_block:
@@ -1684,39 +1841,6 @@ class ArrayHandler:
                 self.append_block(block_list)
 
         self.__reset_IDs(reset_block=True)
-
-    def __prepare_system(self):
-
-        # this method has to be called just before the calculation, it asks the blocks to prepare themselves for the
-        # calculation
-
-        self.__update_block_list()
-
-        for block in self.block_list:
-            block.prepare_for_calculation()
-
-        if self.there_are_dissipative_blocks:
-            self.__move_skipped_element_at_the_end()
-
-    def __try_append_connection(self, new_conn, block_input, is_input):
-
-        if not block_input is None:
-
-            if issubclass(type(block_input), Block) or type(block_input) is Block:
-
-                block_input.add_connection(new_conn, is_input=is_input)
-
-            else:
-
-                try:
-
-                    self.block_list[int(block_input)].add_connection(new_conn, is_input=is_input)
-
-                except:
-
-                    warningString = ""
-                    warningString += str(block_input) + " is not an accepted input"
-                    warnings.warn(warningString)
 
     def __move_skipped_element_at_the_end(self):
 
@@ -1824,9 +1948,11 @@ class CalculationOptions:
         self.condenser_is_dissipative = True
 
         self.redistribution_method = CalculationOptions.RELATIVE_COST
+        self.calculate_component_decomposition = True
 
     @property
     def xml(self) -> ETree.Element:
+
         option_child = ETree.Element("options")
 
         option_child.set("calculate_on_pf_diagram", str(self.calculate_on_pf_diagram))
@@ -1835,14 +1961,17 @@ class CalculationOptions:
         option_child.set("valve_is_dissipative", str(self.valve_is_dissipative))
         option_child.set("condenser_is_dissipative", str(self.condenser_is_dissipative))
         option_child.set("redistribution_method", str(self.redistribution_method))
+        option_child.set("calculate_component_decomposition", str(self.calculate_component_decomposition))
 
         return option_child
 
     @xml.setter
     def xml(self, xml_input: ETree.Element):
+
         self.calculate_on_pf_diagram = xml_input.get("calculate_on_pf_diagram") == "True"
         self.loss_cost_is_zero = xml_input.get("loss_cost_is_zero") == "True"
 
         self.valve_is_dissipative = xml_input.get("valve_is_dissipative") == "True"
         self.condenser_is_dissipative = xml_input.get("condenser_is_dissipative") == "True"
         self.redistribution_method = int(xml_input.get("redistribution_method"))
+        self.calculate_component_decomposition = xml_input.get("calculate_component_decomposition") == "True"
