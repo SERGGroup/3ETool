@@ -61,6 +61,21 @@ def launch_network_display(excel_path=""):
     display_network(array_handler)
 
 
+def plot_sankey(excel_path="", show_component_mixers=False):
+
+    from EEETools.Tools.API.Tools.main_tools import generate_sankey_diagram
+    if excel_path == "":
+        root = tk.Tk()
+        root.withdraw()
+        excel_path = filedialog.askopenfilename()
+
+    if excel_path == "":
+        return
+
+    array_handler = import_excel_input(excel_path)
+    generate_sankey_diagram(array_handler, show_component_mixers=show_component_mixers)
+
+
 def paste_default_excel_file():
     __import_file("Default Excel Input_eng.xlsm")
 

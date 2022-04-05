@@ -41,6 +41,31 @@ def get_result_data_frames(array_handler: ArrayHandler) -> dict:
         }
 
 
+def generate_sankey_diagram(array_handler: ArrayHandler, show_component_mixers=False):
+
+    import plotly.graph_objects as go
+    data = array_handler.get_pf_diagram().sankey_diagram_data(show_component_mixers)
+
+    fig = go.Figure(
+
+        data=[
+
+            go.Sankey(
+
+                arrangement="snap",
+                node=data["nodes"],
+                link=data["links"]
+
+            )
+
+        ]
+
+    )
+
+    fig.update_layout(title_text="Basic Sankey Diagram", font_size=10)
+    fig.show()
+
+
 def __get_stream_data_frame(array_handler: ArrayHandler):
 
     stream_data = {
@@ -187,3 +212,4 @@ def __get_useful_data_frame(array_handler: ArrayHandler):
         useful_data["Total Cost [€/s]"].append(conn.rel_cost * conn.exergy_value)
 
     return useful_data
+

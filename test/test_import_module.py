@@ -135,6 +135,18 @@ class ImportTestCase(unittest.TestCase):
         array_handler = calculate_excel(excel_path, new_exergy_list=updated_exergy_values, export_solution=False)
         self.assertEqual(connection["value"], array_handler.find_connection_by_index(connection["index"]).exergy_value)
 
+    def test_sankey(self):
+
+        import EEETools
+        EEETools.plot_sankey(show_component_mixers=False)
+        self.assertTrue(True)
+
+    def test_connection_check(self):
+
+        import EEETools
+        EEETools.launch_connection_debug()
+        self.assertTrue(True)
+
 
 if __name__ == '__main__':
     unittest.main()
