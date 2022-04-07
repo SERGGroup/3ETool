@@ -1318,7 +1318,7 @@ class ArrayHandler:
 
         else:
 
-            self.__prepare_system()
+            self.prepare_system()
 
             if self.options.calculate_on_pf_diagram and "PFArrayHandler" not in str(type(self)):
 
@@ -1402,7 +1402,7 @@ class ArrayHandler:
 
                 self.options.calculate_component_decomposition = False
 
-    def __prepare_system(self):
+    def prepare_system(self):
 
         # this method has to be called just before the calculation, it asks the blocks to prepare themselves for the
         # calculation
@@ -1802,7 +1802,7 @@ class ArrayHandler:
         else:
 
             from EEETools.MainModules.pf_diagram_generation_module import PFArrayHandler
-            self.__prepare_system()
+            self.prepare_system()
             return PFArrayHandler(self)
 
     @property

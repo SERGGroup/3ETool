@@ -161,6 +161,7 @@ class PFArrayHandler(ArrayHandler):
         for prod_block in self.block_list:
 
             if prod_block.base_block.is_support_block:
+
                 prod_block.is_support_block = True
                 prod_block.main_block = self.find_element(prod_block.base_block.main_block)
 
@@ -211,122 +212,6 @@ class PFArrayHandler(ArrayHandler):
 
         return self.find_element(element) is not None
 
-    # -------------------------------------
-    # ------- Sankey Diagram Methods ------
-    # -------------------------------------
+    def get_pf_diagram(self):
 
-    def sankey_diagram_data(self, show_component_mixers=False):
-
-        self.show_component_mixers = show_component_mixers
-        self.__init_sankey_dicts()
-
-        return {
-
-            "nodes": self.nodes_dict,
-            "links": self.link_dict
-        }
-
-    def __init_sankey_dicts(self):
-
-        self.nodes_dict = {
-
-            "label": list(),
-            "groups": list()
-
-        }
-        self.link_dict = {
-
-            "source": list(),
-            "target": list(),
-            "value": list()
-
-        }
-
-        self.__fill_sankey_diagram_dicts()
-
-    def __fill_sankey_diagram_dicts(self):
-
-        for conn in self.connection_list:
-
-            from_block_label, to_block_label = self.__get_node_labels_from_connection(conn)
-            if not from_block_label == to_block_label:
-                self.__update_link_dict(from_block_label, to_block_label, conn.exergy_value)
-
-        self.__append_destruction()
-
-    def __update_link_dict(self, from_block_label, to_block_label, exergy_value):
-
-        self.__check_label(from_block_label)
-        self.__check_label(to_block_label)
-
-        self.link_dict["source"].append(self.nodes_dict["label"].index(from_block_label))
-        self.link_dict["target"].append(self.nodes_dict["label"].index(to_block_label))
-        self.link_dict["value"].append(exergy_value)
-
-    def __check_label(self, label):
-
-        if label not in self.nodes_dict["label"]:
-            self.nodes_dict["label"].append(label)
-
-    def __append_destruction(self):
-
-        for block in self.block_list:
-
-            from_block_label = self.__get_node_label(block)
-            self.__update_link_dict(from_block_label, "Destruction", block.exergy_balance)
-
-    def __define_support_block_groups(self):
-
-        for block in self.block_list:
-
-            if block.base_block.is_support_block:
-
-                main_block = self.find_element(block.base_block.main_block)
-
-                if main_block is not None:
-
-                    support_block_index = self.nodes_dict["label"].index(self.__get_node_label(block))
-                    main_block_index = self.nodes_dict["label"].index(self.__get_node_label(main_block))
-                    self.nodes_dict["groups"].append([support_block_index, main_block_index])
-
-    def __get_node_labels_from_connection(self, conn):
-
-        if conn.is_system_output:
-
-            from_block_label = self.__get_node_label(conn.from_block)
-
-            if conn.is_loss:
-                to_block_label = "Losses"
-
-            else:
-                to_block_label = conn.name
-
-        elif conn.is_system_input:
-
-            from_block_label = conn.name
-            to_block_label = self.__get_node_label(conn.to_block)
-
-        else:
-
-            from_block_label = self.__get_node_label(conn.from_block)
-            to_block_label = self.__get_node_label(conn.to_block)
-
-        return from_block_label, to_block_label
-
-    def __get_node_label(self, block):
-
-        if block.base_block.is_support_block:
-
-            main_block = self.find_element(block.base_block.main_block)
-
-            if main_block is not None and not self.show_component_mixers:
-
-                return self.__get_node_label(main_block)
-
-            else:
-
-                return "{}".format(block.ID)
-
-        else:
-
-            return "{}-{}".format(block.ID, block.name)
+        return self

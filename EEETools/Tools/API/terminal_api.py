@@ -12,12 +12,7 @@ import os, warnings
 def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=True, valve_is_dissipative=True,
               condenser_is_dissipative=True):
 
-    if excel_path == "":
-
-        root = tk.Tk()
-        root.withdraw()
-        excel_path = filedialog.askopenfilename()
-
+    excel_path = __find_excel_path(excel_path)
     if excel_path == "":
         return
 
@@ -35,11 +30,7 @@ def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=Tru
 
 def launch_connection_debug(excel_path=""):
 
-    if excel_path == "":
-        root = tk.Tk()
-        root.withdraw()
-        excel_path = filedialog.askopenfilename()
-
+    excel_path = __find_excel_path(excel_path)
     if excel_path == "":
         return
 
@@ -49,11 +40,7 @@ def launch_connection_debug(excel_path=""):
 
 def launch_network_display(excel_path=""):
 
-    if excel_path == "":
-        root = tk.Tk()
-        root.withdraw()
-        excel_path = filedialog.askopenfilename()
-
+    excel_path = __find_excel_path(excel_path)
     if excel_path == "":
         return
 
@@ -61,19 +48,20 @@ def launch_network_display(excel_path=""):
     display_network(array_handler)
 
 
-def plot_sankey(excel_path="", show_component_mixers=False):
+def plot_sankey(excel_path="", show_component_mixers=False, generate_on_pf_diagram=True):
 
-    from EEETools.Tools.API.Tools.main_tools import generate_sankey_diagram
-    if excel_path == "":
-        root = tk.Tk()
-        root.withdraw()
-        excel_path = filedialog.askopenfilename()
-
+    from EEETools.Tools.API.Tools.sankey_diagram_generation import SankeyDiagramGenerator, SankeyDiagramOptions
+    excel_path = __find_excel_path(excel_path)
     if excel_path == "":
         return
 
     array_handler = import_excel_input(excel_path)
-    generate_sankey_diagram(array_handler, show_component_mixers=show_component_mixers)
+
+    options = SankeyDiagramOptions()
+    options.generate_on_pf_diagram = generate_on_pf_diagram
+    options.show_component_mixers = show_component_mixers
+
+    SankeyDiagramGenerator(array_handler, options).show()
 
 
 def paste_default_excel_file():
@@ -89,7 +77,6 @@ def paste_components_documentation():
 
 
 def __import_file(filename):
-
     root = tk.Tk()
     root.withdraw()
 
@@ -132,3 +119,14 @@ def __import_file(filename):
         warning_message += "file position:\t" + file_path + "\n\n"
 
         warnings.warn(warning_message)
+
+
+def __find_excel_path(excel_path):
+
+    if excel_path == "":
+
+        root = tk.Tk()
+        root.withdraw()
+        excel_path = filedialog.askopenfilename()
+
+    return excel_path
