@@ -39,6 +39,13 @@ Topology can be displayed using:
 import EEETools
 EEETools.launch_network_display()
 ```
+Sankey diagram of the exergy flows can be plotted using the following command
+```python
+import EEETools
+EEETools.plot_sankey(generate_on_pf_diagram=True)
+```
+the option _generate_on_pf_diagram_ can be omitted and is True by default, if False the connections are defined 
+according to the physical topology of the plant otherwise they are based on the product-fuel definition.
 <br/><br/>
 __The application code is divided into 3 main folders:__<br/><br/>
 __MainModules__ directory contains Base modules such as _Block, Connection, ArrayHandler and Drawer Classes._<br/>

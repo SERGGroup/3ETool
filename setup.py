@@ -21,7 +21,8 @@ def __get_install_requires():
         'setuptools',
         'xlrd~=1.2.0',
         'numpy',
-        'requests'
+        'requests',
+        'plotly'
 
     ]
 
