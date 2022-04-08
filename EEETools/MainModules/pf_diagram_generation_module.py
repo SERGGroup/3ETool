@@ -1,3 +1,5 @@
+import warnings
+
 from EEETools.MainModules.main_module import Connection, ArrayHandler, Block
 from EEETools.BlockSubClasses.generic import Generic
 
@@ -15,10 +17,10 @@ class ProductBlock(Generic):
 
     def add_connection(self, new_connection, is_input, append_to_support_block=None):
 
-        super(ProductBlock, self).add_connection(new_connection, is_input, append_to_support_block=append_to_support_block)
+        super(ProductBlock, self).add_connection(new_connection, is_input,
+                                                 append_to_support_block=append_to_support_block)
 
         if not is_input:
-
             self.contained_connection.append(new_connection)
 
     def append_output_cost(self, defined_steam_cost):
@@ -43,17 +45,10 @@ class ProductBlock(Generic):
 
     def find_product_connections(self):
 
-        try:
+        for conn in self.base_block.output_connections:
+            self.__check_connection(conn)
 
-            for conn in self.base_block.output_connections:
-
-                self.__check_connection(conn)
-
-            self.__set_comp_cost()
-
-        except:
-
-            a = 10
+        self.__set_comp_cost()
 
     def contains(self, element):
 
@@ -90,7 +85,6 @@ class ProductBlock(Generic):
                     self.contained_blocks.append(new_block)
 
                     for conn in new_block.output_connections:
-
                         self.__check_connection(conn)
 
                 else:
@@ -99,7 +93,8 @@ class ProductBlock(Generic):
 
             else:
 
-                self.main_class.generate_product_connection(conn, from_product_block=self, to_product_block=self.main_class.find_element(new_block))
+                self.main_class.generate_product_connection(conn, from_product_block=self,
+                                                            to_product_block=self.main_class.find_element(new_block))
 
     def __set_comp_cost(self):
 
@@ -108,11 +103,18 @@ class ProductBlock(Generic):
         for block in self.contained_blocks:
             self.comp_cost += block.comp_cost
 
+    def this_has_higher_skipping_order(self, other):
+
+        return None
+
+    def this_has_higher_support_block_order(self, this, other):
+
+        return None
+
 
 class ProductConnection(Connection):
 
     def __init__(self, base_connection: Connection):
-
         super().__init__(base_connection.ID)
 
         self.base_connection = base_connection
@@ -126,12 +128,10 @@ class ProductConnection(Connection):
 
     @property
     def rel_cost(self) -> float:
-
         return self.__rel_cost
 
     @rel_cost.setter
     def rel_cost(self, rel_cost_input):
-
         self.__rel_cost = rel_cost_input
         self.base_connection.rel_cost = rel_cost_input
 
@@ -181,7 +181,8 @@ class PFArrayHandler(ArrayHandler):
 
         elif input_connection is not None:
 
-            self.generate_product_connection(input_connection, to_product_block=new_block, from_product_block=from_block)
+            self.generate_product_connection(input_connection, to_product_block=new_block,
+                                             from_product_block=from_block)
 
     def __append_new_product_block(self, input_block: Block, input_connection, from_block) -> ProductBlock:
 
@@ -189,7 +190,8 @@ class PFArrayHandler(ArrayHandler):
         self.append_block(new_block)
 
         if input_connection is not None:
-            self.generate_product_connection(input_connection, to_product_block=new_block, from_product_block=from_block)
+            self.generate_product_connection(input_connection, to_product_block=new_block,
+                                             from_product_block=from_block)
 
         return new_block
 
@@ -209,3 +211,7 @@ class PFArrayHandler(ArrayHandler):
     def contains(self, element):
 
         return self.find_element(element) is not None
+
+    def get_pf_diagram(self):
+
+        return self

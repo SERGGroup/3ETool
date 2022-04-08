@@ -187,3 +187,4 @@ def __get_useful_data_frame(array_handler: ArrayHandler):
         useful_data["Total Cost [€/s]"].append(conn.rel_cost * conn.exergy_value)
 
     return useful_data
+

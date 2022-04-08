@@ -721,7 +721,15 @@ class Block(ABC):
     @property
     def can_be_removed_in_pf_definition(self):
 
-        if self.exergy_balance == 0 and self.n_input == 1 and self.comp_cost == 0. and not self.is_dissipative:
+        if not self.exergy_input == 0:
+
+            relative_exergy_balance = round(self.exergy_balance/self.exergy_input, 6)
+
+        else:
+
+            relative_exergy_balance = self.exergy_balance
+
+        if relative_exergy_balance == 0 and self.n_input == 1 and self.comp_cost == 0. and not self.is_dissipative:
             return True
 
         return False
@@ -876,7 +884,7 @@ class Block(ABC):
     # -------- Sequencing  Methods --------
     # -------------------------------------
 
-    def __this_has_higher_skipping_order(self, other):
+    def this_has_higher_skipping_order(self, other):
 
         if self.is_dissipative == other.is_dissipative:
 
@@ -886,13 +894,13 @@ class Block(ABC):
 
             return self.is_dissipative
 
-    def __this_has_higher_support_block_order(self, this, other):
+    def this_has_higher_support_block_order(self, this, other):
 
         if this.is_support_block == other.is_support_block:
 
             if this.is_support_block:
 
-                return self.__this_has_higher_support_block_order(this.main_block, other.main_block)
+                return self.this_has_higher_support_block_order(this.main_block, other.main_block)
 
             else:
 
@@ -907,7 +915,7 @@ class Block(ABC):
         # enables comparison
         # self > other
 
-        skipping_order = self.__this_has_higher_skipping_order(other)
+        skipping_order = self.this_has_higher_skipping_order(other)
 
         if skipping_order is not None and self.move_skipped_block_at_the_end:
 
@@ -915,7 +923,7 @@ class Block(ABC):
 
         else:
 
-            self_has_higher_support_block_order = self.__this_has_higher_support_block_order(self, other)
+            self_has_higher_support_block_order = self.this_has_higher_support_block_order(self, other)
 
             if self_has_higher_support_block_order is None:
 
@@ -934,7 +942,7 @@ class Block(ABC):
         # enables comparison
         # self < other
 
-        skipping_order = self.__this_has_higher_skipping_order(other)
+        skipping_order = self.this_has_higher_skipping_order(other)
 
         if skipping_order is not None and self.move_skipped_block_at_the_end:
 
@@ -942,7 +950,7 @@ class Block(ABC):
 
         else:
 
-            self_has_higher_support_block_order = self.__this_has_higher_support_block_order(self, other)
+            self_has_higher_support_block_order = self.this_has_higher_support_block_order(self, other)
 
             if self_has_higher_support_block_order is None:
 
@@ -1310,7 +1318,7 @@ class ArrayHandler:
 
         else:
 
-            self.__prepare_system()
+            self.prepare_system()
 
             if self.options.calculate_on_pf_diagram and "PFArrayHandler" not in str(type(self)):
 
@@ -1394,7 +1402,7 @@ class ArrayHandler:
 
                 self.options.calculate_component_decomposition = False
 
-    def __prepare_system(self):
+    def prepare_system(self):
 
         # this method has to be called just before the calculation, it asks the blocks to prepare themselves for the
         # calculation
@@ -1785,6 +1793,18 @@ class ArrayHandler:
 
         return self.modules_handler.import_correct_sub_class(subclass_name)
 
+    def get_pf_diagram(self):
+
+        if self.has_pf_diagram:
+
+            return self.pf_diagram
+
+        else:
+
+            from EEETools.MainModules.pf_diagram_generation_module import PFArrayHandler
+            self.prepare_system()
+            return PFArrayHandler(self)
+
     @property
     def is_ready_for_calculation(self):
 
@@ -1804,6 +1824,11 @@ class ArrayHandler:
                 return True
 
         return False
+
+    @property
+    def has_pf_diagram(self):
+
+        return self.pf_diagram is not None
 
     # -------------------------------------
     # ---- Elements Sequencing Methods ----
