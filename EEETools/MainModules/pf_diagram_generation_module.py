@@ -163,7 +163,7 @@ class PFArrayHandler(ArrayHandler):
             if prod_block.base_block.is_support_block:
 
                 prod_block.is_support_block = True
-                prod_block.main_block = self.find_element(prod_block.base_block.main_block)
+                prod_block.main_block = self.find_element(prod_block.base_block.first_non_support_block)
 
     def generate_product_connection(self, input_connection: Connection, from_product_block=None, to_product_block=None):
 

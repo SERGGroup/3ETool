@@ -112,7 +112,7 @@ class ImportTestCase(unittest.TestCase):
     def test_excel_calculate(self):
 
         import EEETools
-        EEETools.calculate()
+        EEETools.calculate(calculate_on_pf_diagram=True)
         self.assertTrue(True)
 
     def test_excel_update(self):
@@ -138,7 +138,7 @@ class ImportTestCase(unittest.TestCase):
     def test_sankey(self):
 
         import EEETools
-        EEETools.plot_sankey(show_component_mixers=False)
+        EEETools.plot_sankey(generate_on_pf_diagram=True)
         self.assertTrue(True)
 
     def test_connection_check(self):
@@ -149,4 +149,5 @@ class ImportTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
+
     unittest.main()

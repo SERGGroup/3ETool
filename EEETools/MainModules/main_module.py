@@ -31,6 +31,7 @@ class Block(ABC):
         self.comp_cost = 0.
         self.difference_cost = 0.
         self.output_cost = 0.
+        self.dissipative_output_cost = 0.
         self.output_cost_decomposition = dict()
 
         self.input_connections = list()
@@ -287,6 +288,14 @@ class Block(ABC):
 
         fuel_cost = 0.
 
+        if self.is_dissipative:
+
+            c_prod = self.dissipative_output_cost
+
+        else:
+
+            c_prod = self.output_cost
+
         for conn in self.input_connections:
 
             fuel_cost += conn.exergy_value * conn.rel_cost
@@ -303,7 +312,7 @@ class Block(ABC):
 
         if not c_fuel == 0:
 
-            r = (self.output_cost - c_fuel) / c_fuel
+            r = (c_prod - c_fuel) / c_fuel
 
         if not (self.comp_cost + c_dest * abs(dest_loss_exergy)) == 0:
 
@@ -313,12 +322,16 @@ class Block(ABC):
 
             y = dest_exergy / total_destruction
 
-        self.coefficients.update({"r": r,
-                                  "f": f,
-                                  "y": y,
-                                  "eta": eta,
-                                  "c_fuel": c_fuel,
-                                  "c_dest": c_dest})
+        self.coefficients.update({
+
+                "r": r,
+                "f": f,
+                "y": y,
+                "eta": eta,
+                "c_fuel": c_fuel,
+                "c_dest": c_dest
+
+        })
 
     # - Support Methods -
 
@@ -770,6 +783,17 @@ class Block(ABC):
                 counter += 1
 
         return counter
+
+    @property
+    def first_non_support_block(self):
+
+        if not self.is_support_block:
+
+            return self
+
+        if self.is_support_block:
+
+            return self.main_block.first_non_support_block
 
     # -------------------------------------
     # ------  EES Generation Methods  -----
@@ -1358,7 +1382,7 @@ class ArrayHandler:
 
                 self.append_solution(sol)
                 self.calculate_coefficients()
-                self.decompose_component_output_cost()
+                self.decompose_component_output_cost(matrix_analyzer)
 
     def append_solution(self, sol):
 
@@ -1369,11 +1393,13 @@ class ArrayHandler:
             if not block.is_dissipative:
 
                 block.append_output_cost(sol[i])
-                i += 1
 
             else:
 
                 block.append_output_cost(0.)
+                block.dissipative_output_cost = sol[i]
+
+            i += 1
 
         self.__reset_IDs(reset_block=True)
         self.__reset_IDs(reset_block=False)
@@ -1386,13 +1412,13 @@ class ArrayHandler:
 
             block.calculate_coefficients(total_destruction)
 
-    def decompose_component_output_cost(self):
+    def decompose_component_output_cost(self, analizer:MatrixAnalyzer):
 
         if self.options.calculate_component_decomposition:
 
             try:
 
-                __inverse_matrix = np.linalg.inv(self.matrix)
+                __inverse_matrix = analizer.inverse_matrix
 
                 for block in self.block_list:
 
@@ -1972,7 +1998,7 @@ class CalculationOptions:
         self.valve_is_dissipative = True
         self.condenser_is_dissipative = True
 
-        self.redistribution_method = CalculationOptions.RELATIVE_COST
+        self.redistribution_method = CalculationOptions.EXERGY_DESTRUCTION
         self.calculate_component_decomposition = True
 
     @property
