@@ -9,36 +9,42 @@ class SankeyDiagramOptions:
         self.show_component_mixers = False
         self.colors = {
 
-            "Destruction": "180, 160, 0",
-            "Other": "150, 0, 0"
+            "Destruction": "150, 0, 0",
+            "Losses": "50, 125, 150",
+            "Default": "250, 210, 20"
 
         }
         self.opacity = {
 
             "nodes": 1,
-            "links": 0.4
+            "links": 0.6,
+            "DL_links": 0.25
 
         }
 
     def define_color(self, block_label, is_link):
 
-        return "rgba({}, {})".format(self.get_color(block_label), self.get_opacity(is_link))
+        return "rgba({}, {})".format(self.get_color(block_label), self.get_opacity(block_label, is_link))
 
     def get_color(self, block_label):
 
-        if not (block_label == "Destruction" or block_label == "Losses"):
+        if block_label == "Destruction" or block_label == "Losses":
 
-            color = self.colors["Destruction"]
+            color = self.colors[block_label]
 
         else:
 
-            color = self.colors["Other"]
+            color = self.colors["Default"]
 
         return color
 
-    def get_opacity(self, is_link):
+    def get_opacity(self, block_label, is_link):
 
         if is_link:
+
+            if block_label == "Destruction" or block_label == "Losses":
+
+                return self.opacity["DL_links"]
 
             return self.opacity["links"]
 
