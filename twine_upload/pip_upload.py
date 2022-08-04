@@ -47,4 +47,5 @@ def __read_token():
 
 
 if __name__ == "__main__":
-    upload_files(activate_venv=False)
+
+    upload_files(activate_venv=True)

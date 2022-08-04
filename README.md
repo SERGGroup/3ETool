@@ -1,7 +1,7 @@
 # 3ETool
 
 __3ETool__ contains some useful tools developed by the [SERG research group](https://www.dief.unifi.it/vp-177-serg-group-english-version.html) 
-of the [University of Florence](https://www.unifi.it/changelang-eng.html) for performing exergo-economic and exergo environmental analysis. The __user manual__ can be downloaded [here](https://firebasestorage.googleapis.com/v0/b/etapp-serggroup.appspot.com/o/3ETool_res%2FOther%2FUser%20Guide-eng.pdf?alt=media&token=db51ff1e-4c63-48b9-8b42-322a2eee44da). Moreover, some [youtube tutorials](https://www.youtube.com/playlist?list=PLj6A7PjCJLfa9xNOFwRc3D_XroWhKlptj) have been uploaded in order to help the user in compiling the excel file.
+of the [University of Florence](https://www.unifi.it/changelang-eng.html) for performing exergo-economic and exergo environmental analysis. The __user manual__ can be downloaded [here](https://firebasestorage.googleapis.com/v0/b/etapp-serggroup.appspot.com/o/3ETool_res%2FOther%2FUser%20Guide-eng.pdf?alt=media&token=db51ff1e-4c63-48b9-8b42-322a2eee44da). Moreover, some [youtube tutorials](https://www.youtube.com/playlist?list=PLj6A7PjCJLfa9xNOFwRc3D_XroWhKlptj) have been uploaded in order to help the user in compiling the excel file. 
 
 The beta version can be downloaded using __PIP__:
 
@@ -57,3 +57,15 @@ __-------------------------- !!! THIS IS A BETA VERSION !!! --------------------
 
 please report any bug or problems in the installation to _pietro.ungar@unifi.it_<br/>
 for further information visit: https://tinyurl.com/SERG-3ETool
+
+__-------------------------------- !!! HOW TO CITE !!! --------------------------------__ 
+
+The following reference can be used to cite the tool in publications:
+ 
+    Fiaschi, D., Manfrida, G., Ungar, P., Talluri, L. 
+    
+    Development of an exergo-economic and exergo-environmental tool for power plant assessment: 
+    evaluation of a geothermal case study.
+    
+    https://doi.org/10.52202/062738-0003
+
