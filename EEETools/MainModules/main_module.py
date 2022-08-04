@@ -1173,7 +1173,7 @@ class Connection:
     @property
     def abs_cost(self) -> float:
 
-        return self.__rel_cost * self.exergy_value
+        return self.rel_cost * self.exergy_value
 
     @property
     def rel_cost(self) -> float:
