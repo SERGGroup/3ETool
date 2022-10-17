@@ -22,7 +22,8 @@ def __get_install_requires():
         'xlrd~=1.2.0',
         'numpy',
         'requests',
-        'plotly'
+        'plotly',
+        'scipy'
 
     ]
 
