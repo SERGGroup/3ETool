@@ -31,6 +31,7 @@ class Block(ABC):
         self.comp_cost = 0.
         self.difference_cost = 0.
         self.output_cost = 0.
+        self.dissipative_output_cost = 0.
         self.output_cost_decomposition = dict()
 
         self.input_connections = list()
@@ -287,6 +288,14 @@ class Block(ABC):
 
         fuel_cost = 0.
 
+        if self.is_dissipative:
+
+            c_prod = self.dissipative_output_cost
+
+        else:
+
+            c_prod = self.output_cost
+
         for conn in self.input_connections:
 
             fuel_cost += conn.exergy_value * conn.rel_cost
@@ -313,12 +322,16 @@ class Block(ABC):
 
             y = dest_exergy / total_destruction
 
-        self.coefficients.update({"r": r,
-                                  "f": f,
-                                  "y": y,
-                                  "eta": eta,
-                                  "c_fuel": c_fuel,
-                                  "c_dest": c_dest})
+        self.coefficients.update({
+
+            "r": r,
+            "f": f,
+            "y": y,
+            "eta": eta,
+            "c_fuel": c_fuel,
+            "c_dest": c_dest
+
+        })
 
     # - Support Methods -
 
@@ -770,6 +783,15 @@ class Block(ABC):
                 counter += 1
 
         return counter
+
+    @property
+    def first_non_support_block(self):
+
+        if not self.is_support_block:
+            return self
+
+        if self.is_support_block:
+            return self.main_block.first_non_support_block
 
     # -------------------------------------
     # ------  EES Generation Methods  -----
@@ -1369,11 +1391,13 @@ class ArrayHandler:
             if not block.is_dissipative:
 
                 block.append_output_cost(sol[i])
-                i += 1
 
             else:
 
                 block.append_output_cost(0.)
+                block.dissipative_output_cost = sol[i]
+
+            i += 1
 
         self.__reset_IDs(reset_block=True)
         self.__reset_IDs(reset_block=False)
