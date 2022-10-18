@@ -10,5 +10,5 @@ setuptools
 xlrd~=1.2.0
 pywin32
 numpy
-scipy
 plotly
+scipy
