@@ -1,13 +1,18 @@
-import numpy
+from scipy.linalg import diagsvd
 from copy import deepcopy
+import numpy.linalg
 
 
 class MatrixAnalyzer:
 
-    def __init__(self, matrix: numpy.ndarray, vector: numpy.ndarray, main_matrix=None):
+    def __init__(self, matrix: numpy.ndarray, vector: numpy.ndarray, main_matrix=None, try_system_decomposition=False):
 
         self.matrix = deepcopy(matrix)
         self.vector = vector
+
+        self.__inv_matrix = None
+        self.re_matrix = self.matrix
+        self.re_vector = self.vector
 
         self.main_matrix = main_matrix
         self.sub_matrix = None
@@ -30,6 +35,7 @@ class MatrixAnalyzer:
         self.__check_assignments()
 
         self.__ill_conditioned_matrix_warning = False
+        self.try_system_decomposition = try_system_decomposition
 
     def __initialize_matrix(self):
 
@@ -85,16 +91,53 @@ class MatrixAnalyzer:
 
         else:
 
+            self.re_matrix, self.re_vector = self.__rearrange_matrix(self.matrix, self.vector)
+
             try:
 
-                sol = numpy.linalg.solve(self.matrix, self.vector)
+                sol = self.__std_solve()
 
             except:
 
-                sol = numpy.linalg.lstsq(self.matrix, self.vector)
-                sol = sol[0]
+                if self.try_system_decomposition:
 
-                self.__ill_conditioned_matrix_warning = True
+                    try:
+
+                        A, B = self.__decompose_matrix()
+
+                        sol_prev = self.__svd_solve(A, self.vector)
+                        matrix = B
+                        matrix_prev = A
+
+                        counter = 0
+                        while True:
+
+                            sol = self.__svd_solve(matrix, self.vector - matrix_prev.dot(sol_prev))
+                            error = abs(numpy.max(numpy.abs(sol_prev - sol)) / numpy.max(sol_prev))
+
+                            if error < 0.01:
+
+                                break
+
+                            else:
+
+                                sol_prev = (sol + sol_prev) / 2
+                                matrix_tmp = matrix_prev
+                                matrix_prev = matrix
+                                matrix = matrix_tmp
+
+                                counter += 1
+
+                                if counter > 100:
+                                    raise
+
+                    except:
+
+                        sol = self.__lstsq_solve()
+
+                else:
+
+                    sol = self.__lstsq_solve()
 
             for i in range(len(self.columns)):
                 self.columns[i].set_solution(sol[i])
@@ -146,6 +189,130 @@ class MatrixAnalyzer:
         return {"new_matrix": new_matrix,
                 "new_vector": new_vector}
 
+    def __decompose_matrix(self):
+
+        m, n = self.matrix.shape
+        u, s, vt = numpy.linalg.svd(self.matrix)
+        s_new = s
+
+        for i in range(len(s)):
+
+            if i <= len(s) * 4 / 5:
+
+                s_new[i] = s[i]
+
+            else:
+
+                s_new[i] = 0
+
+        s_mat = diagsvd(s_new, m, n)
+        A = u.dot(s_mat).dot(vt)
+
+        # ext_a = (numpy.min(A), numpy.max(A))
+        # A = numpy.round(A / (ext_a[1] - ext_a[0]), 3) * (ext_a[1] - ext_a[0])
+
+        B = self.matrix - A
+
+        return A, B
+
+    def __std_solve(self):
+
+        new_matrix, new_vector, deleted_rows = self.__identify_empty_lines(self.re_matrix, self.re_vector)
+        self.__inv_matrix = numpy.linalg.inv(new_matrix)
+        sol = self.__inv_matrix.dot(new_vector)
+        return self.__append_zeroes_if_needed(sol, deleted_rows)
+
+    def __lstsq_solve(self):
+
+        new_matrix, new_vector, deleted_rows = self.__identify_empty_lines(self.re_matrix, self.re_vector)
+        sol = numpy.linalg.lstsq(new_matrix, new_vector)
+        self.__ill_conditioned_matrix_warning = True
+        return self.__append_zeroes_if_needed(sol[0], deleted_rows)
+
+    @staticmethod
+    def __svd_solve(matrix, vector):
+
+        m, n = matrix.shape
+        u, s, vt = numpy.linalg.svd(matrix)
+        r = numpy.linalg.matrix_rank(matrix)
+
+        s[:r] = 1 / s[:r]
+        s_inv = diagsvd(s, m, n)
+
+        return vt.T.dot(s_inv).dot(u.T).dot(vector)
+
+    @staticmethod
+    def __rearrange_matrix(matrix, vector):
+
+        m, n = matrix.shape
+        new_matrix = numpy.ones((m, n))
+        new_vector = numpy.ones(m)
+
+        for i in range(m):
+
+            row = matrix[i, :]
+            ext_row = (numpy.min(row), numpy.max(row))
+
+            if not (ext_row[1] - ext_row[0]) == 0:
+
+                new_matrix[i, :] = row / (ext_row[1] - ext_row[0])
+                new_vector[i] = vector[i] / (ext_row[1] - ext_row[0])
+
+            else:
+
+                new_matrix[i, :] = matrix[i, :]
+                new_vector[i] = vector[i]
+
+        return new_matrix, new_vector
+
+    @staticmethod
+    def __identify_empty_lines(matrix, vector):
+
+        m, n = matrix.shape
+        deleted_rows = []
+
+        new_matrix = numpy.copy(matrix)
+        new_vector = numpy.copy(vector)
+
+        for i in range(m):
+
+            row = matrix[i, :]
+            ext_row = (numpy.min(row), numpy.max(row))
+
+            if (ext_row[1] - ext_row[0]) == 0 and ext_row[0] == 0:
+
+                if vector[i] == 0:
+
+                    del_i = i - len(deleted_rows)
+                    new_matrix = numpy.delete(new_matrix, del_i, 0)
+                    new_matrix = numpy.delete(new_matrix, del_i, 1)
+                    new_vector = numpy.delete(new_vector, del_i)
+                    deleted_rows.append(i)
+
+                else:
+
+                    raise
+
+        return new_matrix, new_vector, deleted_rows
+
+    def __append_zeroes_if_needed(self, sol, deleted_rows):
+
+        for i in deleted_rows:
+
+            sol = numpy.insert(sol, i, 0)
+
+            if self.__inv_matrix is not None:
+
+                m, n = self.__inv_matrix.shape
+
+                new_row = numpy.zeros(m)
+                new_col = numpy.zeros(n + 1)
+
+                self.__inv_matrix = numpy.insert(self.__inv_matrix, i, [new_row], axis=0)
+                self.__inv_matrix = numpy.insert(self.__inv_matrix, i, [new_col], axis=1)
+
+        return sol
+
     @property
     def is_solvable(self):
 
@@ -181,6 +348,11 @@ class MatrixAnalyzer:
         else:
 
             return self.sub_matrix.is_ill_conditioned
+
+    @property
+    def inverse_matrix(self):
+
+        return self.__inv_matrix
 
 
 class MatrixElement:
@@ -434,7 +606,6 @@ class MatrixLineList(list):
         self.sort()
 
         for element in self:
-
             sorted_indices.append(element.initial_position)
 
         return sorted_indices
