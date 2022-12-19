@@ -1316,8 +1316,9 @@ class ArrayHandler:
         self.vector = np.zeros(0)
 
         self.modules_handler = ModulesHandler()
-
+        self.matrix_analyzer = None
         self.pf_diagram = None
+
         self.options = CalculationOptions()
 
     # -------------------------------------
@@ -1374,9 +1375,9 @@ class ArrayHandler:
 
                     i += 1
 
-                matrix_analyzer = MatrixAnalyzer(self.matrix, self.vector)
-                matrix_analyzer.solve()
-                sol = matrix_analyzer.solution
+                self.matrix_analyzer = MatrixAnalyzer(self.matrix, self.vector)
+                self.matrix_analyzer.solve()
+                sol = self.matrix_analyzer.solution
 
                 self.append_solution(sol)
                 self.calculate_coefficients()
@@ -1424,7 +1425,17 @@ class ArrayHandler:
 
             except:
 
-                self.options.calculate_component_decomposition = False
+                try:
+
+                    __inverse_matrix = self.matrix_analyzer.inverse_matrix
+
+                    for block in self.block_list:
+
+                        block.generate_output_cost_decomposition(__inverse_matrix[block.ID, ])
+
+                except:
+
+                    self.options.calculate_component_decomposition = False
 
     def prepare_system(self):
 
