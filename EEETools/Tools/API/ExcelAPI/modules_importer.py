@@ -1,4 +1,4 @@
-from EEETools.Tools.API.Tools.main_tools import get_result_data_frames, update_exergy_values
+from EEETools.Tools.API.Tools.main_tools import get_result_data_frames, update_exergy_values, get_debug_data_frames
 from EEETools.Tools.API.DatAPI.modules_importer import export_dat
 from EEETools.MainModules.main_module import CalculationOptions
 from openpyxl import Workbook, load_workbook, styles, utils
@@ -109,6 +109,16 @@ def import_excel_input(excel_path, calculation_option=None) -> ArrayHandler:
 def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
 
     result_df = get_result_data_frames(array_handler)
+    __write_excel_file(excel_path, result_df)
+
+
+def export_debug_info_to_excel(excel_path, array_handler: ArrayHandler):
+
+    result_df = get_debug_data_frames(array_handler)
+    __write_excel_file(excel_path, result_df)
+
+
+def __write_excel_file(excel_path, result_df):
 
     # generation of time stamps for excel sheet name
     today = date.today()
@@ -118,11 +128,16 @@ def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
 
     for key in result_df.keys():
 
-        __write_excel_file(excel_path, sheet_name=(key + " - " + today_str + " - " + now_str),
-                           data_frame=result_df[key])
+        __write_excel_sheet(
+
+            excel_path,
+            sheet_name=(key + " - " + today_str + " - " + now_str),
+            data_frame=result_df[key]
+
+        )
 
 
-def __write_excel_file(excel_path, sheet_name, data_frame: dict):
+def __write_excel_sheet(excel_path, sheet_name, data_frame: dict):
 
     data_frame = __convert_result_data_frames(data_frame)
 
