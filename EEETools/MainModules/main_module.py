@@ -312,7 +312,7 @@ class Block(ABC):
 
         if not c_fuel == 0:
 
-            r = (c_prod - c_fuel) / c_fuel
+            r = (self.output_cost - c_fuel) / c_fuel
 
         if not (self.comp_cost + c_dest * abs(dest_loss_exergy)) == 0:
 
@@ -324,12 +324,12 @@ class Block(ABC):
 
         self.coefficients.update({
 
-                "r": r,
-                "f": f,
-                "y": y,
-                "eta": eta,
-                "c_fuel": c_fuel,
-                "c_dest": c_dest
+            "r": r,
+            "f": f,
+            "y": y,
+            "eta": eta,
+            "c_fuel": c_fuel,
+            "c_dest": c_dest
 
         })
 
@@ -788,11 +788,9 @@ class Block(ABC):
     def first_non_support_block(self):
 
         if not self.is_support_block:
-
             return self
 
         if self.is_support_block:
-
             return self.main_block.first_non_support_block
 
     # -------------------------------------
@@ -1173,7 +1171,7 @@ class Connection:
     @property
     def abs_cost(self) -> float:
 
-        return self.rel_cost * self.exergy_value
+        return self.__rel_cost * self.exergy_value
 
     @property
     def rel_cost(self) -> float:
@@ -1318,8 +1316,9 @@ class ArrayHandler:
         self.vector = np.zeros(0)
 
         self.modules_handler = ModulesHandler()
-
+        self.matrix_analyzer = None
         self.pf_diagram = None
+
         self.options = CalculationOptions()
 
     # -------------------------------------
@@ -1376,13 +1375,13 @@ class ArrayHandler:
 
                     i += 1
 
-                matrix_analyzer = MatrixAnalyzer(self.matrix, self.vector)
-                matrix_analyzer.solve()
-                sol = matrix_analyzer.solution
+                self.matrix_analyzer = MatrixAnalyzer(self.matrix, self.vector)
+                self.matrix_analyzer.solve()
+                sol = self.matrix_analyzer.solution
 
                 self.append_solution(sol)
                 self.calculate_coefficients()
-                self.decompose_component_output_cost(matrix_analyzer)
+                self.decompose_component_output_cost()
 
     def append_solution(self, sol):
 
@@ -1412,13 +1411,13 @@ class ArrayHandler:
 
             block.calculate_coefficients(total_destruction)
 
-    def decompose_component_output_cost(self, analizer:MatrixAnalyzer):
+    def decompose_component_output_cost(self):
 
         if self.options.calculate_component_decomposition:
 
             try:
 
-                __inverse_matrix = analizer.inverse_matrix
+                __inverse_matrix = np.linalg.inv(self.matrix)
 
                 for block in self.block_list:
 
@@ -1426,7 +1425,17 @@ class ArrayHandler:
 
             except:
 
-                self.options.calculate_component_decomposition = False
+                try:
+
+                    __inverse_matrix = self.matrix_analyzer.inverse_matrix
+
+                    for block in self.block_list:
+
+                        block.generate_output_cost_decomposition(__inverse_matrix[block.ID, ])
+
+                except:
+
+                    self.options.calculate_component_decomposition = False
 
     def prepare_system(self):
 
@@ -1998,7 +2007,7 @@ class CalculationOptions:
         self.valve_is_dissipative = True
         self.condenser_is_dissipative = True
 
-        self.redistribution_method = CalculationOptions.EXERGY_DESTRUCTION
+        self.redistribution_method = CalculationOptions.RELATIVE_COST
         self.calculate_component_decomposition = True
 
     @property
