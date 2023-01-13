@@ -115,6 +115,12 @@ class ImportTestCase(unittest.TestCase):
         EEETools.calculate(calculate_on_pf_diagram=True)
         self.assertTrue(True)
 
+    def test_excel_debug(self):
+
+        import EEETools
+        EEETools.export_debug_information(calculate_on_pf_diagram=True)
+        self.assertTrue(True)
+
     def test_excel_update(self):
 
         resource_excel_path = os.path.join(costants.TEST_RES_DIR, "ImportTestResources", "ExcelTestFiles")

@@ -1,4 +1,4 @@
-from EEETools.Tools.API.ExcelAPI.modules_importer import calculate_excel, import_excel_input
+from EEETools.Tools.API.ExcelAPI.modules_importer import calculate_excel, import_excel_input, export_debug_info_to_excel
 from EEETools.Tools.GUIElements.connection_and_block_check import CheckConnectionWidget
 from EEETools.Tools.GUIElements.net_plot_modules import display_network
 from EEETools.MainModules.main_module import CalculationOptions
@@ -9,8 +9,13 @@ import tkinter as tk
 import os, warnings
 
 
-def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=True, valve_is_dissipative=True,
-              condenser_is_dissipative=True):
+def calculate(
+
+        excel_path="", calculate_on_pf_diagram=True,
+        loss_cost_is_zero=True, valve_is_dissipative=True,
+        condenser_is_dissipative=True
+
+):
 
     excel_path = __find_excel_path(excel_path)
     if excel_path == "":
@@ -27,6 +32,29 @@ def calculate(excel_path="", calculate_on_pf_diagram=True, loss_cost_is_zero=Tru
         warnings.simplefilter("ignore")
         calculate_excel(excel_path, option)
 
+def export_debug_information(
+
+        excel_path="", calculate_on_pf_diagram=True,
+        loss_cost_is_zero=True, valve_is_dissipative=True,
+        condenser_is_dissipative=True
+
+):
+
+    excel_path = __find_excel_path(excel_path)
+    if excel_path == "":
+        return
+
+    option = CalculationOptions()
+    option.calculate_on_pf_diagram = calculate_on_pf_diagram
+    option.loss_cost_is_zero = loss_cost_is_zero
+    option.valve_is_dissipative = valve_is_dissipative
+    option.condenser_is_dissipative = condenser_is_dissipative
+
+    with warnings.catch_warnings():
+
+        warnings.simplefilter("ignore")
+        array_handler = calculate_excel(excel_path, option, export_solution=False)
+        export_debug_info_to_excel(excel_path, array_handler)
 
 def launch_connection_debug(excel_path=""):
 

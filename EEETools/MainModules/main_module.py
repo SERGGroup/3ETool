@@ -106,7 +106,7 @@ class Block(ABC):
 
     def __get_standard_matrix_row(self, n_blocks):
 
-        # This Methods returns the row of the Cost Matrix corresponding to the current block in a block-oriented
+        # These Methods returns the row of the Cost Matrix corresponding to the current block in a block-oriented
         # computation scheme
 
         # The Cost Matrix is a squared matrix of size NXN where N is the number of blocks. Another column,
@@ -1328,7 +1328,7 @@ class ArrayHandler:
 
     def calculate(self):
 
-        # This methods generate the cost matrix combining the lines returned by each block and then solve it. Before
+        # These methods generate the cost matrix combining the lines returned by each block and then solve it. Before
         # doing so, it invokes the method "__prepare_system" that prepares the system to be solved asking the
         # blocks to generate their own support blocks (if needed) and appending them to the block list.
 

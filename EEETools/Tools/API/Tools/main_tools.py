@@ -41,6 +41,28 @@ def get_result_data_frames(array_handler: ArrayHandler) -> dict:
         }
 
 
+def get_debug_data_frames(array_handler: ArrayHandler) -> dict:
+
+    if not array_handler.options.calculate_on_pf_diagram:
+
+        return {
+
+            "Main Matrix": __get_main_matrix_data_frame(array_handler),
+            "Connections List": __get_connections_list_data_frame(array_handler)
+
+        }
+
+    else:
+
+        return {
+
+            "Debug - Matrix": __get_main_matrix_data_frame(array_handler),
+            "Debug - Block": __get_block_list_data_frame(array_handler),
+            "Debug - Connections": __get_connections_list_data_frame(array_handler)
+
+        }
+
+
 def __get_stream_data_frame(array_handler: ArrayHandler):
 
     stream_data = {
@@ -158,6 +180,7 @@ def __get_cost_dec_data_frame(array_handler: ArrayHandler):
             for name in block.output_cost_decomposition.keys():
 
                 if name not in cost_dec_data.keys():
+
                     cost_dec_data.update({name: list()})
 
                 cost_dec_data[name].append(block.output_cost_decomposition[name])
@@ -188,3 +211,114 @@ def __get_useful_data_frame(array_handler: ArrayHandler):
 
     return useful_data
 
+
+def __get_main_matrix_data_frame(array_handler: ArrayHandler):
+
+    if array_handler.options.calculate_on_pf_diagram:
+
+        array_handler = array_handler.pf_diagram
+
+    block_list = array_handler.block_list
+    useful_data = {"names": list()}
+
+    for block in block_list:
+
+        useful_data.update({"{}-{}".format(block.ID, block.name): list()})
+
+    useful_data.update({"constants": list()})
+
+    for block in block_list:
+
+        useful_data["names"].append("{}-{}".format(block.ID, block.name))
+        useful_data["constants"].append(array_handler.vector[block.ID])
+
+        for other_block in block_list:
+
+            key = "{}-{}".format(other_block.ID, other_block.name)
+            useful_data[key].append(array_handler.matrix[block.ID][other_block.ID])
+
+    return useful_data
+
+
+def __get_block_list_data_frame(array_handler: ArrayHandler):
+
+    if array_handler.options.calculate_on_pf_diagram:
+
+        array_handler = array_handler.pf_diagram
+
+    block_list = array_handler.block_list
+
+    max_con_blocks = 0.
+    for block in block_list:
+
+        con_blocks = len(block.contained_blocks)
+        if con_blocks > max_con_blocks:
+            max_con_blocks = con_blocks
+
+    useful_data = {
+
+        "Block ID": list(),
+        "Name": list(),
+        "Cost [€/s]": list()
+
+    }
+
+    for i in range(max_con_blocks):
+
+        useful_data.update({"{} Cont. Blocks".format(i + 1): list()})
+
+    for block in block_list:
+
+        useful_data["Block ID"].append(block.index)
+        useful_data["Name"].append(block.name)
+        useful_data["Cost [€/s]"].append(block.comp_cost)
+
+        i = 1
+        for cont_block in block.contained_blocks:
+
+            useful_data["{} Cont. Blocks".format(i)].append("{}-{}".format(cont_block.ID, cont_block.name))
+            i += 1
+
+    return useful_data
+
+
+def __get_connections_list_data_frame(array_handler: ArrayHandler):
+
+    if array_handler.options.calculate_on_pf_diagram:
+
+        array_handler = array_handler.pf_diagram
+
+    useful_data = {
+
+        "Stream": list(),
+        "Name": list(),
+        "From": list(),
+        "To": list(),
+        "Exergy Value [kW]": list()
+
+    }
+
+    for conn in array_handler.connection_list:
+
+        useful_data["Stream"].append(conn.index)
+        useful_data["Name"].append(conn.name)
+
+        if conn.from_block is not None:
+
+            useful_data["From"].append("{}-{}".format(conn.from_block.ID, conn.from_block.name))
+
+        else:
+
+            useful_data["From"].append("-")
+
+        if conn.to_block is not None:
+
+            useful_data["To"].append("{}-{}".format(conn.to_block.ID, conn.to_block.name))
+
+        else:
+
+            useful_data["To"].append("-")
+
+        useful_data["Exergy Value [kW]"].append(conn.exergy_value)
+
+    return useful_data
