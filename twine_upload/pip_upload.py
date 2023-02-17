@@ -38,8 +38,6 @@ def upload_files(activate_venv=True):
             shutil.rmtree(os.path.join(base_dir, sub_dir))
 
 
-
-
 def __read_token():
 
     with open("pipy_token", "r") as file:

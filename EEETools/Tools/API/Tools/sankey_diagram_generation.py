@@ -7,11 +7,14 @@ class SankeyDiagramOptions:
 
         self.generate_on_pf_diagram = False
         self.show_component_mixers = False
+        self.display_costs = False
+
         self.colors = {
 
-            "Destruction": "150, 0, 0",
-            "Losses": "50, 125, 150",
-            "Default": "250, 210, 20"
+            "Destruction": [150, 0, 0],
+            "Losses": [50, 125, 150],
+            "Default": [250, 210, 20],
+            "Cost": [40, 170, 60]
 
         }
         self.opacity = {
@@ -21,10 +24,11 @@ class SankeyDiagramOptions:
             "DL_links": 0.25
 
         }
+        self.min_opacity_perc = 0.05
 
-    def define_color(self, block_label, is_link):
+    def define_color(self, block_label, is_link, cost_perc=1):
 
-        return "rgba({}, {})".format(self.get_color(block_label), self.get_opacity(block_label, is_link))
+        return "rgba({}, {})".format(self.get_color(block_label), self.get_opacity(block_label, is_link, cost_perc))
 
     def get_color(self, block_label):
 
@@ -32,25 +36,35 @@ class SankeyDiagramOptions:
 
             color = self.colors[block_label]
 
+        elif block_label == "Redistributed Cost":
+
+            return self.get_color("Destruction")
+
         else:
 
-            color = self.colors["Default"]
+            if self.display_costs:
 
-        return color
+                color = self.colors["Cost"]
 
-    def get_opacity(self, block_label, is_link):
+            else:
+
+                color = self.colors["Default"]
+
+        return "{}, {}, {}".format(color[0], color[1], color[2])
+
+    def get_opacity(self, block_label, is_link, cost_perc=1):
 
         if is_link:
 
-            if block_label == "Destruction" or block_label == "Losses":
+            if block_label == "Destruction" or block_label == "Losses" or block_label == "Redistributed Cost":
 
-                return self.opacity["DL_links"]
+                return self.opacity["DL_links"] * cost_perc
 
-            return self.opacity["links"]
+            return self.opacity["links"] * cost_perc
 
         else:
 
-            return self.opacity["nodes"]
+            return self.opacity["nodes"] * cost_perc
 
 
 class SankeyDiagramGenerator:
@@ -108,13 +122,22 @@ class SankeyDiagramGenerator:
 
         }
 
+        if self.options.display_costs:
+
+            self.input_array_handler.calculate()
+
         if self.options.generate_on_pf_diagram:
+
             self.array_handler = self.input_array_handler.get_pf_diagram()
 
         else:
+
             self.array_handler = self.input_array_handler
 
-        self.array_handler.prepare_system()
+        if not self.options.display_costs:
+
+            self.array_handler.prepare_system()
+
         self.__fill_sankey_diagram_dicts()
 
     def __fill_sankey_diagram_dicts(self):
@@ -122,20 +145,48 @@ class SankeyDiagramGenerator:
         for conn in self.array_handler.connection_list:
 
             from_block_label, to_block_label = self.__get_node_labels_from_connection(conn)
+
             if not from_block_label == to_block_label:
-                self.__update_link_dict(from_block_label, to_block_label, conn.exergy_value)
 
-        self.__append_destruction()
+                self.__update_link_dict(from_block_label, to_block_label, conn.exergy_value, conn=conn)
 
-    def __update_link_dict(self, from_block_label, to_block_label, exergy_value):
+        if not self.options.display_costs:
+
+            self.__append_destruction()
+
+        else:
+
+            self.__append_redistributed_cost()
+
+    def __update_link_dict(self, from_block_label, to_block_label, value, conn=None, block=None):
 
         self.__check_label(from_block_label)
         self.__check_label(to_block_label)
 
         self.link_dict["source"].append(self.nodes_dict["label"].index(from_block_label))
         self.link_dict["target"].append(self.nodes_dict["label"].index(to_block_label))
-        self.link_dict["value"].append(exergy_value)
-        self.link_dict["color"].append(self.options.define_color(to_block_label, is_link=True))
+
+        if not self.options.display_costs:
+
+            self.link_dict["value"].append(value)
+            self.link_dict["color"].append(self.options.define_color(to_block_label, is_link=True))
+
+        else:
+
+            if to_block_label != "Redistributed Cost":
+
+                rel_cost = conn.rel_cost
+                value = conn.abs_cost
+
+            else:
+
+                rel_cost = block.dissipative_output_cost
+
+            max_rel_cost = self.__get_maximum_rel_cost()
+            perc = rel_cost / max_rel_cost * (1 - self.options.min_opacity_perc) + self.options.min_opacity_perc
+
+            self.link_dict["value"].append(value)
+            self.link_dict["color"].append(self.options.define_color(to_block_label, is_link=True, cost_perc=perc))
 
     def __check_label(self, label):
 
@@ -147,8 +198,18 @@ class SankeyDiagramGenerator:
     def __append_destruction(self):
 
         for block in self.array_handler.block_list:
+
             from_block_label = self.__get_node_label(block)
             self.__update_link_dict(from_block_label, "Destruction", block.exergy_balance)
+
+    def __append_redistributed_cost(self):
+
+        for block in self.array_handler.block_list:
+
+            if block.is_dissipative:
+
+                from_block_label = self.__get_node_label(block)
+                self.__update_link_dict(from_block_label, "Redistributed Cost", block.difference_cost, block=block)
 
     def __get_node_labels_from_connection(self, conn):
 
@@ -191,3 +252,23 @@ class SankeyDiagramGenerator:
         else:
 
             return "{}".format(block.name)
+
+    def __get_maximum_rel_cost(self):
+
+        max_rel_cost = 0.
+        for conn in self.array_handler.connection_list:
+
+            if conn.rel_cost > max_rel_cost:
+
+                max_rel_cost = conn.rel_cost
+
+
+        for block in self.array_handler.block_list:
+
+            if block.is_dissipative:
+
+                if block.dissipative_output_cost  > max_rel_cost:
+
+                    max_rel_cost = block.dissipative_output_cost
+
+        return max_rel_cost

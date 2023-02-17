@@ -144,7 +144,7 @@ class ImportTestCase(unittest.TestCase):
     def test_sankey(self):
 
         import EEETools
-        EEETools.plot_sankey(generate_on_pf_diagram=True)
+        EEETools.plot_sankey(generate_on_pf_diagram=True, display_costs=True)
         self.assertTrue(True)
 
     def test_connection_check(self):

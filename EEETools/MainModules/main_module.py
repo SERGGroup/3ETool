@@ -28,10 +28,12 @@ class Block(ABC):
         self.exergy_analysis = dict()
 
         self.comp_cost_corr = None
+
         self.comp_cost = 0.
-        self.difference_cost = 0.
         self.output_cost = 0.
+        self.difference_cost = 0.
         self.dissipative_output_cost = 0.
+
         self.output_cost_decomposition = dict()
 
         self.input_connections = list()
@@ -155,7 +157,7 @@ class Block(ABC):
 
     def __get_dissipative_matrix_row(self, n_blocks):
 
-        # This Methods returns the rows of the Cost Matrix corresponding to the a dissipative block
+        # These Methods return the rows of the Cost Matrix corresponding to a dissipative block
 
         # The Cost Matrix is a squared matrix of size NXN where N is the number of blocks. Another column,
         # representing the known variables vector has been added at the end of the matrix, hence its actual
@@ -352,19 +354,22 @@ class Block(ABC):
 
         if self.is_dissipative:
 
-            self.difference_cost = defined_steam_cost
+            block_ex_dl = self.exergy_dl
+            self.difference_cost = defined_steam_cost * block_ex_dl
+            self.dissipative_output_cost = defined_steam_cost
+            self.output_cost = 0.
 
         else:
 
             self.output_cost = defined_steam_cost
 
-            for outConn in self.output_connections:
+        for outConn in self.output_connections:
 
-                if outConn.is_loss and self.main_class.options.loss_cost_is_zero:
-                    outConn.set_cost(0.)
+            if outConn.is_loss and self.main_class.options.loss_cost_is_zero:
+                outConn.set_cost(0.)
 
-                else:
-                    outConn.set_cost(defined_steam_cost)
+            else:
+                outConn.set_cost(self.output_cost)
 
     def generate_output_cost_decomposition(self, inverse_matrix_row):
 
@@ -435,6 +440,19 @@ class Block(ABC):
         return overall_exergy_input
 
     @property
+    def exergy_dl(self):
+
+        overall_exergy_dl = self.exergy_balance
+
+        for conn in self.output_connections:
+
+            if conn.is_loss:
+
+                overall_exergy_dl += abs(conn.exergy_value)
+
+        return overall_exergy_dl
+
+    @property
     def exergy_balance(self):
 
         exergy_balance = 0
@@ -456,7 +474,6 @@ class Block(ABC):
             cost_balance += conn.exergy_value * conn.rel_cost
 
         if self.is_dissipative:
-
             cost_balance -= self.difference_cost
 
         else:
@@ -1389,15 +1406,7 @@ class ArrayHandler:
 
         for block in self.block_list:
 
-            if not block.is_dissipative:
-
-                block.append_output_cost(sol[i])
-
-            else:
-
-                block.append_output_cost(0.)
-                block.dissipative_output_cost = sol[i]
-
+            block.append_output_cost(sol[i])
             i += 1
 
         self.__reset_IDs(reset_block=True)
@@ -1838,7 +1847,9 @@ class ArrayHandler:
 
             from EEETools.MainModules.pf_diagram_generation_module import PFArrayHandler
             self.prepare_system()
-            return PFArrayHandler(self)
+            self.pf_diagram = PFArrayHandler(self)
+
+            return self.pf_diagram
 
     @property
     def is_ready_for_calculation(self):
