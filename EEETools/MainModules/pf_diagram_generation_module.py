@@ -17,24 +17,20 @@ class ProductBlock(Generic):
 
     def add_connection(self, new_connection, is_input, append_to_support_block=None):
 
-        super(ProductBlock, self).add_connection(new_connection, is_input,
-                                                 append_to_support_block=append_to_support_block)
+        super(ProductBlock, self).add_connection(
+
+            new_connection, is_input,
+            append_to_support_block=append_to_support_block
+
+        )
 
         if not is_input:
             self.contained_connection.append(new_connection)
 
     def append_output_cost(self, defined_steam_cost):
 
-        self.output_cost = defined_steam_cost
-        self.base_block.output_cost = defined_steam_cost
-
-        for outConn in self.contained_connection:
-
-            if outConn.is_loss:
-                outConn.set_cost(0.)
-
-            else:
-                outConn.set_cost(defined_steam_cost)
+        super().append_output_cost(defined_steam_cost)
+        self.base_block.append_output_cost(defined_steam_cost)
 
     def generate_output_cost_decomposition(self, inverse_matrix_row):
 
@@ -115,6 +111,7 @@ class ProductBlock(Generic):
 class ProductConnection(Connection):
 
     def __init__(self, base_connection: Connection):
+
         super().__init__(base_connection.ID)
 
         self.base_connection = base_connection
@@ -127,11 +124,16 @@ class ProductConnection(Connection):
         self.is_fluid_stream = base_connection.is_fluid_stream
 
     @property
+    def abs_cost(self) -> float:
+        return self.rel_cost * self.exergy_value
+
+    @property
     def rel_cost(self) -> float:
-        return self.__rel_cost
+        return self.base_connection.rel_cost
 
     @rel_cost.setter
     def rel_cost(self, rel_cost_input):
+
         self.__rel_cost = rel_cost_input
         self.base_connection.rel_cost = rel_cost_input
 
@@ -181,8 +183,12 @@ class PFArrayHandler(ArrayHandler):
 
         elif input_connection is not None:
 
-            self.generate_product_connection(input_connection, to_product_block=new_block,
-                                             from_product_block=from_block)
+            self.generate_product_connection(
+
+                input_connection, to_product_block=new_block,
+                from_product_block=from_block
+
+            )
 
     def __append_new_product_block(self, input_block: Block, input_connection, from_block) -> ProductBlock:
 
@@ -190,8 +196,13 @@ class PFArrayHandler(ArrayHandler):
         self.append_block(new_block)
 
         if input_connection is not None:
-            self.generate_product_connection(input_connection, to_product_block=new_block,
-                                             from_product_block=from_block)
+
+            self.generate_product_connection(
+
+                input_connection, to_product_block=new_block,
+                from_product_block=from_block
+
+            )
 
         return new_block
 
