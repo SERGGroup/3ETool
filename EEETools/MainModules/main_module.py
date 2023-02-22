@@ -108,7 +108,7 @@ class Block(ABC):
 
     def __get_standard_matrix_row(self, n_blocks):
 
-        # These Methods returns the row of the Cost Matrix corresponding to the current block in a block-oriented
+        # This method return the row of the Cost Matrix corresponding to the current block in a block-oriented
         # computation scheme
 
         # The Cost Matrix is a squared matrix of size NXN where N is the number of blocks. Another column,
@@ -119,7 +119,7 @@ class Block(ABC):
         # into the component from block with ID "m".
 
         # The last column represent known variable and should be filled with the known costs
-        # For further details please refers to the paper (to be quoted)
+        # For further details please refer to the paper (to be quoted)
 
         # line initialization with an array of zeroes (dimension N+1)
         row = np.zeros(n_blocks + 1)
@@ -135,7 +135,7 @@ class Block(ABC):
 
             if not (conn.is_system_input or conn.exergy_value == 0):
 
-                row[conn.fromID] = -conn.exergy_value
+                row[conn.fromID] -= conn.exergy_value
 
             else:
 
@@ -149,6 +149,7 @@ class Block(ABC):
         for conn in self.output_connections:
 
             if not conn.is_loss or (not self.main_class.options.loss_cost_is_zero):
+
                 exergy_sum += conn.exergy_value
 
         row[self.ID] = exergy_sum
@@ -157,7 +158,7 @@ class Block(ABC):
 
     def __get_dissipative_matrix_row(self, n_blocks):
 
-        # These Methods return the rows of the Cost Matrix corresponding to a dissipative block
+        # This method return the rows of the Cost Matrix corresponding to a dissipative block
 
         # The Cost Matrix is a squared matrix of size NXN where N is the number of blocks. Another column,
         # representing the known variables vector has been added at the end of the matrix, hence its actual
@@ -169,7 +170,7 @@ class Block(ABC):
         # exergy flux coming into the component from block with ID "m".
 
         # The last column represent known variable and should be filled with the known costs
-        # For further details please refers to the paper (to be quoted)
+        # For further details please refer to the paper (to be quoted)
 
         # line initialization with an array of zeroes (dimension N+1)
         row = np.zeros(n_blocks + 1)
@@ -184,7 +185,7 @@ class Block(ABC):
 
             if not (conn.is_system_input or conn.exergy_value == 0):
 
-                row[conn.fromID] = -conn.exergy_value
+                row[conn.fromID] -= conn.exergy_value
 
             else:
 
