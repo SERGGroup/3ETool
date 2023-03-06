@@ -120,7 +120,7 @@ def export_debug_info_to_excel(excel_path, array_handler: ArrayHandler):
 
 def __write_excel_file(excel_path, result_df):
 
-    # generation of time stamps for excel sheet name
+    # Generation of time stamps for Excel sheet name
     today = date.today()
     now = datetime.now()
     today_str = today.strftime("%d %b")

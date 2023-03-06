@@ -117,9 +117,11 @@ def __get_comp_data_frame(array_handler: ArrayHandler):
 
     }
 
-    for block in array_handler.block_list:
+    block_list = array_handler.blocks_by_index
+    for block in block_list:
 
         if not block.is_support_block:
+
             comp_data["Name"].append(block.name)
             comp_data["Comp Cost [€/s]"].append(block.comp_cost)
 
@@ -170,8 +172,9 @@ def __get_comp_data_frame(array_handler: ArrayHandler):
 def __get_cost_dec_data_frame(array_handler: ArrayHandler):
 
     cost_dec_data = {"Name": list()}
+    block_list = array_handler.blocks_by_index
 
-    for block in array_handler.block_list:
+    for block in block_list:
 
         if not block.is_support_block:
 

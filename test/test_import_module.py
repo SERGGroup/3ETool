@@ -1,10 +1,9 @@
-import tkinter as tk
-import unittest
-from tkinter import filedialog
-
-from EEETools import costants
 from EEETools.Tools.API.DatAPI.modules_importer import import_dat
 from EEETools.Tools.API.ExcelAPI.modules_importer import *
+from EEETools import costants
+from tkinter import filedialog
+import tkinter as tk
+import unittest
 
 
 def import_matlab_result(excel_path):
@@ -144,7 +143,7 @@ class ImportTestCase(unittest.TestCase):
     def test_sankey(self):
 
         import EEETools
-        EEETools.plot_sankey(generate_on_pf_diagram=True, display_costs=True)
+        EEETools.plot_sankey(generate_on_pf_diagram=True, display_costs=True, font_size=15)
         self.assertTrue(True)
 
     def test_connection_check(self):
