@@ -76,7 +76,13 @@ def launch_network_display(excel_path=""):
     display_network(array_handler)
 
 
-def plot_sankey(excel_path="", show_component_mixers=False, generate_on_pf_diagram=True, display_costs=False):
+def plot_sankey(
+
+        excel_path="", show_component_mixers=False,
+        generate_on_pf_diagram=True, display_costs=False,
+        font_size=15
+
+):
 
     from EEETools.Tools.API.Tools.sankey_diagram_generation import SankeyDiagramGenerator, SankeyDiagramOptions
     excel_path = __find_excel_path(excel_path)
@@ -89,6 +95,7 @@ def plot_sankey(excel_path="", show_component_mixers=False, generate_on_pf_diagr
     options.generate_on_pf_diagram = generate_on_pf_diagram
     options.show_component_mixers = show_component_mixers
     options.display_costs = display_costs
+    options.font_size = font_size
 
     SankeyDiagramGenerator(array_handler, options).show()
 

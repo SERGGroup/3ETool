@@ -1,3 +1,5 @@
+import math
+
 from EEETools.MainModules.pf_diagram_generation_module import ArrayHandler
 
 
@@ -8,6 +10,8 @@ class SankeyDiagramOptions:
         self.generate_on_pf_diagram = False
         self.show_component_mixers = False
         self.display_costs = False
+
+        self.font_size = 15
 
         self.colors = {
 
@@ -28,7 +32,7 @@ class SankeyDiagramOptions:
             "Redistributed Cost": 0.20
 
         }
-        self.min_opacity_perc = 0.05
+        self.min_opacity_perc = 0.15
 
     def define_color(self, block_label, is_link, cost_perc=1):
 
@@ -57,6 +61,10 @@ class SankeyDiagramOptions:
         return "{}, {}, {}".format(color[0], color[1], color[2])
 
     def get_opacity(self, block_label, is_link, cost_perc=1):
+
+        if not math.isfinite(cost_perc):
+
+            cost_perc = 1
 
         if is_link:
 
@@ -110,7 +118,7 @@ class SankeyDiagramGenerator:
 
         )
 
-        fig.update_layout(title_text="Basic Sankey Diagram", font_size=10)
+        fig.update_layout(title_text="", font_size=self.options.font_size)
         fig.show()
 
     def __init_sankey_dicts(self):

@@ -1924,6 +1924,28 @@ class ArrayHandler:
         for block in self.block_list:
             block.move_skipped_block_at_the_end = False
 
+    @property
+    def blocks_by_index(self):
+
+        new_block_list = list()
+        for block in self.block_list:
+
+            inserted = False
+            for i in range(len(new_block_list)):
+
+                if new_block_list[i].index > block.index:
+
+                    new_block_list.insert(i, block)
+                    inserted = True
+                    break
+
+            if not inserted:
+
+                new_block_list.append(block)
+
+
+        return new_block_list
+
     def __str__(self):
 
         # enables printing and str() method
