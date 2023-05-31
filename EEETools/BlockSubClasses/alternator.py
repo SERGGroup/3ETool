@@ -26,7 +26,7 @@ class Alternator(Block):
         self.support_block[0].prepare_for_calculation()
 
         new_conn = self.main_class.append_connection(from_block=self)
-        new_conn.name = "electrical power output"
+        new_conn.name = "Electrical Power Output"
         new_conn.is_useful_effect = True
         new_conn.automatically_generated_connection = True
         new_conn.exergy_value = self.exergy_balance

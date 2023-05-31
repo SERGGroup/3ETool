@@ -1,6 +1,5 @@
-import math
-
 from EEETools.MainModules.pf_diagram_generation_module import ArrayHandler
+import math
 
 
 class SankeyDiagramOptions:
@@ -204,7 +203,14 @@ class SankeyDiagramGenerator:
 
                 rel_cost = conn.rel_cost
                 max_rel_cost = self.__get_maximum_rel_cost()
-                perc = rel_cost / max_rel_cost * (1 - self.options.min_opacity_perc) + self.options.min_opacity_perc
+
+                if max_rel_cost == 0:
+
+                    perc = 1
+
+                else:
+
+                    perc = rel_cost / max_rel_cost * (1 - self.options.min_opacity_perc) + self.options.min_opacity_perc
 
                 color = self.options.define_color(to_block_label, is_link=True, cost_perc=perc)
 

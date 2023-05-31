@@ -285,11 +285,16 @@ class Block(ABC):
         c_fuel = 0
         c_dest = 0
 
+        self.calculate_exergy_analysis()
         fuel_exergy = self.exergy_analysis["fuel"]
         dest_exergy = self.exergy_analysis["distruction"]
         dest_loss_exergy = self.exergy_analysis["distruction"] + self.exergy_analysis["losses"]
 
         fuel_cost = 0.
+
+        if self.can_be_removed_in_pf_definition and self.main_class.options.calculate_on_pf_diagram:
+
+            self.output_cost = self.output_connections[0].rel_cost
 
         if self.is_dissipative:
 
@@ -315,11 +320,11 @@ class Block(ABC):
 
         if not c_fuel == 0:
 
-            r = (self.output_cost - c_fuel) / c_fuel
+            r = (c_prod - c_fuel) / c_fuel
 
         if not (self.comp_cost + c_dest * abs(dest_loss_exergy)) == 0:
 
-            f = self.comp_cost / (self.comp_cost + c_dest * abs(dest_loss_exergy))
+            f = self.comp_cost / (self.comp_cost + c_dest * abs(dest_exergy))
 
         if not total_destruction == 0:
 
@@ -525,8 +530,6 @@ class Block(ABC):
                     return
 
             sel_block.add_connection(new_connection, is_input)
-
-        self.calculate_exergy_analysis()
 
     def remove_connection(self, deleted_conn):
 
@@ -1367,6 +1370,8 @@ class ArrayHandler:
                 self.pf_diagram = PFArrayHandler(self)
                 self.pf_diagram.calculate()
 
+                self.calculate_coefficients()
+
             else:
 
                 i = 0
@@ -1421,6 +1426,12 @@ class ArrayHandler:
 
             block.calculate_coefficients(total_destruction)
 
+    def calculate_exergy_analysis(self):
+
+        for block in self.block_list:
+
+            block.calculate_exergy_analysis()
+
     def decompose_component_output_cost(self):
 
         if self.options.calculate_component_decomposition:
@@ -1452,6 +1463,7 @@ class ArrayHandler:
         # this method has to be called just before the calculation, it asks the blocks to prepare themselves for the
         # calculation
 
+        self.calculate_exergy_analysis()
         self.__update_block_list()
 
         for block in self.block_list:
@@ -1574,12 +1586,14 @@ class ArrayHandler:
     def append_connection(self, new_conn=None, from_block=None, to_block=None) -> Connection:
 
         if new_conn is None:
-            new_conn = Connection(self.n_connection)
+
+            new_conn = Connection(self.__get_empty_index())
 
         self.__try_append_connection(new_conn, from_block, is_input=False)
         self.__try_append_connection(new_conn, to_block, is_input=True)
 
         if not new_conn in self.connection_list:
+
             self.connection_list.append(new_conn)
             self.__reset_IDs(reset_block=False)
 
@@ -1904,11 +1918,12 @@ class ArrayHandler:
     def __update_block_list(self):
 
         # this method asks the blocks to generate their own support blocks (if needed) and appends them to the
-        # block list. Finally it orders the lists and reset the IDs.
+        # block list. Finally, it orders the lists and reset the IDs.
 
         for block in self.block_list:
 
             if block.has_support_block:
+
                 block_list = block.support_block
                 self.append_block(block_list)
 
@@ -1923,6 +1938,21 @@ class ArrayHandler:
 
         for block in self.block_list:
             block.move_skipped_block_at_the_end = False
+
+    def __get_empty_index(self):
+
+        i = 0
+        j = 0
+
+        while np.power(10, i) < self.n_connection:
+
+            i += 1
+
+        while self.find_connection_by_index(int(np.power(10, i)) + j) is not None:
+
+            j += 1
+
+        return int(np.power(10, i)) + j
 
     @property
     def blocks_by_index(self):

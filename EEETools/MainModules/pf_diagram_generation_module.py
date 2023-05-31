@@ -1,5 +1,3 @@
-import warnings
-
 from EEETools.MainModules.main_module import Connection, ArrayHandler, Block
 from EEETools.BlockSubClasses.generic import Generic
 
@@ -32,6 +30,14 @@ class ProductBlock(Generic):
         super().append_output_cost(defined_steam_cost)
         self.base_block.append_output_cost(defined_steam_cost)
 
+        for outConn in self.contained_connection:
+
+            if outConn.is_loss and self.main_class.options.loss_cost_is_zero:
+                outConn.set_cost(0.)
+
+            else:
+                outConn.set_cost(self.output_cost)
+
     def generate_output_cost_decomposition(self, inverse_matrix_row):
 
         super(ProductBlock, self).generate_output_cost_decomposition(inverse_matrix_row)
@@ -61,7 +67,6 @@ class ProductBlock(Generic):
         super(ProductBlock, self).calculate_coefficients(total_destruction)
 
         self.base_block.coefficients = self.coefficients
-        self.base_block.exergy_analysis = self.exergy_analysis
 
     def __check_connection(self, conn):
 
