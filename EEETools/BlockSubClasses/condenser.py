@@ -33,7 +33,7 @@ class Condenser(Block):
         if self.main_class.options.loss_cost_is_zero:
 
             new_conn = self.main_class.append_connection(from_block=self)
-            new_conn.name = "condenser exergy loss"
+            new_conn.name = "Condenser Exergy Loss"
             new_conn.automatically_generated_connection = True
             new_conn.exergy_value = self.exergy_balance
             new_conn.is_fluid_stream = False
