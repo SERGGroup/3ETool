@@ -111,7 +111,13 @@ class ImportTestCase(unittest.TestCase):
     def test_excel_calculate(self):
 
         import EEETools
-        EEETools.calculate(calculate_on_pf_diagram=True)
+        EEETools.calculate(
+
+            calculate_on_pf_diagram=True,
+            condenser_is_dissipative=True,
+            loss_cost_is_zero=True,
+
+        )
         self.assertTrue(True)
 
     def test_excel_debug(self):
@@ -143,7 +149,7 @@ class ImportTestCase(unittest.TestCase):
     def test_sankey(self):
 
         import EEETools
-        EEETools.plot_sankey(generate_on_pf_diagram=True, display_costs=True)
+        EEETools.plot_sankey(generate_on_pf_diagram=True, display_costs=False)
         self.assertTrue(True)
 
     def test_connection_check(self):
