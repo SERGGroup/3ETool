@@ -9,6 +9,7 @@ class SankeyDiagramOptions:
         self.generate_on_pf_diagram = False
         self.show_component_mixers = False
         self.display_costs = False
+        self.change_opacity = True
 
         self.font_size = 15
 
@@ -61,7 +62,7 @@ class SankeyDiagramOptions:
 
     def get_opacity(self, block_label, is_link, cost_perc=1):
 
-        if not math.isfinite(cost_perc):
+        if not math.isfinite(cost_perc) or not (0 <= cost_perc <= 1) or not self.change_opacity:
 
             cost_perc = 1
 
@@ -136,11 +137,6 @@ class SankeyDiagramGenerator:
             "color": list()
 
         }
-
-        if self.options.display_costs:
-
-            self.input_array_handler.calculate()
-
         if self.options.generate_on_pf_diagram:
 
             self.array_handler = self.input_array_handler.get_pf_diagram()
@@ -149,7 +145,11 @@ class SankeyDiagramGenerator:
 
             self.array_handler = self.input_array_handler
 
-        if not self.options.display_costs:
+        if self.options.display_costs:
+
+            self.input_array_handler.calculate()
+
+        else:
 
             self.array_handler.prepare_system()
 
@@ -161,9 +161,15 @@ class SankeyDiagramGenerator:
 
             from_block_label, to_block_label = self.__get_node_labels_from_connection(conn)
 
+            if not self.options.display_costs:
+                value = conn.exergy_value
+
+            else:
+                value = conn.abs_cost
+
             if not from_block_label == to_block_label:
 
-                self.__update_link_dict(from_block_label, to_block_label, conn.exergy_value, conn=conn)
+                self.__update_link_dict(from_block_label, to_block_label, value, conn=conn)
 
         if not self.options.display_costs:
 
@@ -174,18 +180,25 @@ class SankeyDiagramGenerator:
             self.__append_redistributed_cost()
             self.__append_components_cost()
 
-    def __update_link_dict(self, from_block_label, to_block_label, value, conn=None):
+    def __update_link_dict(self, from_block_label, to_block_label, value, conn=None, force_negative=False):
 
         self.__check_label(from_block_label)
         self.__check_label(to_block_label)
 
-        self.link_dict["source"].append(self.nodes_dict["label"].index(from_block_label))
-        self.link_dict["target"].append(self.nodes_dict["label"].index(to_block_label))
+        if value >= 0 or force_negative:
+
+            self.link_dict["source"].append(self.nodes_dict["label"].index(from_block_label))
+            self.link_dict["target"].append(self.nodes_dict["label"].index(to_block_label))
+
+        else:
+
+            value = -value
+            self.link_dict["source"].append(self.nodes_dict["label"].index(to_block_label))
+            self.link_dict["target"].append(self.nodes_dict["label"].index(from_block_label))
 
         if not self.options.display_costs:
 
-            self.link_dict["value"].append(value)
-            self.link_dict["color"].append(self.options.define_color(to_block_label, is_link=True))
+            color = self.options.define_color(to_block_label, is_link=True)
 
         else:
 
@@ -198,8 +211,6 @@ class SankeyDiagramGenerator:
                 color = self.options.define_color("Components Cost", is_link=True)
 
             else:
-
-                value = conn.abs_cost
 
                 rel_cost = conn.rel_cost
                 max_rel_cost = self.__get_maximum_rel_cost()
@@ -214,8 +225,8 @@ class SankeyDiagramGenerator:
 
                 color = self.options.define_color(to_block_label, is_link=True, cost_perc=perc)
 
-            self.link_dict["value"].append(value)
-            self.link_dict["color"].append(color)
+        self.link_dict["value"].append(value)
+        self.link_dict["color"].append(color)
 
     def __check_label(self, label):
 
@@ -238,7 +249,13 @@ class SankeyDiagramGenerator:
             if block.is_dissipative:
 
                 from_block_label = self.__get_node_label(block)
-                self.__update_link_dict(from_block_label, "Redistributed Cost", block.difference_cost)
+
+                if block.difference_cost == 0 and not block.cost_balance == 0:
+                    cost = block.cost_balance
+                else:
+                    cost = block.difference_cost
+
+                self.__update_link_dict(from_block_label, "Redistributed Cost", cost)
 
                 red_sum = block.redistribution_sum
                 for non_dissipative_blocks in block.redistribution_block_list:
@@ -248,7 +265,7 @@ class SankeyDiagramGenerator:
 
                     self.__update_link_dict(
 
-                        "Redistributed Cost", to_block_label, block.difference_cost*red_perc
+                        "Redistributed Cost", to_block_label, cost*red_perc
 
                     )
 

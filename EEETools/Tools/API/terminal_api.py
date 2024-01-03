@@ -80,7 +80,7 @@ def plot_sankey(
 
         excel_path="", show_component_mixers=False,
         generate_on_pf_diagram=True, display_costs=False,
-        font_size=15, min_opacity_perc=0.15
+        font_size=15, min_opacity_perc=0.15, change_opacity=True
 
 ):
 
@@ -97,6 +97,7 @@ def plot_sankey(
     options.display_costs = display_costs
     options.font_size = font_size
     options.min_opacity_perc = min_opacity_perc
+    options.change_opacity = change_opacity
 
     SankeyDiagramGenerator(array_handler, options).show()
 
