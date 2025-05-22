@@ -97,6 +97,49 @@ class Evaporator(Block):
             self.__add_connection_by_index(connection, "output", append_to_support_block=support_block_array[i])
             i = i + 1
 
+    @classmethod
+    def get_json_component_description(cls) -> dict:
+
+        return {
+
+            "type": "Evaporator",
+            "handles": [
+
+                {"id": "product input", "name": "product input", "type": "target", "position": "left", "Category": "physical",
+                 "single": False},
+                {"id": "product output", "name": "product output", "type": "source", "position": "right", "Category": "physical",
+                 "single": False},
+                {"id": "fuel input", "name": "fuel input", "type": "target", "position": "top", "Category": "physical",
+                 "single": False},
+                {"id": "fuel output", "name": "fuel output", "type": "source", "position": "bottom", "Category": "physical",
+                 "single": False},
+
+            ]
+
+        }
+
+    def append_json_connection(self, input_conns: dict, output_conns: dict):
+
+        for conn in input_conns.get("product input", []):
+            new_conn = self.main_class.find_connection_by_index(float(conn["label"]))
+            if new_conn is not None:
+                self.add_connection(new_conn, is_input=True, append_to_support_block=1)
+
+        for conn in output_conns.get("product output", []):
+            new_conn = self.main_class.find_connection_by_index(float(conn["label"]))
+            if new_conn is not None:
+                self.add_connection(new_conn, is_input=False, append_to_support_block=1)
+
+        for conn in input_conns.get("fuel input", []):
+            new_conn = self.main_class.find_connection_by_index(float(conn["label"]))
+            if new_conn is not None:
+                self.add_connection(new_conn, is_input=True, append_to_support_block=0)
+
+        for conn in output_conns.get("fuel output", []):
+            new_conn = self.main_class.find_connection_by_index(float(conn["label"]))
+            if new_conn is not None:
+                self.add_connection(new_conn, is_input=False, append_to_support_block=0)
+
     def __add_connection_by_index(self, input_list: ETree.Element, connection_name, append_to_support_block=None):
 
         if connection_name == "input":

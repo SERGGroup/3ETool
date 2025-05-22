@@ -36,21 +36,8 @@ class Alternator(Block):
         self.efficiency = float(input_list[0])
 
         for elem in input_list[1:]:
-
-            new_conn = self.main_class.find_connection_by_index(abs(elem))
-
-            if not new_conn is None:
-
-                is_input = (elem > 0)
-                new_conn.is_fluid_stream = False
-
-                if is_input:
-
-                    self.add_connection(new_conn, is_input, append_to_support_block=0)
-
-                else:
-
-                    self.add_connection(new_conn, is_input)
+            is_input = (elem > 0)
+            self.__append_connection(abs(elem), is_input)
 
     def export_xml_other_parameters(self) -> ETree.Element:
 
@@ -111,6 +98,44 @@ class Alternator(Block):
 
         self.__add_connection_by_index(electrical_connections, "input")
         self.__add_connection_by_index(electrical_connections, "output")
+
+    @classmethod
+    def get_json_component_description(cls) -> dict:
+
+        return {
+
+            "type": "Alternator",
+            "handles": [
+
+                {"id": "input", "name": "input", "type": "target", "position": "left", "Category": "power",
+                 "single": False},
+                {"id": "output", "name": "output", "type": "source", "position": "right", "Category": "power",
+                 "single": False},
+
+            ]
+
+        }
+
+    def append_json_connection(self, input_conns: dict, output_conns: dict):
+
+        for conn in input_conns.get("input", []):
+            self.__append_connection(float(conn["label"]), True)
+
+        for conn in output_conns.get("output", []):
+            self.__append_connection(float(conn["label"]), False)
+
+    def __append_connection(self, conn_label, is_input):
+
+        new_conn = self.main_class.find_connection_by_index(conn_label)
+
+        if not new_conn is None:
+            new_conn.is_fluid_stream = False
+
+            if is_input:
+                self.add_connection(new_conn, is_input, append_to_support_block=0)
+
+            else:
+                self.add_connection(new_conn, is_input)
 
     def __add_connection_by_index(self, input_list: ETree.Element, connection_name, append_to_support_block=None):
 

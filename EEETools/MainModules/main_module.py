@@ -1,13 +1,12 @@
-import copy
-import warnings
-import xml.etree.ElementTree as ETree
-from abc import ABC, abstractmethod
-
-import numpy as np
-
-from EEETools import costants
 from EEETools.Tools.Other.matrix_analyzer import MatrixAnalyzer
 from EEETools.Tools.modules_handler import ModulesHandler
+import xml.etree.ElementTree as ETree
+from abc import ABC, abstractmethod
+from EEETools import costants
+from typing import Union
+import numpy as np
+import warnings
+import copy
 
 
 class Block(ABC):
@@ -719,6 +718,20 @@ class Block(ABC):
 
         raise (NotImplementedError, "block.__append_xml_connection_list() must be overloaded in subclasses")
 
+
+    # -------------------------------------
+    # ----------- JSON Methods ------------
+    # -------------------------------------
+
+    @classmethod
+    @abstractmethod
+    def get_json_component_description(cls) -> dict:
+        return dict()
+
+    # @abstractmethod
+    def append_json_connection(self, input_conns: dict, output_conns: dict):
+        pass
+
     # -------------------------------------
     # ---------- Support Methods ----------
     # -------------------------------------
@@ -1391,10 +1404,10 @@ class ArrayHandler:
                         red_sum = block.redistribution_sum
                         exergy_dissipated = block.exergy_input
 
-                        for non_dissipative_blocks in block.redistribution_block_list:
-
-                            red_perc = non_dissipative_blocks.redistribution_index / red_sum
-                            self.matrix[non_dissipative_blocks.ID, i] -= exergy_dissipated * red_perc
+                        if not red_sum == 0:
+                            for non_dissipative_blocks in block.redistribution_block_list:
+                                red_perc = non_dissipative_blocks.redistribution_index / red_sum
+                                self.matrix[non_dissipative_blocks.ID, i] -= exergy_dissipated * red_perc
 
                     i += 1
 
@@ -1531,7 +1544,7 @@ class ArrayHandler:
     # ----- Elements Handling Methods -----
     # -------------------------------------
 
-    def append_block(self, input_element="Generic"):
+    def append_block(self, input_element="Generic") -> Union[Block, list[Block]]:
 
         # this method accepts three types of inputs:
         #
@@ -1666,13 +1679,12 @@ class ArrayHandler:
     # -- Elements Identification Methods --
     # -------------------------------------
 
-    def find_connection_by_index(self, index):
+    def find_connection_by_index(self, index: Union[float, int, str]) -> Union[Connection, None]:
 
+        index = float(index)
         for conn in self.connection_list:
-
             try:
-
-                if conn.index == index:
+                if float(conn.index) == index:
                     return conn
 
             except:
@@ -1791,22 +1803,6 @@ class ArrayHandler:
     # ------- Input/Output Methods --------
     # -------------------------------------
 
-    def append_excel_costs_and_useful_output(self, input_list, add_useful_output, input_cost):
-
-        for elem in input_list:
-
-            new_conn = self.find_connection_by_index(elem)
-
-            if not new_conn is None:
-
-                if add_useful_output:
-                    new_conn.is_useful_effect = True
-
-                else:
-                    new_conn.rel_cost = input_cost
-
-            # Overloaded Methods
-
     @property
     def xml(self) -> ETree.Element:
 
@@ -1890,6 +1886,13 @@ class ArrayHandler:
     def has_pf_diagram(self):
 
         return self.pf_diagram is not None
+
+    # -------------------------------------
+    # ----------- JSON Methods ------------
+    # -------------------------------------
+    def get_json_component_description(self) -> list:
+
+        return self.modules_handler.get_json_component_description()
 
     # -------------------------------------
     # ---- Elements Sequencing Methods ----
