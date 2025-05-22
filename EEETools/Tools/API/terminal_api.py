@@ -1,4 +1,5 @@
 from EEETools.Tools.API.ExcelAPI.modules_importer import calculate_excel, import_excel_input, export_debug_info_to_excel
+from EEETools.Tools.API.Tools.sankey_diagram_generation import SankeyDiagramGenerator, SankeyDiagramOptions
 from EEETools.Tools.GUIElements.connection_and_block_check import CheckConnectionWidget
 from EEETools.Tools.GUIElements.net_plot_modules import display_network
 from EEETools.MainModules.main_module import CalculationOptions
@@ -84,7 +85,6 @@ def plot_sankey(
 
 ):
 
-    from EEETools.Tools.API.Tools.sankey_diagram_generation import SankeyDiagramGenerator, SankeyDiagramOptions
     excel_path = __find_excel_path(excel_path)
     if excel_path == "":
         return

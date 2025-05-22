@@ -4,6 +4,10 @@ from EEETools.MainModules import Block, ArrayHandler
 
 class Drawer(Block):
 
+    @classmethod
+    def get_json_component_description(cls) -> dict:
+        pass
+
     # This class is a simple block subclass that will be used for the definition of support blocks. See the component
     # documentation for further explanations.
     #

@@ -68,6 +68,43 @@ class Compressor(Block):
         self.__add_connection_by_index(fluid_connections, "output", append_to_support_block=0)
         self.__add_connection_by_index(mechanical_connections, "input")
 
+    @classmethod
+    def get_json_component_description(cls) -> dict:
+
+        return {
+
+            "type": "Compressor",
+            "handles": [
+
+                {"id": "input", "name": "input", "type": "target", "position": "top", "Category": "physical",
+                 "single": True},
+                {"id": "output", "name": "output", "type": "source", "position": "bottom", "Category": "physical",
+                 "single": True},
+                {"id": "fuel", "name": "input power", "type": "target", "position": "left", "Category": "power",
+                 "single": True},
+
+            ]
+
+        }
+
+    def append_json_connection(self, input_conns: dict, output_conns: dict):
+
+        for conn in input_conns.get("fuel", []):
+            new_conn = self.main_class.find_connection_by_index(float(conn["label"]))
+            if new_conn is not None:
+                new_conn.is_fluid_stream = False
+                self.add_connection(new_conn, is_input=True)
+
+        for conn in input_conns.get("input", []):
+            new_conn = self.main_class.find_connection_by_index(float(conn["label"]))
+            if new_conn is not None:
+                self.add_connection(new_conn, is_input=True, append_to_support_block=0)
+
+        for conn in output_conns.get("output", []):
+            new_conn = self.main_class.find_connection_by_index(float(conn["label"]))
+            if new_conn is not None:
+                self.add_connection(new_conn, is_input=False, append_to_support_block=0)
+
     def __add_connection_by_index(self, input_list: ETree.Element, connection_name, append_to_support_block=None):
 
         if connection_name == "input":

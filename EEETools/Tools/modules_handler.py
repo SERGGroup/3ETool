@@ -100,3 +100,11 @@ class ModulesHandler(Handler):
         else:
 
             return subclass_name
+
+    def get_json_component_description(self) -> list:
+
+        return_list = []
+        for module_name in self.name_list:
+            return_list.append(self.import_correct_sub_class(module_name).get_json_component_description())
+
+        return return_list

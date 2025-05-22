@@ -1,5 +1,7 @@
 from EEETools.MainModules.pf_diagram_generation_module import ArrayHandler
+import plotly.graph_objects as go
 import math
+import io
 
 
 class SankeyDiagramOptions:
@@ -97,29 +99,29 @@ class SankeyDiagramGenerator:
     # ------- Sankey Diagram Methods ------
     # -------------------------------------
 
-    def show(self):
+    def show(self, export_html=False):
 
-        import plotly.graph_objects as go
         self.__init_sankey_dicts()
 
         fig = go.Figure(
-
             data=[
-
                 go.Sankey(
-
                     arrangement="snap",
                     node=self.nodes_dict,
                     link=self.link_dict
-
                 )
-
             ]
-
         )
 
         fig.update_layout(title_text="", font_size=self.options.font_size)
-        fig.show()
+        if export_html:
+            buffer = io.BytesIO()
+            html_str = fig.to_html(include_plotlyjs='cdn')
+            buffer.write(html_str.encode('utf-8'))
+            buffer.seek(0)
+            return buffer
+        else:
+            fig.show()
 
     def __init_sankey_dicts(self):
 

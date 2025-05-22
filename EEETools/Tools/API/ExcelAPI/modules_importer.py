@@ -5,6 +5,7 @@ from openpyxl import Workbook, load_workbook, styles, utils
 from EEETools.MainModules.main_module import ArrayHandler
 from datetime import date, datetime
 import math, pandas, os
+from io import BytesIO
 import warnings
 
 
@@ -101,53 +102,77 @@ def import_excel_input(excel_path, calculation_option=None) -> ArrayHandler:
 
                 else:
 
-                    array_handler.append_excel_costs_and_useful_output(line[5:-1], line[0] == 0, line[3])
+                    __append_excel_costs_and_useful_output(array_handler, line[5:-1], line[0] == 0, line[3])
 
         return array_handler
 
 
-def export_solution_to_excel(excel_path, array_handler: ArrayHandler):
+def __append_excel_costs_and_useful_output(handler, input_list, add_useful_output, input_cost):
+
+    for elem in input_list:
+
+        new_conn = handler.find_connection_by_index(elem)
+
+        if not new_conn is None:
+
+            if add_useful_output:
+                new_conn.is_useful_effect = True
+
+            else:
+                new_conn.rel_cost = input_cost
+
+
+def export_solution_to_excel(excel_path, array_handler: ArrayHandler, return_bytes=False):
 
     result_df = get_result_data_frames(array_handler)
-    __write_excel_file(excel_path, result_df)
+    return __write_excel_file(excel_path, result_df, return_bytes)
 
 
-def export_debug_info_to_excel(excel_path, array_handler: ArrayHandler):
+def export_debug_info_to_excel(excel_path, array_handler: ArrayHandler, return_bytes=False):
 
     result_df = get_debug_data_frames(array_handler)
-    __write_excel_file(excel_path, result_df)
+    return __write_excel_file(excel_path, result_df, return_bytes)
 
 
-def __write_excel_file(excel_path, result_df):
+def __write_excel_file(excel_path, result_df, return_bytes):
 
-    # Generation of time stamps for Excel sheet name
     today = date.today()
     now = datetime.now()
     today_str = today.strftime("%d %b")
     now_str = now.strftime("%H.%M")
 
-    for key in result_df.keys():
-
-        __write_excel_sheet(
-
-            excel_path,
-            sheet_name=(key + " - " + today_str + " - " + now_str),
-            data_frame=result_df[key]
-
-        )
-
-
-def __write_excel_sheet(excel_path, sheet_name, data_frame: dict):
-
-    data_frame = __convert_result_data_frames(data_frame)
+    output = BytesIO()
 
     if not os.path.isfile(str(excel_path)):
-
         wb = Workbook()
 
     else:
-
         wb = load_workbook(excel_path)
+
+    if "Sheet" in wb.sheetnames:
+        std = wb["Sheet"]
+        wb.remove(std)
+
+    for idx, key in enumerate(result_df.keys()):
+
+        __write_excel_sheet(
+            wb,
+            sheet_name=(key + " - " + today_str + " - " + now_str),
+            data_frame=result_df[key]
+        )
+
+        if not return_bytes:
+            wb.save(excel_path)
+
+    if return_bytes:
+        wb.save(output)
+        output.seek(0)
+        return output.getvalue()
+
+
+def __write_excel_sheet(wb: Workbook, sheet_name, data_frame: dict):
+
+    data_frame = __convert_result_data_frames(data_frame)
 
     if not sheet_name in wb.sheetnames:
         wb.create_sheet(sheet_name)
@@ -204,8 +229,6 @@ def __write_excel_sheet(excel_path, sheet_name, data_frame: dict):
                 row += 1
 
             col += 1
-
-    wb.save(excel_path)
 
 
 def __convert_result_data_frames(data_frame: dict) -> dict:
