@@ -1,27 +1,68 @@
 from EEETools.Tools.API.Tools.main_tools import get_result_data_frames, update_exergy_values, get_debug_data_frames
 from EEETools.Tools.API.Tools.sankey_diagram_generation import SankeyDiagramGenerator, SankeyDiagramOptions
 from EEETools.Tools.API.ExcelAPI.modules_importer import export_solution_to_excel
+from flask import json, jsonify, Flask, request, send_from_directory, redirect
 from EEETools.MainModules.main_module import CalculationOptions
 from EEETools.MainModules.main_module import ArrayHandler
-from flask import json, jsonify, Flask, request
 from datetime import datetime
 from flask_cors import CORS
+import multiprocessing
 import typing as t
 import warnings
 import os
 import io
 
-CURRENT_DIR = os.path.join(os.path.dirname(__file__), "debug_dir")
+
+CURR_DIR = os.path.join(os.path.dirname(__file__))
+DEBUG_DIR = os.path.join(CURR_DIR, "debug_dir")
+BUILD_DIR = os.path.join(CURR_DIR, "build")
 debug=False
 
+def run_drag_drop_server():
+
+    backend_proc = multiprocessing.Process(target=run_json_backend)
+    frontend_proc = multiprocessing.Process(target=run_react_frontend)
+
+    backend_proc.start()
+    frontend_proc.start()
+
+    backend_proc.join()
+    frontend_proc.join()
+
+def run_react_frontend(host="localhost", port=8002):
+    app = get_react_frontend_app()
+    app.run(host=host, port=port, debug=debug)
+
+def get_react_frontend_app():
+    app = Flask(__name__, static_folder=BUILD_DIR)
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve(path):
+        if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        else:
+            return send_from_directory(app.static_folder, 'index.html')
+
+    @app.route('/api/<path:path>', methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    def redirect_api(path):
+        new_url = f"http://localhost:8081/api/{path}"
+        # Mantiene il metodo originale (307 Temporary Redirect)
+        return redirect(new_url, code=307)
+
+    return app
+
 def run_json_backend(host="localhost", port=8081):
+    app = get_backend_app()
+    app.run(host=host, port=port, debug=debug)
+
+def get_backend_app():
     app = Flask(__name__)
     CORS(app)
     app.add_url_rule("/api/component-types", view_func=prepare_json_list, methods=["GET"])
-    app.add_url_rule("/analyze", view_func=analyze_post_view, methods=["POST", "GET"])
-    app.add_url_rule("/sankey", view_func=analyze_post_view, methods=["POST", "GET"])
-    app.add_url_rule("/sankey_cost", view_func=analyze_post_view, methods=["POST", "GET"])
-    app.run(host=host, port=port, debug=debug)
+    app.add_url_rule("/api/analyze", view_func=analyze_post_view, methods=["POST", "GET"])
+    app.add_url_rule("/api/sankey", view_func=analyze_post_view, methods=["POST", "GET"])
+    app.add_url_rule("/api/sankey_cost", view_func=analyze_post_view, methods=["POST", "GET"])
+    return app
 
 def analyze_post_view():
 
@@ -35,7 +76,7 @@ def analyze_post_view():
 
     # Salva il file JSON se l'app è in modalità debug
     if debug:
-        save_path = os.path.join(CURRENT_DIR, f"debug_{file.filename}")
+        save_path = os.path.join(DEBUG_DIR, f"debug_{file.filename}")
         with open(save_path, "w", encoding="utf-8") as f:
             f.write(json_content)
 
@@ -179,6 +220,7 @@ def __plot_sankey( json_in: t.IO[t.AnyStr], plot_cost = False):
 
     return SankeyDiagramGenerator(array_handler, options).show(export_html=True)
 
+
 if __name__ == '__main__':
 
-    run_json_backend(host="localhost", port=8081)
+    run_drag_drop_server()

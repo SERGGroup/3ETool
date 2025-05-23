@@ -26,6 +26,8 @@ if not called_from_setup:
 
     )
 
+    from EEETools.Tools.API.JSONAPI.modules_importer import run_drag_drop_server
+
 else:
 
     try:

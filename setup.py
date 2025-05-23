@@ -23,7 +23,9 @@ def __get_install_requires():
         'numpy',
         'requests',
         'plotly',
-        'scipy'
+        'scipy',
+        'flask',
+        'flask_cors',
 
     ]
 
