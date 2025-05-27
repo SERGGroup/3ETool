@@ -59,7 +59,7 @@
         "type": "Combustion Chamber",
         "cost": 100000
       },
-      "width": 181,
+      "width": 185,
       "height": 95,
       "selected": false,
       "positionAbsolute": {
@@ -300,9 +300,17 @@
     }
   ],
   "options": {
-    "calculate_on_pf_diagram": true,
-    "loss_cost_is_zero": true,
-    "valve_is_dissipative": true,
-    "condenser_is_dissipative": true
+    "calculation_option": {
+      "calculate_on_pf_diagram": true,
+      "loss_cost_is_zero": true,
+      "condenser_is_dissipative": true,
+      "valve_is_dissipative": true
+    },
+    "economic_model": "standard",
+    "economic_model_params": {
+      "lifetime": 20,
+      "discount_rate": 4,
+      "om_perc": 1
+    }
   }
 }

@@ -1,10 +1,13 @@
 from EEETools.Tools.API.Tools.main_tools import get_result_data_frames, update_exergy_values, get_debug_data_frames
 from EEETools.Tools.API.Tools.sankey_diagram_generation import SankeyDiagramGenerator, SankeyDiagramOptions
+from EEETools.Tools.EconomicModel.PECHandlerModels.ModulesHandlers import EconomicModulesHandler
 from EEETools.Tools.API.ExcelAPI.modules_importer import export_solution_to_excel
-from flask import json, jsonify, Flask, request, send_from_directory, redirect
+from flask import json, jsonify, Flask, request, send_from_directory, redirect, abort
 from EEETools.MainModules.main_module import CalculationOptions
 from EEETools.MainModules.main_module import ArrayHandler
+from EEETools.costants import RES_DIR
 from datetime import datetime
+from urllib.parse import quote
 from flask_cors import CORS
 import multiprocessing
 import typing as t
@@ -12,11 +15,14 @@ import warnings
 import os
 import io
 
-
 CURR_DIR = os.path.join(os.path.dirname(__file__))
+DOC_DIR = os.path.join(CURR_DIR, "resources")
 DEBUG_DIR = os.path.join(CURR_DIR, "debug_dir")
 BUILD_DIR = os.path.join(CURR_DIR, "build")
+EXAMPLE_DIR = os.path.join(CURR_DIR, "example_topologies")
+
 debug=False
+economy_modules_handler = EconomicModulesHandler()
 
 def run_drag_drop_server():
 
@@ -43,10 +49,16 @@ def get_react_frontend_app():
         else:
             return send_from_directory(app.static_folder, 'index.html')
 
+    @app.route('/api/download', methods=["GET"])
+    def frontend_download_file():
+        return download_file()
+
     @app.route('/api/<path:path>', methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     def redirect_api(path):
+        query_string = request.query_string.decode()
         new_url = f"http://localhost:8081/api/{path}"
-        # Mantiene il metodo originale (307 Temporary Redirect)
+        if query_string:
+            new_url += f"?{query_string}"
         return redirect(new_url, code=307)
 
     return app
@@ -62,6 +74,11 @@ def get_backend_app():
     app.add_url_rule("/api/analyze", view_func=analyze_post_view, methods=["POST", "GET"])
     app.add_url_rule("/api/sankey", view_func=analyze_post_view, methods=["POST", "GET"])
     app.add_url_rule("/api/sankey_cost", view_func=analyze_post_view, methods=["POST", "GET"])
+    app.add_url_rule("/api/economic_models", view_func=return_economic_models_list, methods=["POST", "GET"])
+    app.add_url_rule("/api/download", view_func=download_file, methods=["GET"])
+    app.add_url_rule("/api/example_topology/<filename>", view_func=handle_example, methods=["GET"])
+    app.add_url_rule("/api/example_topology/", view_func=handle_example, methods=["GET"])
+
     return app
 
 def analyze_post_view():
@@ -115,6 +132,30 @@ def analyze_post_view():
             }
         )
 
+def download_file():
+    filename = request.args.get('file')
+    if not filename:
+        abort(400, description="File parameter is required")
+    file_path = os.path.join(DOC_DIR, filename)
+    if not os.path.isfile(file_path):
+        abort(404, description="File not found")
+    return send_from_directory(DOC_DIR, filename, as_attachment=True)
+
+def handle_example(filename=None):
+    if filename is None:
+        # Restituisce la lista dei file nella cartella
+        files = [f for f in os.listdir(EXAMPLE_DIR) if os.path.isfile(os.path.join(EXAMPLE_DIR, f))]
+        return jsonify(files)
+    else:
+        file_path = os.path.join(EXAMPLE_DIR, filename)
+        if not os.path.isfile(file_path):
+            abort(404, description="File not found")
+        return send_from_directory(EXAMPLE_DIR, filename, as_attachment=True)
+
+def return_economic_models_list():
+
+    return jsonify(economy_modules_handler.get_json_inputs_dict())
+
 def prepare_json_list():
     array_handler = ArrayHandler()
     return jsonify(array_handler.get_json_component_description())
@@ -136,8 +177,8 @@ def import_json_input(json_in: t.IO[t.AnyStr]) -> ArrayHandler:
         warnings.simplefilter("ignore")
 
         array_handler = ArrayHandler()
-        calculation_option = CalculationOptions()
-        array_handler.options = calculation_option
+        array_handler.options = __get_options_from_topology(topology)
+        economic_model = economy_modules_handler.init_subclass(topology)
 
         # import connections
         json_connection_data = topology.get('edges', [])
@@ -167,7 +208,7 @@ def import_json_input(json_in: t.IO[t.AnyStr]) -> ArrayHandler:
                 for conn in out_conn.get('fuel input', []):
                     new_conn = array_handler.find_connection_by_index(float(conn["label"]))
                     if new_conn:
-                        new_conn.rel_cost = block_cost
+                        new_conn.rel_cost = block_cost / 3600 # from €/kWh to €/kJ
 
             elif block_type == "Useful Effect":
                 for conn in in_conn.get('useful effect', []):
@@ -179,10 +220,29 @@ def import_json_input(json_in: t.IO[t.AnyStr]) -> ArrayHandler:
                 new_block = array_handler.append_block(block_type)
                 new_block.index = block_index
                 new_block.name = block_data["label"]
-                new_block.comp_cost = block_cost
+                new_block.comp_cost = economic_model.get_cost(block_cost)
                 new_block.append_json_connection(in_conn, out_conn)
 
         return array_handler
+
+def __get_options_from_topology(topology) -> CalculationOptions:
+
+    calculation_option = CalculationOptions()
+    options = topology.get('options', None)
+
+    if options is not None:
+        calculation_type = options.get('analysis_type', 'exergo-economic')
+        topology_options = options.get('calculation_options', None)
+
+    calculation_option.is_exergo_economic_analysis = (calculation_type == 'exergo-economic')
+
+    if topology_options is not None:
+        calculation_option.calculate_on_pf_diagram = topology_options.get('calculate_on_pf_diagram', True)
+        calculation_option.valve_is_dissipative = topology_options.get('valve_is_dissipative', True)
+        calculation_option.condenser_is_dissipative = topology_options.get('condenser_is_dissipative', True)
+        calculation_option.loss_cost_is_zero = topology_options.get('loss_cost_is_zero', True)
+
+    return calculation_option
 
 def __identify_json_connections(block_index: int, input_list: dict):
 

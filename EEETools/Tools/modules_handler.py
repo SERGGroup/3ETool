@@ -10,8 +10,10 @@ class ModulesHandler(Handler):
         super().__init__()
 
         self.current_folder = os.path.join(costants.ROOT_DIR, "EEETools", "Tools")
-        self.data_folder = os.path.join(costants.ROOT_DIR, "3ETool_res", "EES Code Data")
+        self.subclasses_folder = os.path.join(costants.ROOT_DIR, "EEETools", "BlockSubClasses")
         self.subclass_directory_path = "EEETools.BlockSubClasses"
+
+        self.ignore_subclasses = ["Drawer"]
 
         self.name_list = self.list_modules()
 
@@ -51,22 +53,14 @@ class ModulesHandler(Handler):
 
             return -1
 
-    def check_data_folder(self):
+    def check_subclasses_folder(self):
 
-        if not os.path.isdir(self.data_folder):
-
-            try:
-
-                os.mkdir(self.data_folder)
-
-            except:
-
-                return
+        super().check_subclasses_folder()
 
         for name in self.name_list:
 
             folder_name = self.get_module_name(name)
-            name_folder_path = os.path.join(self.data_folder, folder_name)
+            name_folder_path = os.path.join(self.subclasses_folder, folder_name)
 
             if not os.path.isdir(name_folder_path):
 
@@ -104,7 +98,14 @@ class ModulesHandler(Handler):
     def get_json_component_description(self) -> list:
 
         return_list = []
-        for module_name in self.name_list:
+        for module_name in self.raw_name_list:
             return_list.append(self.import_correct_sub_class(module_name).get_json_component_description())
 
         return return_list
+
+
+if __name__ == "__main__":
+
+    handler = ModulesHandler()
+    input_list = handler.get_json_component_description()
+    print(input_list)

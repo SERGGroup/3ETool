@@ -143,7 +143,7 @@ def __write_excel_file(excel_path, result_df, return_bytes):
 
     output = BytesIO()
 
-    if not os.path.isfile(str(excel_path)):
+    if (not os.path.isfile(str(excel_path))) or return_bytes:
         wb = Workbook()
 
     else:

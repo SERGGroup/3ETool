@@ -90,6 +90,7 @@ setup(
     },
 
     packages=__get_packages(),
+    include_package_data=True,
 
     install_requires=__get_install_requires(),
 

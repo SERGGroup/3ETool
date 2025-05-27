@@ -1,0 +1,542 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "custom",
+      "position": {
+        "x": 162.98918704556075,
+        "y": 31.85046742385032
+      },
+      "data": {
+        "label": "Well",
+        "type": "Combustion Chamber",
+        "ymirrored": true,
+        "rotation": 0
+      },
+      "width": 185,
+      "height": 95,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 162.98918704556075,
+        "y": 31.85046742385032
+      }
+    },
+    {
+      "id": "2",
+      "type": "custom",
+      "position": {
+        "x": 175.35287889985898,
+        "y": 227.3202266110889
+      },
+      "data": {
+        "label": "Geothermal Heat",
+        "type": "System Input",
+        "rotation": 1,
+        "ymirrored": true
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 175.35287889985898,
+        "y": 227.3202266110889
+      },
+      "dragging": false
+    },
+    {
+      "id": "3",
+      "type": "custom",
+      "position": {
+        "x": 173.86659213559432,
+        "y": -172.56846737727687
+      },
+      "data": {
+        "label": "EVA",
+        "type": "Heat Exchanger",
+        "cost": 4816000,
+        "xmirrored": true,
+        "ymirrored": false,
+        "rotation": 3
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 173.86659213559432,
+        "y": -172.56846737727687
+      },
+      "dragging": false
+    },
+    {
+      "id": "4",
+      "type": "custom",
+      "position": {
+        "x": 485.28023034408307,
+        "y": -63.24421611029091
+      },
+      "data": {
+        "label": "RHE",
+        "type": "Heat Exchanger",
+        "cost": 900089,
+        "xmirrored": true
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 485.28023034408307,
+        "y": -63.24421611029091
+      },
+      "dragging": false
+    },
+    {
+      "id": "5",
+      "type": "custom",
+      "position": {
+        "x": 786.1882237639655,
+        "y": -64.78021078886972
+      },
+      "data": {
+        "label": "PMP",
+        "type": "Pump",
+        "cost": 492191,
+        "rotation": 1
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 786.1882237639655,
+        "y": -64.78021078886972
+      },
+      "dragging": false
+    },
+    {
+      "id": "6",
+      "type": "custom",
+      "position": {
+        "x": 332.70715347256544,
+        "y": -309.5119099550084
+      },
+      "data": {
+        "label": "TURB",
+        "type": "Expander",
+        "rotation": 3,
+        "cost": 2762000
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 332.70715347256544,
+        "y": -309.5119099550084
+      },
+      "dragging": false
+    },
+    {
+      "id": "7",
+      "type": "custom",
+      "position": {
+        "x": 692.3753696174839,
+        "y": 80.68172286557518
+      },
+      "data": {
+        "label": "COND",
+        "type": "Condenser",
+        "cost": 1835000
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 692.3753696174839,
+        "y": 80.68172286557518
+      },
+      "dragging": false
+    },
+    {
+      "id": "8",
+      "type": "custom",
+      "position": {
+        "x": 329.02479433013946,
+        "y": -467.1834893617094
+      },
+      "data": {
+        "label": "GEN",
+        "type": "Alternator",
+        "rotation": 3
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 329.02479433013946,
+        "y": -467.1834893617094
+      },
+      "dragging": false
+    },
+    {
+      "id": "10",
+      "type": "custom",
+      "position": {
+        "x": -249.28775199713857,
+        "y": -318.031690172856
+      },
+      "data": {
+        "label": "COMP 1",
+        "type": "Compressor",
+        "rotation": 3,
+        "xmirrored": true,
+        "ymirrored": true,
+        "cost": 510468
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -249.28775199713857,
+        "y": -318.031690172856
+      },
+      "dragging": false
+    },
+    {
+      "id": "11",
+      "type": "custom",
+      "position": {
+        "x": -369.40138384002535,
+        "y": -24.150593770014524
+      },
+      "data": {
+        "label": "COMP 2",
+        "type": "Compressor",
+        "rotation": 1,
+        "xmirrored": true,
+        "cost": 471000
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -369.40138384002535,
+        "y": -24.150593770014524
+      },
+      "dragging": false
+    },
+    {
+      "id": "12",
+      "type": "custom",
+      "position": {
+        "x": -547.8496318819058,
+        "y": -157.48059082542008
+      },
+      "data": {
+        "label": "IC 1",
+        "type": "Cooler",
+        "rotation": 3,
+        "ymirrored": true,
+        "cost": 116035
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -547.8496318819058,
+        "y": -157.48059082542008
+      },
+      "dragging": false
+    },
+    {
+      "id": "13",
+      "type": "custom",
+      "position": {
+        "x": -110.12301626330634,
+        "y": -19.429169238603663
+      },
+      "data": {
+        "label": "IC 2",
+        "type": "Cooler",
+        "cost": 132332
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -110.12301626330634,
+        "y": -19.429169238603663
+      },
+      "dragging": false
+    },
+    {
+      "id": "14",
+      "type": "custom",
+      "position": {
+        "x": 8.823607964285031,
+        "y": -315.456536063763
+      },
+      "data": {
+        "label": "PC",
+        "type": "Cooler",
+        "xmirrored": true,
+        "cost": 106286
+      },
+      "width": 162,
+      "height": 95,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 8.823607964285031,
+        "y": -315.456536063763
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "7",
+      "sourceHandle": "output",
+      "target": "5",
+      "targetHandle": "input",
+      "label": "1",
+      "data": {
+        "exergy": 700.3,
+        "name_txt": "Condenser Outlet"
+      },
+      "id": "1",
+      "selected": false
+    },
+    {
+      "source": "5",
+      "sourceHandle": "output",
+      "target": "4",
+      "targetHandle": "product input",
+      "label": 2,
+      "data": {
+        "exergy": 1450,
+        "name_txt": "Pump Outlet"
+      },
+      "id": "2"
+    },
+    {
+      "source": "4",
+      "sourceHandle": "product output",
+      "target": "3",
+      "targetHandle": "product input",
+      "label": 3,
+      "data": {
+        "exergy": 2659,
+        "name_txt": "RH Outlet - Cold Side"
+      },
+      "id": "3"
+    },
+    {
+      "source": "3",
+      "sourceHandle": "product output",
+      "target": "6",
+      "targetHandle": "input",
+      "label": 6,
+      "data": {
+        "exergy": 25361,
+        "name_txt": "EVA Outlet"
+      },
+      "id": "4"
+    },
+    {
+      "source": "6",
+      "sourceHandle": "output",
+      "target": "4",
+      "targetHandle": "fuel input",
+      "label": 7,
+      "data": {
+        "exergy": 8757,
+        "name_txt": "Turbine Outlet"
+      },
+      "id": "5"
+    },
+    {
+      "source": "4",
+      "sourceHandle": "fuel output",
+      "target": "7",
+      "targetHandle": "input",
+      "label": 8,
+      "data": {
+        "exergy": 7230,
+        "name_txt": "RH Outlet - Hot Side"
+      },
+      "id": "6"
+    },
+    {
+      "source": "1",
+      "sourceHandle": "output",
+      "target": "3",
+      "targetHandle": "fuel input",
+      "label": 30,
+      "data": {
+        "exergy": 29050,
+        "name_txt": "Brine In"
+      },
+      "id": "7",
+      "selected": false
+    },
+    {
+      "source": "3",
+      "sourceHandle": "fuel output",
+      "target": "1",
+      "targetHandle": "input",
+      "label": 31,
+      "data": {
+        "exergy": 837.6,
+        "name_txt": "Brine Out"
+      },
+      "id": "8"
+    },
+    {
+      "source": "3",
+      "sourceHandle": "product output",
+      "target": "14",
+      "targetHandle": "input",
+      "label": 40,
+      "data": {
+        "exergy": 336.9,
+        "name_txt": "NCGs Suction"
+      },
+      "id": "9",
+      "selected": false
+    },
+    {
+      "source": "14",
+      "sourceHandle": "output",
+      "target": "10",
+      "targetHandle": "input",
+      "label": 41,
+      "data": {
+        "exergy": 324.9,
+        "name_txt": "PC Outlet"
+      },
+      "id": "10"
+    },
+    {
+      "source": "10",
+      "sourceHandle": "output",
+      "target": "12",
+      "targetHandle": "input",
+      "label": 42,
+      "data": {
+        "exergy": 479.7,
+        "name_txt": "Comp-I Outlet"
+      },
+      "id": "11"
+    },
+    {
+      "source": "12",
+      "sourceHandle": "output",
+      "target": "11",
+      "targetHandle": "input",
+      "label": 43,
+      "data": {
+        "exergy": 437.9,
+        "name_txt": "IC Outlet"
+      },
+      "id": "12"
+    },
+    {
+      "source": "11",
+      "sourceHandle": "output",
+      "target": "13",
+      "targetHandle": "input",
+      "label": 44,
+      "data": {
+        "exergy": 579.4,
+        "name_txt": "Comp-II Outlet"
+      },
+      "id": "13"
+    },
+    {
+      "source": "13",
+      "sourceHandle": "output",
+      "target": "1",
+      "targetHandle": "input",
+      "label": 45,
+      "data": {
+        "exergy": 531.4,
+        "name_txt": "NCGs Outlet"
+      },
+      "id": "14",
+      "selected": false
+    },
+    {
+      "source": "6",
+      "sourceHandle": "product",
+      "target": "8",
+      "targetHandle": "input",
+      "label": "50",
+      "data": {
+        "exergy": 12707.14,
+        "name_txt": "Turbine Power"
+      },
+      "id": "15",
+      "selected": false
+    },
+    {
+      "source": "8",
+      "sourceHandle": "output",
+      "target": "5",
+      "targetHandle": "fuel",
+      "label": "51",
+      "data": {
+        "exergy": 878.880000000002,
+        "name_txt": "Pump Power"
+      },
+      "id": "16",
+      "selected": false
+    },
+    {
+      "source": "8",
+      "sourceHandle": "output",
+      "target": "10",
+      "targetHandle": "fuel",
+      "label": "52",
+      "data": {
+        "exergy": 178.522263,
+        "name_txt": "Comp-I Power"
+      },
+      "id": "17",
+      "selected": false
+    },
+    {
+      "source": "8",
+      "sourceHandle": "output",
+      "target": "11",
+      "targetHandle": "fuel",
+      "label": "53",
+      "data": {
+        "exergy": 163.261944,
+        "name_txt": "Comp-II Power"
+      },
+      "id": "18",
+      "selected": false
+    },
+    {
+      "source": "2",
+      "sourceHandle": "fuel input",
+      "target": "1",
+      "targetHandle": "fuel",
+      "label": 60,
+      "data": {
+        "exergy": 36602.70320424353,
+        "name_txt": "GEO exergy flow"
+      },
+      "id": "19",
+      "selected": false
+    }
+  ],
+  "options": {
+    "calculation_option": {
+      "calculate_on_pf_diagram": true,
+      "loss_cost_is_zero": true,
+      "valve_is_dissipative": true,
+      "condenser_is_dissipative": true
+    },
+    "economic_model": "manfrida_et_al",
+    "economic_model_params": {}
+  }
+}

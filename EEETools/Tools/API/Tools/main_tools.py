@@ -65,14 +65,16 @@ def get_debug_data_frames(array_handler: ArrayHandler) -> dict:
 
 def __get_stream_data_frame(array_handler: ArrayHandler):
 
+    currency = array_handler.options.currency
+
     stream_data = {
 
         "Stream": list(),
         "Name": list(),
         "Exergy Value [kW]": list(),
-        "Specific Cost [€/kJ]": list(),
-        "Specific Cost [€/kWh]": list(),
-        "Total Cost [€/s]": list()
+        f"Specific Cost [{currency}/kJ]": list(),
+        f"Specific Cost [{currency}/kWh]": list(),
+        f"Total Cost [{currency}/s]": list()
 
     }
 
@@ -83,19 +85,21 @@ def __get_stream_data_frame(array_handler: ArrayHandler):
             stream_data["Stream"].append(conn.index)
             stream_data["Name"].append(conn.name)
             stream_data["Exergy Value [kW]"].append(conn.exergy_value)
-            stream_data["Specific Cost [€/kJ]"].append(conn.rel_cost)
-            stream_data["Specific Cost [€/kWh]"].append(conn.rel_cost * 3600)
-            stream_data["Total Cost [€/s]"].append(conn.rel_cost * conn.exergy_value)
+            stream_data[f"Specific Cost [{currency}/kJ]"].append(conn.rel_cost)
+            stream_data[f"Specific Cost [{currency}/kWh]"].append(conn.rel_cost * 3600)
+            stream_data[f"Total Cost [{currency}/s]"].append(conn.rel_cost * conn.exergy_value)
 
     return stream_data
 
 
 def __get_comp_data_frame(array_handler: ArrayHandler):
 
+    currency = array_handler.options.currency
+
     comp_data = {
 
         "Name": list(),
-        "Comp Cost [€/s]": list(),
+        f"Comp Cost [{currency}/s]": list(),
 
         "Exergy_fuel [kW]": list(),
         "Exergy_product [kW]": list(),
@@ -103,12 +107,12 @@ def __get_comp_data_frame(array_handler: ArrayHandler):
         "Exergy_loss [kW]": list(),
         "Exergy_dl [kW]": list(),
 
-        "Fuel Cost [€/kWh]": list(),
-        "Fuel Cost [€/s]": list(),
-        "Product Cost [€/kWh]": list(),
-        "Product Cost [€/s]": list(),
-        "Destruction Cost [€/kWh]": list(),
-        "Destruction Cost [€/s]": list(),
+        f"Fuel Cost [{currency}/kWh]": list(),
+        f"Fuel Cost [{currency}/s]": list(),
+        f"Product Cost [{currency}/kWh]": list(),
+        f"Product Cost [{currency}/s]": list(),
+        f"Destruction Cost [{currency}/kWh]": list(),
+        f"Destruction Cost [{currency}/s]": list(),
 
         "eta": list(),
         "r": list(),
@@ -123,7 +127,7 @@ def __get_comp_data_frame(array_handler: ArrayHandler):
         if not block.is_support_block:
 
             comp_data["Name"].append(block.name)
-            comp_data["Comp Cost [€/s]"].append(block.comp_cost)
+            comp_data[f"Comp Cost [{currency}/s]"].append(block.comp_cost)
 
             comp_data["Exergy_fuel [kW]"].append(block.exergy_analysis["fuel"])
             comp_data["Exergy_product [kW]"].append(block.exergy_analysis["product"])
@@ -133,13 +137,13 @@ def __get_comp_data_frame(array_handler: ArrayHandler):
 
             try:
 
-                comp_data["Fuel Cost [€/kWh]"].append(block.coefficients["c_fuel"] * 3600)
-                comp_data["Product Cost [€/kWh]"].append(block.output_cost * 3600)
-                comp_data["Destruction Cost [€/kWh]"].append(block.coefficients["c_dest"] * 3600)
+                comp_data[f"Fuel Cost [{currency}/kWh]"].append(block.coefficients["c_fuel"] * 3600)
+                comp_data[f"Product Cost [{currency}/kWh]"].append(block.output_cost * 3600)
+                comp_data[f"Destruction Cost [{currency}/kWh]"].append(block.coefficients["c_dest"] * 3600)
 
-                comp_data["Fuel Cost [€/s]"].append(block.coefficients["c_fuel"] * block.exergy_analysis["fuel"])
-                comp_data["Product Cost [€/s]"].append(block.output_cost * block.exergy_analysis["product"])
-                comp_data["Destruction Cost [€/s]"].append(
+                comp_data[f"Fuel Cost [{currency}/s]"].append(block.coefficients["c_fuel"] * block.exergy_analysis["fuel"])
+                comp_data[f"Product Cost [{currency}/s]"].append(block.output_cost * block.exergy_analysis["product"])
+                comp_data[f"Destruction Cost [{currency}/s]"].append(
 
                     block.coefficients["c_dest"] * (
                             block.exergy_analysis["distruction"] + block.exergy_analysis["losses"])
@@ -153,13 +157,13 @@ def __get_comp_data_frame(array_handler: ArrayHandler):
 
             except:
 
-                comp_data["Fuel Cost [€/kWh]"].append(0)
-                comp_data["Product Cost [€/kWh]"].append(0)
-                comp_data["Destruction Cost [€/kWh]"].append(0)
+                comp_data[f"Fuel Cost [{currency}/kWh]"].append(0)
+                comp_data[f"Product Cost [{currency}/kWh]"].append(0)
+                comp_data[f"Destruction Cost [{currency}/kWh]"].append(0)
 
-                comp_data["Fuel Cost [€/s]"].append(0)
-                comp_data["Product Cost [€/s]"].append(0)
-                comp_data["Destruction Cost [€/s]"].append(0)
+                comp_data[f"Fuel Cost [{currency}/s]"].append(0)
+                comp_data[f"Product Cost [{currency}/s]"].append(0)
+                comp_data[f"Destruction Cost [{currency}/s]"].append(0)
 
                 comp_data["eta"].append(0)
                 comp_data["r"].append(0)
@@ -193,14 +197,16 @@ def __get_cost_dec_data_frame(array_handler: ArrayHandler):
 
 def __get_useful_data_frame(array_handler: ArrayHandler):
 
+    currency = array_handler.options.currency
+
     useful_data = {
 
         "Stream": list(),
         "Name": list(),
         "Exergy Value [kW]": list(),
-        "Specific Cost [€/kJ]": list(),
-        "Specific Cost [€/kWh]": list(),
-        "Total Cost [€/s]": list()
+        f"Specific Cost [{currency}/kJ]": list(),
+        f"Specific Cost [{currency}/kWh]": list(),
+        f"Total Cost [{currency}/s]": list()
 
     }
 
@@ -208,9 +214,9 @@ def __get_useful_data_frame(array_handler: ArrayHandler):
         useful_data["Stream"].append(conn.index)
         useful_data["Name"].append(conn.name)
         useful_data["Exergy Value [kW]"].append(conn.exergy_value)
-        useful_data["Specific Cost [€/kJ]"].append(conn.rel_cost)
-        useful_data["Specific Cost [€/kWh]"].append(conn.rel_cost * 3600)
-        useful_data["Total Cost [€/s]"].append(conn.rel_cost * conn.exergy_value)
+        useful_data[f"Specific Cost [{currency}/kJ]"].append(conn.rel_cost)
+        useful_data[f"Specific Cost [{currency}/kWh]"].append(conn.rel_cost * 3600)
+        useful_data[f"Total Cost [{currency}/s]"].append(conn.rel_cost * conn.exergy_value)
 
     return useful_data
 
@@ -245,6 +251,8 @@ def __get_main_matrix_data_frame(array_handler: ArrayHandler):
 
 def __get_block_list_data_frame(array_handler: ArrayHandler):
 
+    currency = array_handler.options.currency
+
     if array_handler.options.calculate_on_pf_diagram:
 
         array_handler = array_handler.pf_diagram
@@ -262,7 +270,7 @@ def __get_block_list_data_frame(array_handler: ArrayHandler):
 
         "Block ID": list(),
         "Name": list(),
-        "Cost [€/s]": list()
+        f"Cost [{currency}/s]": list()
 
     }
 
@@ -274,7 +282,7 @@ def __get_block_list_data_frame(array_handler: ArrayHandler):
 
         useful_data["Block ID"].append(block.index)
         useful_data["Name"].append(block.name)
-        useful_data["Cost [€/s]"].append(block.comp_cost)
+        useful_data[f"Cost [{currency}/s]"].append(block.comp_cost)
 
         i = 1
         for cont_block in block.contained_blocks:

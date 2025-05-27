@@ -1,5 +1,7 @@
-import importlib, inspect
 from EEETools import costants
+from typing import Union
+import importlib, inspect
+import os
 
 
 class Handler:
@@ -11,7 +13,7 @@ class Handler:
 
         !!!ATTENTION!!! In creating the sub-classes the user must care to overload:
 
-            - "self.data_folder" variable with the path to the folder containing the subclasses (e.g.
+            - "self.subclasses_folder" variable with the path to the folder containing the subclasses (e.g.
             "EEETools\BlockSubClasses")
 
             - "self.subclass_directory_path" variable variable with the path to the folder containing the subclasses
@@ -20,10 +22,15 @@ class Handler:
     def __init__(self):
 
         self.current_folder = costants.ROOT_DIR
-        self.data_folder = self.current_folder
+        self.subclasses_folder = self.current_folder
 
         self.__subclass_directory_path = ""
         self.__subclass_folder_path = ""
+        self.ignore_subclasses = []
+
+        self.classes_list = list()
+        self.raw_name_list = list()
+        self.name_list = list()
 
     @property
     def subclass_directory_path(self):
@@ -45,9 +52,14 @@ class Handler:
         subClasses "Expander" must be in module "expander". The static function called "__get_subclass_module_names"
         generates from "subclass_name" the correct "__module_name" and "__subclass_name" """
 
+
         __tmp_result = self.__get_subclass_module_names(subclass_name)
         __module_name = __tmp_result[0]
         __subclass_name = __tmp_result[1]
+
+        for i, name in enumerate(self.raw_name_list):
+            if name == __subclass_name:
+                return self.classes_list[i]
 
         __importString = self.__subclass_folder_path + __module_name
         __blockModule = importlib.import_module(__importString)
@@ -57,12 +69,29 @@ class Handler:
 
         return self.__get_subclass_module_names(std_name)[0]
 
-    def check_data_folder(self):
-        pass
+    def check_subclasses_folder(self):
+
+        if not os.path.isdir(self.subclasses_folder):
+
+            try:
+
+                os.mkdir(self.subclasses_folder)
+
+            except:
+
+                return
 
     def list_modules(self) -> list:
 
-        raw_names = self.__get_raw_names()
+        raw_names, raw_classes = self.__get_raw_names(append_classes_also=True)
+
+        self.classes_list = raw_classes
+        self.raw_name_list = raw_names
+        self.name_list = self.convert_raw_names(raw_names, raw_classes)
+
+        return self.name_list
+
+    def convert_raw_names(self, raw_names:list, class_list:list) -> list:
 
         for i in range(len(raw_names)):
 
@@ -84,17 +113,29 @@ class Handler:
 
         return raw_names
 
-    def __get_raw_names(self) -> list:
+    def __get_raw_names(self, append_classes_also=False) -> Union[list, tuple]:
 
-        member_list = list()
-        __members = inspect.getmembers(importlib.import_module(self.__subclass_directory_path))
+        names_list = list()
+        classes_list = list()
 
-        for __member in __members:
+        for filename in os.listdir(self.subclasses_folder):
+            if filename.endswith(".py") and not filename.startswith("__"):
 
-            if "__" not in __member[0] and __member[0].islower():
-                member_list.append(__member[0])
+                __module_name = self.subclass_directory_path + f".{filename[:-3]}"
+                __module = importlib.import_module(__module_name)
+                __members = inspect.getmembers(__module, inspect.isclass)
 
-        return member_list
+                for __member in __members:
+                    if "__" not in __member[0]:
+                        cls = __member[1]
+                        if (not inspect.isabstract(cls)) and (not (__member[0] in self.ignore_subclasses or __member[0] in names_list)):
+                            names_list.append(__member[0])
+                            classes_list.append(cls)
+
+        if not append_classes_also:
+            return names_list
+        else:
+            return names_list, classes_list
 
     @staticmethod
     def get_std_name(input_name: str):

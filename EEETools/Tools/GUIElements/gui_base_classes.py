@@ -143,9 +143,9 @@ class AbstractFilesManager(QDialog):
         self.setWindowTitle(self.title)
         self.setGeometry(300, 300, 650, 300)
 
-        self.modules_handler.check_data_folder()
-        self.selected_element_path = self.modules_handler.data_folder
-        self.__init_file_tree(self.modules_handler.data_folder)
+        self.modules_handler.check_subclasses_folder()
+        self.selected_element_path = self.modules_handler.subclasses_folder
+        self.__init_file_tree(self.modules_handler.subclasses_folder)
 
         super(AbstractFilesManager, self).show()
 
