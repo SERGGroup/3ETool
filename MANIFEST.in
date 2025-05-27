@@ -1,0 +1,3 @@
+recursive-include EEETools/Tools/API/JSONAPI/build *
+recursive-include EEETools/Tools/API/JSONAPI/example_topologies *
+recursive-include EEETools/Tools/API/JSONAPI/resources *

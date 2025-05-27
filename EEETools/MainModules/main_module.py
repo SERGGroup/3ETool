@@ -321,7 +321,7 @@ class Block(ABC):
 
             r = (c_prod - c_fuel) / c_fuel
 
-        if not (self.comp_cost + c_dest * abs(dest_loss_exergy)) == 0:
+        if not (self.comp_cost + c_dest * abs(dest_exergy) == 0):
 
             f = self.comp_cost / (self.comp_cost + c_dest * abs(dest_exergy))
 
@@ -2066,6 +2066,8 @@ class CalculationOptions:
     EXERGY_PRODUCT = 1
     RELATIVE_COST = 2
 
+    is_exergo_economic_analysis = True
+
     def __init__(self):
 
         self.calculate_on_pf_diagram = True
@@ -2102,3 +2104,11 @@ class CalculationOptions:
         self.condenser_is_dissipative = xml_input.get("condenser_is_dissipative") == "True"
         self.redistribution_method = int(xml_input.get("redistribution_method"))
         self.calculate_component_decomposition = xml_input.get("calculate_component_decomposition") == "True"
+
+    @property
+    def currency(self):
+        currency = "€"
+        if not self.is_exergo_economic_analysis:
+            currency = "Pts"
+
+        return currency
