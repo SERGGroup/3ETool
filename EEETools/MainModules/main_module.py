@@ -349,6 +349,24 @@ class Block(ABC):
 
         pass
 
+    def append_balancing_connection(self):
+
+        """
+
+            Method used to append a connection to the block to balance out
+            the exergy balance of the component
+
+        """
+
+        self.prepare_for_calculation()
+
+        new_conn = self.main_class.append_connection(from_block=self)
+        new_conn.name = "Balancing Power Output"
+        new_conn.automatically_generated_connection = True
+        new_conn.exergy_value = self.exergy_balance
+
+        return new_conn
+
     def append_output_cost(self, defined_steam_cost):
 
         # The stream cost is calculated in the overall calculation,

@@ -194,9 +194,10 @@ class SankeyDiagramGenerator:
 
         else:
 
-            value = -value
-            self.link_dict["source"].append(self.nodes_dict["label"].index(to_block_label))
-            self.link_dict["target"].append(self.nodes_dict["label"].index(from_block_label))
+            if not to_block_label == "Destruction":
+                value = -value
+                self.link_dict["source"].append(self.nodes_dict["label"].index(to_block_label))
+                self.link_dict["target"].append(self.nodes_dict["label"].index(from_block_label))
 
         if not self.options.display_costs:
 

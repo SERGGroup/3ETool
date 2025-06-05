@@ -211,10 +211,32 @@ def import_json_input(json_in: t.IO[t.AnyStr]) -> ArrayHandler:
                         new_conn.rel_cost = block_cost / 3600 # from €/kWh to €/kJ
 
             elif block_type == "Useful Effect":
+
+                new_block = None
+                out_conns = out_conn.get('useful effect output', [])
+
+                if len(out_conns) > 0:
+                    new_block = array_handler.append_block()
+                    new_block.name = "Output Difference"
+                    new_block.support_block = True
+
+                    for conn in out_conns:
+                        new_conn = array_handler.find_connection_by_index(float(conn["label"]))
+                        if new_conn:
+                            new_block.add_connection(new_connection=new_conn, is_input=False)
+
                 for conn in in_conn.get('useful effect', []):
                     new_conn = array_handler.find_connection_by_index(float(conn["label"]))
                     if new_conn:
-                        new_conn.is_useful_effect = True
+                        if new_block is None:
+                            new_conn.is_useful_effect = True
+                        else:
+                            new_block.add_connection(new_connection=new_conn, is_input=True)
+
+                if new_block:
+                    new_conn = new_block.append_balancing_connection()
+                    new_conn.name = "Net Exergy Product"
+                    new_conn.is_useful_effect = True
 
             elif block_type not in ["System Input", "Useful Effect", "Losses"]:
                 new_block = array_handler.append_block(block_type)
